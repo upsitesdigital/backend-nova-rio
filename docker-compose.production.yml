@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:17-alpine
     container_name: nova_rio_postgres_prod
     restart: unless-stopped
     environment:
@@ -29,8 +29,11 @@ services:
     env_file:
       - .env.production
     environment:
-      POSTGRES_HOST: postgres
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-nova_rio_prod}?schema=public
       REDIS_HOST: redis
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@novario.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@2026!}
+      ADMIN_NAME: ${ADMIN_NAME:-Admin Master}
     ports:
       - '3000:3000'
 
