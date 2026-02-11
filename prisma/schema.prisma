@@ -1,10 +1,10 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ============================================================
@@ -64,7 +64,8 @@ enum PaymentOption {
 // ============================================================
 
 model AdminUser {
-  id        String      @id @default(uuid())
+  id        Int         @id @default(autoincrement())
+  uuid      String      @unique @default(uuid())
   name      String
   email     String      @unique
   password  String
@@ -73,9 +74,11 @@ model AdminUser {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
+  refreshToken String?
+
   // Admin master que criou este admin
   createdBy   AdminUser?  @relation("AdminCreator", fields: [createdById], references: [id])
-  createdById String?
+  createdById Int?
   createdAdmins AdminUser[] @relation("AdminCreator")
 
   @@map("admin_users")
@@ -86,7 +89,8 @@ model AdminUser {
 // ============================================================
 
 model Client {
-  id          String     @id @default(uuid())
+  id          Int        @id @default(autoincrement())
+  uuid        String     @unique @default(uuid())
   name        String
   email       String     @unique
   phone       String?
@@ -96,15 +100,16 @@ model Client {
   cpfCnpj     String?    @unique
   address     String?
   complement  String?
-  status      UserStatus @default(PENDING)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  refreshToken String?
+  status       UserStatus @default(PENDING)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   appointments Appointment[]
   payments     Payment[]
   cards        Card[]
   unit         Unit?        @relation(fields: [unitId], references: [id])
-  unitId       String?
+  unitId       Int?
 
   @@map("clients")
 }
@@ -114,7 +119,8 @@ model Client {
 // ============================================================
 
 model Card {
-  id             String   @id @default(uuid())
+  id             Int      @id @default(autoincrement())
+  uuid           String   @unique @default(uuid())
   lastFourDigits String
   brand          String   // Visa, Mastercard, Elo
   holderName     String
@@ -126,7 +132,7 @@ model Card {
   createdAt      DateTime @default(now())
 
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  clientId String
+  clientId Int
 
   payments Payment[]
 
@@ -138,7 +144,8 @@ model Card {
 // ============================================================
 
 model Employee {
-  id               String         @id @default(uuid())
+  id               Int            @id @default(autoincrement())
+  uuid             String         @unique @default(uuid())
   name             String
   email            String         @unique
   phone            String?
@@ -153,7 +160,7 @@ model Employee {
   updatedAt        DateTime       @updatedAt
 
   unit   Unit?   @relation(fields: [unitId], references: [id])
-  unitId String?
+  unitId Int?
 
   appointments Appointment[]
 
@@ -165,7 +172,8 @@ model Employee {
 // ============================================================
 
 model Unit {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid())
   name      String   @unique
   address   String?
   createdAt DateTime @default(now())
@@ -183,7 +191,8 @@ model Unit {
 // ============================================================
 
 model Service {
-  id          String  @id @default(uuid())
+  id          Int     @id @default(autoincrement())
+  uuid        String  @unique @default(uuid())
   name        String
   description String?
   icon        String? // Identificador do ícone
@@ -209,7 +218,8 @@ model Service {
 // ============================================================
 
 model Package {
-  id          String  @id @default(uuid())
+  id          Int     @id @default(autoincrement())
+  uuid        String  @unique @default(uuid())
   name        String
   description String?
   totalHours  Int?
@@ -219,7 +229,7 @@ model Package {
   updatedAt   DateTime @updatedAt
 
   service   Service @relation(fields: [serviceId], references: [id])
-  serviceId String
+  serviceId Int
 
   appointments Appointment[]
 
@@ -231,7 +241,8 @@ model Package {
 // ============================================================
 
 model Appointment {
-  id             String            @id @default(uuid())
+  id             Int               @id @default(autoincrement())
+  uuid           String            @unique @default(uuid())
   date           DateTime          @db.Date
   startTime      String            // Ex: "09:00"
   duration       Int               // Duração em minutos
@@ -244,25 +255,25 @@ model Appointment {
   updatedAt      DateTime          @updatedAt
 
   client   Client @relation(fields: [clientId], references: [id])
-  clientId String
+  clientId Int
 
   employee   Employee? @relation(fields: [employeeId], references: [id])
-  employeeId String?
+  employeeId Int?
 
   service   Service @relation(fields: [serviceId], references: [id])
-  serviceId String
+  serviceId Int
 
   package   Package? @relation(fields: [packageId], references: [id])
-  packageId String?
+  packageId Int?
 
   unit   Unit? @relation(fields: [unitId], references: [id])
-  unitId String?
+  unitId Int?
 
   payment Payment?
 
   // Para reagendamentos — referência ao agendamento original
   rescheduledFrom   Appointment? @relation("Reschedule", fields: [rescheduledFromId], references: [id])
-  rescheduledFromId String?      @unique
+  rescheduledFromId Int?         @unique
   rescheduledTo     Appointment? @relation("Reschedule")
 
   @@index([date])
@@ -277,7 +288,8 @@ model Appointment {
 // ============================================================
 
 model Payment {
-  id              String        @id @default(uuid())
+  id              Int           @id @default(autoincrement())
+  uuid            String        @unique @default(uuid())
   amount          Decimal       @db.Decimal(10, 2)
   subtotal        Decimal       @db.Decimal(10, 2)
   serviceFee      Decimal       @default(0) @db.Decimal(10, 2)
@@ -292,13 +304,13 @@ model Payment {
   updatedAt       DateTime      @updatedAt
 
   client   Client @relation(fields: [clientId], references: [id])
-  clientId String
+  clientId Int
 
   appointment   Appointment @relation(fields: [appointmentId], references: [id])
-  appointmentId String      @unique
+  appointmentId Int         @unique
 
   card   Card?   @relation(fields: [cardId], references: [id])
-  cardId String?
+  cardId Int?
 
   receipt Receipt?
 
@@ -312,12 +324,13 @@ model Payment {
 // ============================================================
 
 model Receipt {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid())
   fileUrl   String   // URL do PDF/arquivo do recibo
   createdAt DateTime @default(now())
 
   payment   Payment @relation(fields: [paymentId], references: [id])
-  paymentId String  @unique
+  paymentId Int     @unique
 
   @@map("receipts")
 }
@@ -327,7 +340,8 @@ model Receipt {
 // ============================================================
 
 model Holiday {
-  id   String   @id @default(uuid())
+  id   Int      @id @default(autoincrement())
+  uuid String   @unique @default(uuid())
   date DateTime @db.Date
   name String
 
@@ -340,7 +354,8 @@ model Holiday {
 // ============================================================
 
 model VerificationCode {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid())
   code      String
   type      String   // EMAIL_CHANGE, PASSWORD_CHANGE
   channel   String   // SMS, WHATSAPP
@@ -348,7 +363,7 @@ model VerificationCode {
   usedAt    DateTime?
   createdAt DateTime @default(now())
 
-  clientId String
+  clientId Int
 
   @@index([clientId, type])
   @@map("verification_codes")
