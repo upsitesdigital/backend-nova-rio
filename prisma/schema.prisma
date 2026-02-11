@@ -1,0 +1,355 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum AdminRole {
+  ADMIN_MASTER
+  ADMIN_BASIC
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  APPROVED
+  PENDING
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  PIX
+}
+
+enum RecurrenceType {
+  SINGLE       // Avulso
+  PACKAGE      // Pacote
+  WEEKLY       // Semanal
+  BIWEEKLY     // Quinzenal
+  MONTHLY      // Mensal
+}
+
+enum PaymentOption {
+  SINGLE
+  PACKAGE
+  RECURRENCE
+}
+
+// ============================================================
+// ADMIN USERS (Painel Admin)
+// ============================================================
+
+model AdminUser {
+  id        String      @id @default(uuid())
+  name      String
+  email     String      @unique
+  password  String
+  role      AdminRole   @default(ADMIN_BASIC)
+  status    UserStatus  @default(ACTIVE)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Admin master que criou este admin
+  createdBy   AdminUser?  @relation("AdminCreator", fields: [createdById], references: [id])
+  createdById String?
+  createdAdmins AdminUser[] @relation("AdminCreator")
+
+  @@map("admin_users")
+}
+
+// ============================================================
+// CLIENTS (Usuários do app/web)
+// ============================================================
+
+model Client {
+  id          String     @id @default(uuid())
+  name        String
+  email       String     @unique
+  phone       String?
+  password    String
+  avatarUrl   String?
+  company     String?
+  cpfCnpj     String?    @unique
+  address     String?
+  complement  String?
+  status      UserStatus @default(PENDING)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  appointments Appointment[]
+  payments     Payment[]
+  cards        Card[]
+  unit         Unit?        @relation(fields: [unitId], references: [id])
+  unitId       String?
+
+  @@map("clients")
+}
+
+// ============================================================
+// CARDS (Cartões salvos do cliente)
+// ============================================================
+
+model Card {
+  id             String   @id @default(uuid())
+  lastFourDigits String
+  brand          String   // Visa, Mastercard, Elo
+  holderName     String
+  expiryMonth    Int
+  expiryYear     Int
+  // Token do gateway de pagamento (nunca armazenar dados completos)
+  gatewayToken   String?
+  isDefault      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId String
+
+  payments Payment[]
+
+  @@map("cards")
+}
+
+// ============================================================
+// EMPLOYEES (Funcionários)
+// ============================================================
+
+model Employee {
+  id               String         @id @default(uuid())
+  name             String
+  email            String         @unique
+  phone            String?
+  cpf              String         @unique
+  address          String?
+  avatarUrl        String?
+  status           EmployeeStatus @default(ACTIVE)
+  availabilityFrom String?        // Horário inicial ex: "08:00"
+  availabilityTo   String?        // Horário final ex: "18:00"
+  notes            String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  unit   Unit?   @relation(fields: [unitId], references: [id])
+  unitId String?
+
+  appointments Appointment[]
+
+  @@map("employees")
+}
+
+// ============================================================
+// UNITS (Unidades)
+// ============================================================
+
+model Unit {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employees    Employee[]
+  clients      Client[]
+  appointments Appointment[]
+
+  @@map("units")
+}
+
+// ============================================================
+// SERVICES (Tipos de serviço - Faxina Regular, Premium, etc.)
+// ============================================================
+
+model Service {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  icon        String? // Identificador do ícone
+  basePrice   Decimal @db.Decimal(10, 2)
+
+  // Opções de pagamento habilitadas
+  allowSingle     Boolean @default(true)  // Avulso
+  allowPackage    Boolean @default(false)  // Pacote
+  allowRecurrence Boolean @default(false)  // Recorrência
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointments Appointment[]
+  packages     Package[]
+
+  @@map("services")
+}
+
+// ============================================================
+// PACKAGES (Pacotes de serviço)
+// ============================================================
+
+model Package {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  totalHours  Int?
+  price       Decimal @db.Decimal(10, 2)
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  service   Service @relation(fields: [serviceId], references: [id])
+  serviceId String
+
+  appointments Appointment[]
+
+  @@map("packages")
+}
+
+// ============================================================
+// APPOINTMENTS (Agendamentos)
+// ============================================================
+
+model Appointment {
+  id             String            @id @default(uuid())
+  date           DateTime          @db.Date
+  startTime      String            // Ex: "09:00"
+  duration       Int               // Duração em minutos
+  status         AppointmentStatus @default(SCHEDULED)
+  recurrenceType RecurrenceType    @default(SINGLE)
+  locationZip    String?           // CEP do local
+  locationAddress String?
+  notes          String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  client   Client @relation(fields: [clientId], references: [id])
+  clientId String
+
+  employee   Employee? @relation(fields: [employeeId], references: [id])
+  employeeId String?
+
+  service   Service @relation(fields: [serviceId], references: [id])
+  serviceId String
+
+  package   Package? @relation(fields: [packageId], references: [id])
+  packageId String?
+
+  unit   Unit? @relation(fields: [unitId], references: [id])
+  unitId String?
+
+  payment Payment?
+
+  // Para reagendamentos — referência ao agendamento original
+  rescheduledFrom   Appointment? @relation("Reschedule", fields: [rescheduledFromId], references: [id])
+  rescheduledFromId String?      @unique
+  rescheduledTo     Appointment? @relation("Reschedule")
+
+  @@index([date])
+  @@index([status])
+  @@index([clientId])
+  @@index([employeeId])
+  @@map("appointments")
+}
+
+// ============================================================
+// PAYMENTS (Pagamentos)
+// ============================================================
+
+model Payment {
+  id              String        @id @default(uuid())
+  amount          Decimal       @db.Decimal(10, 2)
+  subtotal        Decimal       @db.Decimal(10, 2)
+  serviceFee      Decimal       @default(0) @db.Decimal(10, 2)
+  discount        Decimal       @default(0) @db.Decimal(10, 2)
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  cancellationReason String?
+  gatewayTransactionId String?  // ID da transação no gateway
+  pixCode         String?       // Código PIX quando aplicável
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  client   Client @relation(fields: [clientId], references: [id])
+  clientId String
+
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  appointmentId String      @unique
+
+  card   Card?   @relation(fields: [cardId], references: [id])
+  cardId String?
+
+  receipt Receipt?
+
+  @@index([status])
+  @@index([clientId])
+  @@map("payments")
+}
+
+// ============================================================
+// RECEIPTS (Recibos)
+// ============================================================
+
+model Receipt {
+  id        String   @id @default(uuid())
+  fileUrl   String   // URL do PDF/arquivo do recibo
+  createdAt DateTime @default(now())
+
+  payment   Payment @relation(fields: [paymentId], references: [id])
+  paymentId String  @unique
+
+  @@map("receipts")
+}
+
+// ============================================================
+// HOLIDAYS (Feriados - para bloquear no calendário)
+// ============================================================
+
+model Holiday {
+  id   String   @id @default(uuid())
+  date DateTime @db.Date
+  name String
+
+  @@unique([date])
+  @@map("holidays")
+}
+
+// ============================================================
+// VERIFICATION CODES (Códigos de verificação SMS/WhatsApp)
+// ============================================================
+
+model VerificationCode {
+  id        String   @id @default(uuid())
+  code      String
+  type      String   // EMAIL_CHANGE, PASSWORD_CHANGE
+  channel   String   // SMS, WHATSAPP
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  clientId String
+
+  @@index([clientId, type])
+  @@map("verification_codes")
+}
