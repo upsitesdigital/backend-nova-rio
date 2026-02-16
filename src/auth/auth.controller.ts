@@ -12,12 +12,12 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import type { AuthUser } from '../shared/types/auth-user.type.js';
-import { AdminLoginUseCase } from './application/use-cases/admin-login.use-case.js';
-import { ClientLoginUseCase } from './application/use-cases/client-login.use-case.js';
-import { ClientRegisterUseCase } from './application/use-cases/client-register.use-case.js';
-import { ForgotPasswordUseCase } from './application/use-cases/forgot-password.use-case.js';
-import { GetProfileUseCase } from './application/use-cases/get-profile.use-case.js';
-import { RefreshTokenUseCase } from './application/use-cases/refresh-token.use-case.js';
+import { AdminLoginUseCase } from './application/use-cases/admin/admin-login.use-case.js';
+import { ClientLoginUseCase } from './application/use-cases/client/client-login.use-case.js';
+import { ClientRegisterUseCase } from './application/use-cases/client/client-register.use-case.js';
+import { ForgotPasswordUseCase } from './application/use-cases/client/forgot-password.use-case.js';
+import { GetProfileUseCase } from './application/use-cases/auth/get-profile.use-case.js';
+import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.use-case.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
 import { AdminLoginDto } from './dto/admin-login.dto.js';
 import { ClientLoginDto } from './dto/client-login.dto.js';

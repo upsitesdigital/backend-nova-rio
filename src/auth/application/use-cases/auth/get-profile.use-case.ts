@@ -1,9 +1,9 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import type { AuthUser } from '../../../shared/types/auth-user.type.js';
-import { ADMIN_REPOSITORY } from '../../domain/interfaces/admin.repository.interface.js';
-import type { IAdminRepository } from '../../domain/interfaces/admin.repository.interface.js';
-import { CLIENT_REPOSITORY } from '../../domain/interfaces/client.repository.interface.js';
-import type { IClientRepository } from '../../domain/interfaces/client.repository.interface.js';
+import type { AuthUser } from '../../../../shared/types/auth-user.type.js';
+import { ADMIN_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
+import type { IAdminRepository } from '../../../domain/interfaces/admin.repository.interface.js';
+import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
+import type { IClientRepository } from '../../../domain/interfaces/client.repository.interface.js';
 
 @Injectable()
 export class GetProfileUseCase {

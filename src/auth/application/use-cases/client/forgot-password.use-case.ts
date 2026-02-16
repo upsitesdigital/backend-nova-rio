@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CLIENT_REPOSITORY } from '../../domain/interfaces/client.repository.interface.js';
-import type { IClientRepository } from '../../domain/interfaces/client.repository.interface.js';
-import { ForgotPasswordDto } from '../../dto/forgot-password.dto.js';
+import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
+import type { IClientRepository } from '../../../domain/interfaces/client.repository.interface.js';
+import { ForgotPasswordDto } from '../../../dto/forgot-password.dto.js';
 
 @Injectable()
 export class ForgotPasswordUseCase {
