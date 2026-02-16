@@ -1,0 +1,110 @@
+import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { ADMIN_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
+import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
+import { TOKEN_SERVICE } from '../../../domain/interfaces/token.service.interface.js';
+import { AdminLoginUseCase } from './admin-login.use-case.js';
+
+describe('AdminLoginUseCase', () => {
+  let useCase: AdminLoginUseCase;
+  let adminRepository: { findByEmail: jest.Mock; updateRefreshToken: jest.Mock };
+  let hashService: { compare: jest.Mock; hash: jest.Mock };
+  let tokenService: { generateTokens: jest.Mock };
+
+  beforeEach(async () => {
+    adminRepository = {
+      findByEmail: jest.fn(),
+      updateRefreshToken: jest.fn(),
+    };
+    hashService = {
+      compare: jest.fn(),
+      hash: jest.fn(),
+    };
+    tokenService = {
+      generateTokens: jest.fn(),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AdminLoginUseCase,
+        { provide: ADMIN_REPOSITORY, useValue: adminRepository },
+        { provide: HASH_SERVICE, useValue: hashService },
+        { provide: TOKEN_SERVICE, useValue: tokenService },
+      ],
+    }).compile();
+
+    useCase = module.get<AdminLoginUseCase>(AdminLoginUseCase);
+  });
+
+  it('should be defined', () => {
+    expect(useCase).toBeDefined();
+  });
+
+  it('should throw UnauthorizedException if admin not found', async () => {
+    adminRepository.findByEmail.mockResolvedValue(null);
+
+    await expect(
+      useCase.execute({ email: 'test@example.com', password: 'password' }),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should throw ForbiddenException if admin is not active', async () => {
+    adminRepository.findByEmail.mockResolvedValue({
+      id: 1,
+      email: 'test@example.com',
+      status: 'INACTIVE',
+    });
+
+    await expect(
+      useCase.execute({ email: 'test@example.com', password: 'password' }),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('should throw UnauthorizedException if password is invalid', async () => {
+    adminRepository.findByEmail.mockResolvedValue({
+      id: 1,
+      email: 'test@example.com',
+      password: 'hashedPassword',
+      status: 'ACTIVE',
+    });
+    hashService.compare.mockResolvedValue(false);
+
+    await expect(
+      useCase.execute({ email: 'test@example.com', password: 'password' }),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should return tokens and update refresh token on success', async () => {
+    const admin = {
+      id: 1,
+      email: 'test@example.com',
+      password: 'hashedPassword',
+      status: 'ACTIVE',
+      role: 'ADMIN',
+    };
+    const tokens = {
+      accessToken: 'access',
+      refreshToken: 'refresh',
+    };
+
+    adminRepository.findByEmail.mockResolvedValue(admin);
+    hashService.compare.mockResolvedValue(true);
+    tokenService.generateTokens.mockResolvedValue(tokens);
+    hashService.hash.mockResolvedValue('hashedRefresh');
+
+    const result = await useCase.execute({
+      email: 'test@example.com',
+      password: 'password',
+    });
+
+    expect(result).toEqual(tokens);
+    expect(tokenService.generateTokens).toHaveBeenCalledWith({
+      sub: admin.id,
+      email: admin.email,
+      type: 'admin',
+      role: admin.role,
+    });
+    expect(hashService.hash).toHaveBeenCalledWith(tokens.refreshToken);
+    expect(adminRepository.updateRefreshToken).toHaveBeenCalledWith(admin.id, 'hashedRefresh');
+  });
+});
