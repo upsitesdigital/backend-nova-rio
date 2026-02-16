@@ -1,11 +1,14 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
-import { CLIENT_REPOSITORY } from '../../domain/interfaces/client.repository.interface.js';
-import type { IClientRepository } from '../../domain/interfaces/client.repository.interface.js';
-import { HASH_SERVICE } from '../../domain/interfaces/hash.service.interface.js';
-import type { IHashService } from '../../domain/interfaces/hash.service.interface.js';
-import { TOKEN_SERVICE } from '../../domain/interfaces/token.service.interface.js';
-import type { ITokenService, TokenPair } from '../../domain/interfaces/token.service.interface.js';
-import { ClientRegisterDto } from '../../dto/client-register.dto.js';
+import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
+import type { IClientRepository } from '../../../domain/interfaces/client.repository.interface.js';
+import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
+import type { IHashService } from '../../../domain/interfaces/hash.service.interface.js';
+import { TOKEN_SERVICE } from '../../../domain/interfaces/token.service.interface.js';
+import type {
+  ITokenService,
+  TokenPair,
+} from '../../../domain/interfaces/token.service.interface.js';
+import { ClientRegisterDto } from '../../../dto/client-register.dto.js';
 
 @Injectable()
 export class ClientRegisterUseCase {
