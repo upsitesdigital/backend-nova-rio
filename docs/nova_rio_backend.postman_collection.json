@@ -519,6 +519,123 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Employees",
+      "item": [
+        {
+          "name": "Create Employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Maria Silva\",\n  \"email\": \"maria@example.com\",\n  \"cpf\": \"529.982.247-25\",\n  \"phone\": \"21999998888\",\n  \"address\": \"Rua das Flores, 123\",\n  \"availabilityFrom\": \"08:00\",\n  \"availabilityTo\": \"18:00\",\n  \"notes\": \"Experienced cleaner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/employees",
+              "host": ["{{base_url}}"],
+              "path": ["employees"]
+            },
+            "description": "Create a new employee. CPF must be valid (algorithm check). Email and CPF must be unique."
+          },
+          "response": []
+        },
+        {
+          "name": "List Employees",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/employees",
+              "host": ["{{base_url}}"],
+              "path": ["employees"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "Filter by status (ACTIVE, INACTIVE)",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by name or email",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List employees with optional filters (status, search)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Employee By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/employees/{{employee_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["employees", "{{employee_id}}"]
+            },
+            "description": "Get an employee by ID. Returns 404 if not found."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Employee",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Maria Souza\",\n  \"notes\": \"Senior cleaner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/employees/{{employee_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["employees", "{{employee_id}}"]
+            },
+            "description": "Update an employee by ID. Email/CPF uniqueness checked only when changed."
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Employee",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/employees/{{employee_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["employees", "{{employee_id}}"]
+            },
+            "description": "Soft delete (deactivate) an employee by ID. Returns 204 No Content."
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "auth": {
@@ -546,6 +663,16 @@
       "key": "refresh_token",
       "value": "",
       "description": "JWT refresh token"
+    },
+    {
+      "key": "service_id",
+      "value": "1",
+      "description": "Service ID for parameterized requests"
+    },
+    {
+      "key": "employee_id",
+      "value": "1",
+      "description": "Employee ID for parameterized requests"
     }
   ]
 }
