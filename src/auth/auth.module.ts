@@ -34,5 +34,6 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
     ForgotPasswordUseCase,
     GetProfileUseCase,
   ],
+  exports: [HASH_SERVICE],
 })
 export class AuthModule {}
