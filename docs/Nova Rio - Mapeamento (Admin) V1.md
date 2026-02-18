@@ -114,6 +114,7 @@
 - Filtros:
   - Todos
   - Ativos
+  - Inativos
   - Pendentes
   - Pesquisar (nome do cliente ou unidade)
 - Informações visíveis dos clientes:
