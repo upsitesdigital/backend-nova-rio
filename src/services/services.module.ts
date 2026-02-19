@@ -18,5 +18,6 @@ import { ServicesController } from './services.controller.js';
     UpdateServiceUseCase,
     DeleteServiceUseCase,
   ],
+  exports: [SERVICE_REPOSITORY],
 })
 export class ServicesModule {}
