@@ -638,6 +638,137 @@
       ]
     },
     {
+      "name": "Packages",
+      "item": [
+        {
+          "name": "Create Package",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pacote 10 horas\",\n  \"description\": \"Pacote com 10 horas de faxina\",\n  \"totalHours\": 10,\n  \"price\": 1200,\n  \"serviceId\": {{service_id}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/packages",
+              "host": ["{{base_url}}"],
+              "path": ["packages"]
+            },
+            "description": "Create a new package (Admin only). Validates that serviceId references an active service."
+          },
+          "response": []
+        },
+        {
+          "name": "List Packages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/packages",
+              "host": ["{{base_url}}"],
+              "path": ["packages"],
+              "query": [
+                {
+                  "key": "active",
+                  "value": "true",
+                  "description": "Filter by active status (true = active only, omit = all)",
+                  "disabled": true
+                },
+                {
+                  "key": "serviceId",
+                  "value": "1",
+                  "description": "Filter by service ID",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List packages with optional filters: active, serviceId (Admin only). Returns 400 if serviceId not found or inactive."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Package By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/packages/{{package_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["packages", "{{package_id}}"]
+            },
+            "description": "Get a single package by ID (Admin only). Returns 404 if not found or inactive."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Package",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pacote 20 horas\",\n  \"totalHours\": 20,\n  \"price\": 2200\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/packages/{{package_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["packages", "{{package_id}}"]
+            },
+            "description": "Update a package by ID (Admin only). Validates serviceId if provided."
+          },
+          "response": []
+        },
+        {
+          "name": "Reactivate Package",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/packages/{{package_id}}/reactivate",
+              "host": ["{{base_url}}"],
+              "path": ["packages", "{{package_id}}", "reactivate"]
+            },
+            "description": "Reactivate a deactivated package by ID (Admin only). Returns 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Package",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/packages/{{package_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["packages", "{{package_id}}"]
+            },
+            "description": "Soft delete (deactivate) a package by ID (Admin only). Returns 204 No Content."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Units",
       "item": [
         {
@@ -776,6 +907,11 @@
       "key": "employee_id",
       "value": "1",
       "description": "Employee ID for parameterized requests"
+    },
+    {
+      "key": "package_id",
+      "value": "1",
+      "description": "Package ID for parameterized requests"
     },
     {
       "key": "unit_id",
