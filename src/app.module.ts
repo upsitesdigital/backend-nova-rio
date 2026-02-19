@@ -8,6 +8,7 @@ import { ClientsModule } from './clients/clients.module.js';
 import { EmployeesModule } from './employees/employees.module.js';
 import { ServicesModule } from './services/services.module.js';
 import { PrismaModule } from './shared/prisma/prisma.module.js';
+import { UnitsModule } from './units/units.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PrismaModule } from './shared/prisma/prisma.module.js';
     AdminUsersModule,
     ClientsModule,
     EmployeesModule,
+    UnitsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
