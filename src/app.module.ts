@@ -6,6 +6,7 @@ import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
 import { ClientsModule } from './clients/clients.module.js';
 import { EmployeesModule } from './employees/employees.module.js';
+import { PackagesModule } from './packages/packages.module.js';
 import { ServicesModule } from './services/services.module.js';
 import { PrismaModule } from './shared/prisma/prisma.module.js';
 import { UnitsModule } from './units/units.module.js';
@@ -19,6 +20,7 @@ import { UnitsModule } from './units/units.module.js';
     AdminUsersModule,
     ClientsModule,
     EmployeesModule,
+    PackagesModule,
     UnitsModule,
   ],
   controllers: [AppController],

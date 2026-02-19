@@ -55,7 +55,7 @@
   - Botão "← Voltar"
   - Informações do serviço:
     - Tipo de Serviço (dropdown)
-    - Pacote (dropdown)
+    - Pacote (dropdown — pacotes ativos do serviço selecionado)
     - Duração (dropdown)
   - Detalhes do agendamento:
     - Cliente (dropdown)
@@ -208,6 +208,24 @@
       - Quinzenal
       - Mensal
   - Botão "Salvar alterações"
+
+- Pacotes do serviço:
+  - Cada serviço pode ter múltiplos pacotes (ex: "Pacote 10 horas", "Pacote 20 horas")
+  - Botão "+ Criar pacote"
+  - Listagem de pacotes do serviço:
+    - Nome
+    - Descrição
+    - Total de horas
+    - Preço
+    - Status (Ativo/Inativo)
+    - Ações: Editar, Desativar, Reativar
+  - Criação/Edição de pacote:
+    - Nome
+    - Descrição (opcional)
+    - Total de horas (opcional)
+    - Preço
+    - Serviço (dropdown — apenas serviços ativos)
+    - Botão "Salvar"
 
 ## Usuários:
 
