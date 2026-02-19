@@ -32,6 +32,7 @@
   - Configurar Recorrência:
     - Avulso
     - Pacote
+      - Ao selecionar Pacote, exibe dropdown com pacotes disponíveis do serviço escolhido (ex: "Pacote 10 horas — R$ 1.200")
     - Recorrência (badge "5% OFF")
       - Ao selecionar Recorrência, exibe dropdown "Selecione o tipo de recorrência" (Mensal, Semanal, Quinzenal)
       - Nota de desconto: "5% de desconto para recorrências mensais e 10% para semanais e quinzenais"
@@ -140,10 +141,12 @@
     - Método de pagamento, valor e status
     - Local (Unidade)
     - Tipo de recorrência (Avulso/Pacote/Recorrência)
+    - Pacote vinculado (nome e total de horas, quando aplicável)
   - Editar (drawer lateral):
     - Nome do serviço, link Recibo
     - Data
     - Configurar Recorrência (Avulso, Pacote, Recorrência com 5% OFF)
+      - Ao selecionar Pacote, exibe dropdown com pacotes ativos do serviço
     - Método de pagamento, valor e status
     - Local da limpeza expandível: CEP, Endereço, Complemento
     - Botões "Reagendar" e "Cancelar"
