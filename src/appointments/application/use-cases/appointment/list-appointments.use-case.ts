@@ -1,0 +1,43 @@
+import { Inject, Injectable } from '@nestjs/common';
+import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
+import type {
+  IAppointmentRepository,
+  ListAppointmentsFilters,
+  PaginatedAppointments,
+} from '../../../domain/interfaces/appointment.repository.interface.js';
+import type { ListAppointmentsQueryDto } from '../../../dto/appointment/list-appointments-query.dto.js';
+
+@Injectable()
+export class ListAppointmentsUseCase {
+  constructor(
+    @Inject(APPOINTMENT_REPOSITORY) private appointmentRepository: IAppointmentRepository,
+  ) {}
+
+  async listAppointments(query: ListAppointmentsQueryDto): Promise<PaginatedAppointments> {
+    const filters: ListAppointmentsFilters = {
+      page: query.page ?? 1,
+      limit: query.limit ?? 20,
+    };
+
+    if (query.date) {
+      filters.date = new Date(query.date);
+    }
+    if (query.weekStart) {
+      filters.weekStart = new Date(query.weekStart);
+    }
+    if (query.weekEnd) {
+      filters.weekEnd = new Date(query.weekEnd);
+    }
+    if (query.employeeId) {
+      filters.employeeId = query.employeeId;
+    }
+    if (query.unitId) {
+      filters.unitId = query.unitId;
+    }
+    if (query.status) {
+      filters.status = query.status;
+    }
+
+    return this.appointmentRepository.listAppointments(filters);
+  }
+}
