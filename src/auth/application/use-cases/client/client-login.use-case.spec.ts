@@ -1,3 +1,4 @@
+import { type Mock, vi } from 'vitest';
 import { UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
@@ -7,21 +8,21 @@ import { ClientLoginUseCase } from './client-login.use-case.js';
 
 describe('ClientLoginUseCase', () => {
   let useCase: ClientLoginUseCase;
-  let clientRepository: { findByEmail: jest.Mock; updateRefreshToken: jest.Mock };
-  let hashService: { compare: jest.Mock; hash: jest.Mock };
-  let tokenService: { generateTokens: jest.Mock };
+  let clientRepository: { findByEmail: Mock; updateRefreshToken: Mock };
+  let hashService: { compare: Mock; hash: Mock };
+  let tokenService: { generateTokens: Mock };
 
   beforeEach(async () => {
     clientRepository = {
-      findByEmail: jest.fn(),
-      updateRefreshToken: jest.fn(),
+      findByEmail: vi.fn(),
+      updateRefreshToken: vi.fn(),
     };
     hashService = {
-      compare: jest.fn(),
-      hash: jest.fn(),
+      compare: vi.fn(),
+      hash: vi.fn(),
     };
     tokenService = {
-      generateTokens: jest.fn(),
+      generateTokens: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

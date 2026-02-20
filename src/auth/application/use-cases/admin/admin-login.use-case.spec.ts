@@ -1,3 +1,4 @@
+import { type Mock, vi } from 'vitest';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ADMIN_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
@@ -7,21 +8,21 @@ import { AdminLoginUseCase } from './admin-login.use-case.js';
 
 describe('AdminLoginUseCase', () => {
   let useCase: AdminLoginUseCase;
-  let adminRepository: { findByEmail: jest.Mock; updateRefreshToken: jest.Mock };
-  let hashService: { compare: jest.Mock; hash: jest.Mock };
-  let tokenService: { generateTokens: jest.Mock };
+  let adminRepository: { findByEmail: Mock; updateRefreshToken: Mock };
+  let hashService: { compare: Mock; hash: Mock };
+  let tokenService: { generateTokens: Mock };
 
   beforeEach(async () => {
     adminRepository = {
-      findByEmail: jest.fn(),
-      updateRefreshToken: jest.fn(),
+      findByEmail: vi.fn(),
+      updateRefreshToken: vi.fn(),
     };
     hashService = {
-      compare: jest.fn(),
-      hash: jest.fn(),
+      compare: vi.fn(),
+      hash: vi.fn(),
     };
     tokenService = {
-      generateTokens: jest.fn(),
+      generateTokens: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
