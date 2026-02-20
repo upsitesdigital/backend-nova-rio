@@ -4,8 +4,16 @@ import { Resend } from 'resend';
 import type { IEmailService } from '../../domain/interfaces/email.service.interface.js';
 import { welcomeTemplate } from '../templates/welcome.template.js';
 import { passwordResetTemplate } from '../templates/password-reset.template.js';
+import { passwordChangedTemplate } from '../templates/password-changed.template.js';
 import { clientApprovedTemplate } from '../templates/client-approved.template.js';
 import { clientRejectedTemplate } from '../templates/client-rejected.template.js';
+import { emailChangeVerificationTemplate } from '../templates/email-change-verification.template.js';
+import { accountDeletedTemplate } from '../templates/account-deleted.template.js';
+import { appointmentConfirmedTemplate } from '../templates/appointment-confirmed.template.js';
+import { appointmentCancelledTemplate } from '../templates/appointment-cancelled.template.js';
+import { appointmentRescheduledTemplate } from '../templates/appointment-rescheduled.template.js';
+import { paymentApprovedTemplate } from '../templates/payment-approved.template.js';
+import { paymentCancelledTemplate } from '../templates/payment-cancelled.template.js';
 
 @Injectable()
 export class ResendEmailService implements IEmailService {
@@ -67,6 +75,139 @@ export class ResendEmailService implements IEmailService {
       });
     } catch (error) {
       this.logger.error(`Failed to send client rejected email to ${to}`, error);
+    }
+  }
+
+  async sendPasswordChangedEmail(to: string, name: string): Promise<void> {
+    try {
+      await this.resend.emails.send({
+        from: this.from,
+        to,
+        subject: 'Senha alterada com sucesso - Nova Rio',
+        html: passwordChangedTemplate(name),
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send password changed email to ${to}`, error);
+    }
+  }
+
+  async sendEmailChangeVerification(to: string, name: string, code: string): Promise<void> {
+    try {
+      await this.resend.emails.send({
+        from: this.from,
+        to,
+        subject: 'Verificação de novo e-mail - Nova Rio',
+        html: emailChangeVerificationTemplate(name, code),
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send email change verification to ${to}`, error);
+    }
+  }
+
+  async sendAccountDeletedEmail(to: string, name: string): Promise<void> {
+    try {
+      await this.resend.emails.send({
+        from: this.from,
+        to,
+        subject: 'Conta excluída - Nova Rio',
+        html: accountDeletedTemplate(name),
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send account deleted email to ${to}`, error);
+    }
+  }
+
+  async sendAppointmentConfirmedEmail(
+    to: string,
+    name: string,
+    date: string,
+    time: string,
+    serviceName: string,
+  ): Promise<void> {
+    try {
+      await this.resend.emails.send({
+        from: this.from,
+        to,
+        subject: 'Agendamento confirmado - Nova Rio',
+        html: appointmentConfirmedTemplate(name, date, time, serviceName),
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send appointment confirmed email to ${to}`, error);
+    }
+  }
+
+  async sendAppointmentCancelledEmail(
+    to: string,
+    name: string,
+    date: string,
+    time: string,
+    serviceName: string,
+  ): Promise<void> {
+    try {
+      await this.resend.emails.send({
+        from: this.from,
+        to,
+        subject: 'Agendamento cancelado - Nova Rio',
+        html: appointmentCancelledTemplate(name, date, time, serviceName),
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send appointment cancelled email to ${to}`, error);
+    }
+  }
+
+  async sendAppointmentRescheduledEmail(
+    to: string,
+    name: string,
+    newDate: string,
+    newTime: string,
+    serviceName: string,
+  ): Promise<void> {
+    try {
+      await this.resend.emails.send({
+        from: this.from,
+        to,
+        subject: 'Agendamento reagendado - Nova Rio',
+        html: appointmentRescheduledTemplate(name, newDate, newTime, serviceName),
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send appointment rescheduled email to ${to}`, error);
+    }
+  }
+
+  async sendPaymentApprovedEmail(
+    to: string,
+    name: string,
+    amount: string,
+    serviceName: string,
+    date: string,
+  ): Promise<void> {
+    try {
+      await this.resend.emails.send({
+        from: this.from,
+        to,
+        subject: 'Pagamento confirmado - Nova Rio',
+        html: paymentApprovedTemplate(name, amount, serviceName, date),
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send payment approved email to ${to}`, error);
+    }
+  }
+
+  async sendPaymentCancelledEmail(
+    to: string,
+    name: string,
+    amount: string,
+    serviceName: string,
+  ): Promise<void> {
+    try {
+      await this.resend.emails.send({
+        from: this.from,
+        to,
+        subject: 'Pagamento cancelado - Nova Rio',
+        html: paymentCancelledTemplate(name, amount, serviceName),
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send payment cancelled email to ${to}`, error);
     }
   }
 }
