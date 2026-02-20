@@ -1,3 +1,4 @@
+import { type Mock, vi } from 'vitest';
 import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
@@ -8,24 +9,24 @@ import { ClientRegisterUseCase } from './client-register.use-case.js';
 describe('ClientRegisterUseCase', () => {
   let useCase: ClientRegisterUseCase;
   let clientRepository: {
-    findByEmail: jest.Mock;
-    create: jest.Mock;
-    updateRefreshToken: jest.Mock;
+    findByEmail: Mock;
+    create: Mock;
+    updateRefreshToken: Mock;
   };
-  let hashService: { hash: jest.Mock };
-  let tokenService: { generateTokens: jest.Mock };
+  let hashService: { hash: Mock };
+  let tokenService: { generateTokens: Mock };
 
   beforeEach(async () => {
     clientRepository = {
-      findByEmail: jest.fn(),
-      create: jest.fn(),
-      updateRefreshToken: jest.fn(),
+      findByEmail: vi.fn(),
+      create: vi.fn(),
+      updateRefreshToken: vi.fn(),
     };
     hashService = {
-      hash: jest.fn(),
+      hash: vi.fn(),
     };
     tokenService = {
-      generateTokens: jest.fn(),
+      generateTokens: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
