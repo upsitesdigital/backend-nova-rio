@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -14,7 +15,7 @@ describe('RolesGuard', () => {
         {
           provide: Reflector,
           useValue: {
-            getAllAndOverride: jest.fn(),
+            getAllAndOverride: vi.fn(),
           },
         },
       ],
@@ -29,22 +30,22 @@ describe('RolesGuard', () => {
   });
 
   it('should return true if no roles are required', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(null);
+    vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(null);
     const context = {
-      getHandler: jest.fn(),
-      getClass: jest.fn(),
+      getHandler: vi.fn(),
+      getClass: vi.fn(),
     } as unknown as ExecutionContext;
 
     expect(guard.canActivate(context)).toBe(true);
   });
 
   it('should return true if user has required role', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['ADMIN']);
+    vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['ADMIN']);
     const context = {
-      getHandler: jest.fn(),
-      getClass: jest.fn(),
-      switchToHttp: jest.fn().mockReturnValue({
-        getRequest: jest.fn().mockReturnValue({
+      getHandler: vi.fn(),
+      getClass: vi.fn(),
+      switchToHttp: vi.fn().mockReturnValue({
+        getRequest: vi.fn().mockReturnValue({
           user: { role: 'ADMIN' },
         }),
       }),
@@ -54,12 +55,12 @@ describe('RolesGuard', () => {
   });
 
   it('should return false if user does not have required role', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['ADMIN']);
+    vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['ADMIN']);
     const context = {
-      getHandler: jest.fn(),
-      getClass: jest.fn(),
-      switchToHttp: jest.fn().mockReturnValue({
-        getRequest: jest.fn().mockReturnValue({
+      getHandler: vi.fn(),
+      getClass: vi.fn(),
+      switchToHttp: vi.fn().mockReturnValue({
+        getRequest: vi.fn().mockReturnValue({
           user: { role: 'USER' },
         }),
       }),
@@ -69,12 +70,12 @@ describe('RolesGuard', () => {
   });
 
   it('should return false if user has no role', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['ADMIN']);
+    vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['ADMIN']);
     const context = {
-      getHandler: jest.fn(),
-      getClass: jest.fn(),
-      switchToHttp: jest.fn().mockReturnValue({
-        getRequest: jest.fn().mockReturnValue({
+      getHandler: vi.fn(),
+      getClass: vi.fn(),
+      switchToHttp: vi.fn().mockReturnValue({
+        getRequest: vi.fn().mockReturnValue({
           user: {},
         }),
       }),
