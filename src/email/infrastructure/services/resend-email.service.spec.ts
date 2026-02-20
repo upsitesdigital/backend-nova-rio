@@ -127,4 +127,241 @@ describe('ResendEmailService', () => {
       ).resolves.toBeUndefined();
     });
   });
+
+  describe('sendPasswordChangedEmail', () => {
+    it('should send password changed email with correct params', async () => {
+      mockSend.mockResolvedValue({ id: 'email-id' });
+
+      await service.sendPasswordChangedEmail('client@example.com', 'João');
+
+      expect(mockSend).toHaveBeenCalledWith({
+        from: 'test@novario.com',
+        to: 'client@example.com',
+        subject: expect.stringContaining('Senha alterada') as string,
+        html: expect.stringContaining('João') as string,
+      });
+    });
+
+    it('should not throw on error', async () => {
+      mockSend.mockRejectedValue(new Error('API error'));
+
+      await expect(
+        service.sendPasswordChangedEmail('client@example.com', 'João'),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe('sendEmailChangeVerification', () => {
+    it('should send email change verification with code', async () => {
+      mockSend.mockResolvedValue({ id: 'email-id' });
+
+      await service.sendEmailChangeVerification('new@example.com', 'João', '654321');
+
+      expect(mockSend).toHaveBeenCalledWith({
+        from: 'test@novario.com',
+        to: 'new@example.com',
+        subject: expect.stringContaining('Verificação') as string,
+        html: expect.stringContaining('654321') as string,
+      });
+    });
+
+    it('should not throw on error', async () => {
+      mockSend.mockRejectedValue(new Error('API error'));
+
+      await expect(
+        service.sendEmailChangeVerification('new@example.com', 'João', '654321'),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe('sendAccountDeletedEmail', () => {
+    it('should send account deleted email with correct params', async () => {
+      mockSend.mockResolvedValue({ id: 'email-id' });
+
+      await service.sendAccountDeletedEmail('client@example.com', 'João');
+
+      expect(mockSend).toHaveBeenCalledWith({
+        from: 'test@novario.com',
+        to: 'client@example.com',
+        subject: expect.stringContaining('excluída') as string,
+        html: expect.stringContaining('João') as string,
+      });
+    });
+
+    it('should not throw on error', async () => {
+      mockSend.mockRejectedValue(new Error('API error'));
+
+      await expect(
+        service.sendAccountDeletedEmail('client@example.com', 'João'),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe('sendAppointmentConfirmedEmail', () => {
+    it('should send appointment confirmed email with details', async () => {
+      mockSend.mockResolvedValue({ id: 'email-id' });
+
+      await service.sendAppointmentConfirmedEmail(
+        'client@example.com',
+        'João',
+        '25/02/2026',
+        '14:00',
+        'Limpeza Padrão',
+      );
+
+      expect(mockSend).toHaveBeenCalledWith({
+        from: 'test@novario.com',
+        to: 'client@example.com',
+        subject: expect.stringContaining('confirmado') as string,
+        html: expect.stringContaining('Limpeza Padrão') as string,
+      });
+    });
+
+    it('should not throw on error', async () => {
+      mockSend.mockRejectedValue(new Error('API error'));
+
+      await expect(
+        service.sendAppointmentConfirmedEmail(
+          'client@example.com',
+          'João',
+          '25/02/2026',
+          '14:00',
+          'Limpeza',
+        ),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe('sendAppointmentCancelledEmail', () => {
+    it('should send appointment cancelled email with details', async () => {
+      mockSend.mockResolvedValue({ id: 'email-id' });
+
+      await service.sendAppointmentCancelledEmail(
+        'client@example.com',
+        'João',
+        '25/02/2026',
+        '14:00',
+        'Limpeza Padrão',
+      );
+
+      expect(mockSend).toHaveBeenCalledWith({
+        from: 'test@novario.com',
+        to: 'client@example.com',
+        subject: expect.stringContaining('cancelado') as string,
+        html: expect.stringContaining('Limpeza Padrão') as string,
+      });
+    });
+
+    it('should not throw on error', async () => {
+      mockSend.mockRejectedValue(new Error('API error'));
+
+      await expect(
+        service.sendAppointmentCancelledEmail(
+          'client@example.com',
+          'João',
+          '25/02/2026',
+          '14:00',
+          'Limpeza',
+        ),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe('sendAppointmentRescheduledEmail', () => {
+    it('should send appointment rescheduled email with new details', async () => {
+      mockSend.mockResolvedValue({ id: 'email-id' });
+
+      await service.sendAppointmentRescheduledEmail(
+        'client@example.com',
+        'João',
+        '28/02/2026',
+        '16:00',
+        'Limpeza Padrão',
+      );
+
+      expect(mockSend).toHaveBeenCalledWith({
+        from: 'test@novario.com',
+        to: 'client@example.com',
+        subject: expect.stringContaining('reagendado') as string,
+        html: expect.stringContaining('28/02/2026') as string,
+      });
+    });
+
+    it('should not throw on error', async () => {
+      mockSend.mockRejectedValue(new Error('API error'));
+
+      await expect(
+        service.sendAppointmentRescheduledEmail(
+          'client@example.com',
+          'João',
+          '28/02/2026',
+          '16:00',
+          'Limpeza',
+        ),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe('sendPaymentApprovedEmail', () => {
+    it('should send payment approved email with amount', async () => {
+      mockSend.mockResolvedValue({ id: 'email-id' });
+
+      await service.sendPaymentApprovedEmail(
+        'client@example.com',
+        'João',
+        '150,00',
+        'Limpeza Padrão',
+        '25/02/2026',
+      );
+
+      expect(mockSend).toHaveBeenCalledWith({
+        from: 'test@novario.com',
+        to: 'client@example.com',
+        subject: expect.stringContaining('confirmado') as string,
+        html: expect.stringContaining('150,00') as string,
+      });
+    });
+
+    it('should not throw on error', async () => {
+      mockSend.mockRejectedValue(new Error('API error'));
+
+      await expect(
+        service.sendPaymentApprovedEmail(
+          'client@example.com',
+          'João',
+          '150,00',
+          'Limpeza',
+          '25/02/2026',
+        ),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe('sendPaymentCancelledEmail', () => {
+    it('should send payment cancelled email with details', async () => {
+      mockSend.mockResolvedValue({ id: 'email-id' });
+
+      await service.sendPaymentCancelledEmail(
+        'client@example.com',
+        'João',
+        '150,00',
+        'Limpeza Padrão',
+      );
+
+      expect(mockSend).toHaveBeenCalledWith({
+        from: 'test@novario.com',
+        to: 'client@example.com',
+        subject: expect.stringContaining('cancelado') as string,
+        html: expect.stringContaining('150,00') as string,
+      });
+    });
+
+    it('should not throw on error', async () => {
+      mockSend.mockRejectedValue(new Error('API error'));
+
+      await expect(
+        service.sendPaymentCancelledEmail('client@example.com', 'João', '150,00', 'Limpeza'),
+      ).resolves.toBeUndefined();
+    });
+  });
 });
