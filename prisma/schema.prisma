@@ -280,6 +280,8 @@ model Appointment {
   @@index([status])
   @@index([clientId])
   @@index([employeeId])
+  @@index([employeeId, date, status])
+  @@index([unitId])
   @@map("appointments")
 }
 
