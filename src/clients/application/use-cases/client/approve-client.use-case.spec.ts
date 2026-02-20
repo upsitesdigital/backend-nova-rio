@@ -2,22 +2,28 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
 import { CLIENT_MGMT_REPOSITORY } from '../../../domain/interfaces/client-management.repository.interface.js';
+import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import { ApproveClientUseCase } from './approve-client.use-case.js';
 
 describe('ApproveClientUseCase', () => {
   let useCase: ApproveClientUseCase;
   let clientMgmtRepository: { findClientById: Mock; approveClientById: Mock };
+  let emailService: { sendClientApprovedEmail: Mock };
 
   beforeEach(async () => {
     clientMgmtRepository = {
       findClientById: vi.fn(),
       approveClientById: vi.fn(),
     };
+    emailService = {
+      sendClientApprovedEmail: vi.fn().mockResolvedValue(undefined),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ApproveClientUseCase,
         { provide: CLIENT_MGMT_REPOSITORY, useValue: clientMgmtRepository },
+        { provide: EMAIL_SERVICE, useValue: emailService },
       ],
     }).compile();
 
@@ -28,8 +34,8 @@ describe('ApproveClientUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should approve a PENDING client', async () => {
-    const client = { id: 1, name: 'João', status: 'PENDING' };
+  it('should approve a PENDING client and send email', async () => {
+    const client = { id: 1, name: 'João', email: 'joao@example.com', status: 'PENDING' };
 
     clientMgmtRepository.findClientById.mockResolvedValue(client);
     clientMgmtRepository.approveClientById.mockResolvedValue(undefined);
@@ -38,6 +44,7 @@ describe('ApproveClientUseCase', () => {
 
     expect(clientMgmtRepository.findClientById).toHaveBeenCalledWith(1);
     expect(clientMgmtRepository.approveClientById).toHaveBeenCalledWith(1);
+    expect(emailService.sendClientApprovedEmail).toHaveBeenCalledWith('joao@example.com', 'João');
   });
 
   it('should throw NotFoundException when client not found', async () => {
