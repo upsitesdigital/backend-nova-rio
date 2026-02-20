@@ -1,6 +1,8 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
 import type { IClientRepository } from '../../../domain/interfaces/client.repository.interface.js';
+import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
+import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import type { IHashService } from '../../../domain/interfaces/hash.service.interface.js';
 import { TOKEN_SERVICE } from '../../../domain/interfaces/token.service.interface.js';
@@ -14,6 +16,7 @@ import { ClientRegisterDto } from '../../../dto/client-register.dto.js';
 export class ClientRegisterUseCase {
   constructor(
     @Inject(CLIENT_REPOSITORY) private clientRepository: IClientRepository,
+    @Inject(EMAIL_SERVICE) private emailService: IEmailService,
     @Inject(HASH_SERVICE) private hashService: IHashService,
     @Inject(TOKEN_SERVICE) private tokenService: ITokenService,
   ) {}
@@ -42,6 +45,8 @@ export class ClientRegisterUseCase {
 
     const hashedRefresh = await this.hashService.hash(tokens.refreshToken);
     await this.clientRepository.updateRefreshToken(client.id, hashedRefresh);
+
+    void this.emailService.sendWelcomeEmail(dto.email, dto.name);
 
     return tokens;
   }
