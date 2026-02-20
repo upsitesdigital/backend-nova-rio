@@ -1,3 +1,4 @@
+import { type Mock, vi } from 'vitest';
 import { UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ADMIN_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
@@ -8,27 +9,27 @@ import { RefreshTokenUseCase } from './refresh-token.use-case.js';
 
 describe('RefreshTokenUseCase', () => {
   let useCase: RefreshTokenUseCase;
-  let tokenService: { verifyRefreshToken: jest.Mock; generateTokens: jest.Mock };
-  let hashService: { compare: jest.Mock; hash: jest.Mock };
-  let clientRepository: { getRefreshToken: jest.Mock; updateRefreshToken: jest.Mock };
-  let adminRepository: { getRefreshToken: jest.Mock; updateRefreshToken: jest.Mock };
+  let tokenService: { verifyRefreshToken: Mock; generateTokens: Mock };
+  let hashService: { compare: Mock; hash: Mock };
+  let clientRepository: { getRefreshToken: Mock; updateRefreshToken: Mock };
+  let adminRepository: { getRefreshToken: Mock; updateRefreshToken: Mock };
 
   beforeEach(async () => {
     tokenService = {
-      verifyRefreshToken: jest.fn(),
-      generateTokens: jest.fn(),
+      verifyRefreshToken: vi.fn(),
+      generateTokens: vi.fn(),
     };
     hashService = {
-      compare: jest.fn(),
-      hash: jest.fn(),
+      compare: vi.fn(),
+      hash: vi.fn(),
     };
     clientRepository = {
-      getRefreshToken: jest.fn(),
-      updateRefreshToken: jest.fn(),
+      getRefreshToken: vi.fn(),
+      updateRefreshToken: vi.fn(),
     };
     adminRepository = {
-      getRefreshToken: jest.fn(),
-      updateRefreshToken: jest.fn(),
+      getRefreshToken: vi.fn(),
+      updateRefreshToken: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

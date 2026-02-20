@@ -1,3 +1,4 @@
+import { type Mock, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import type { AuthUser } from '../shared/types/auth-user.type.js';
 import { AuthController } from './auth.controller.js';
@@ -10,20 +11,20 @@ import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let clientRegisterUseCase: { execute: jest.Mock };
-  let clientLoginUseCase: { execute: jest.Mock };
-  let adminLoginUseCase: { execute: jest.Mock };
-  let refreshTokenUseCase: { execute: jest.Mock };
-  let forgotPasswordUseCase: { execute: jest.Mock };
-  let getProfileUseCase: { execute: jest.Mock };
+  let clientRegisterUseCase: { execute: Mock };
+  let clientLoginUseCase: { execute: Mock };
+  let adminLoginUseCase: { execute: Mock };
+  let refreshTokenUseCase: { execute: Mock };
+  let forgotPasswordUseCase: { execute: Mock };
+  let getProfileUseCase: { execute: Mock };
 
   beforeEach(async () => {
-    clientRegisterUseCase = { execute: jest.fn() };
-    clientLoginUseCase = { execute: jest.fn() };
-    adminLoginUseCase = { execute: jest.fn() };
-    refreshTokenUseCase = { execute: jest.fn() };
-    forgotPasswordUseCase = { execute: jest.fn() };
-    getProfileUseCase = { execute: jest.fn() };
+    clientRegisterUseCase = { execute: vi.fn() };
+    clientLoginUseCase = { execute: vi.fn() };
+    adminLoginUseCase = { execute: vi.fn() };
+    refreshTokenUseCase = { execute: vi.fn() };
+    forgotPasswordUseCase = { execute: vi.fn() };
+    getProfileUseCase = { execute: vi.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],

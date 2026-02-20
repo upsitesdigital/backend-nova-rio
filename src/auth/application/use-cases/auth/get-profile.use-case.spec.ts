@@ -1,3 +1,4 @@
+import { type Mock, vi } from 'vitest';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ADMIN_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
@@ -6,15 +7,15 @@ import { GetProfileUseCase } from './get-profile.use-case.js';
 
 describe('GetProfileUseCase', () => {
   let useCase: GetProfileUseCase;
-  let clientRepository: { findProfileById: jest.Mock };
-  let adminRepository: { findProfileById: jest.Mock };
+  let clientRepository: { findProfileById: Mock };
+  let adminRepository: { findProfileById: Mock };
 
   beforeEach(async () => {
     clientRepository = {
-      findProfileById: jest.fn(),
+      findProfileById: vi.fn(),
     };
     adminRepository = {
-      findProfileById: jest.fn(),
+      findProfileById: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

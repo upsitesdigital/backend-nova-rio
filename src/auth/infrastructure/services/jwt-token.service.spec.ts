@@ -1,3 +1,4 @@
+import { type Mock, vi } from 'vitest';
 import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -7,16 +8,16 @@ import { JwtTokenService } from './jwt-token.service.js';
 
 describe('JwtTokenService', () => {
   let service: JwtTokenService;
-  let jwtService: { signAsync: jest.Mock; verifyAsync: jest.Mock };
-  let configService: { getOrThrow: jest.Mock };
+  let jwtService: { signAsync: Mock; verifyAsync: Mock };
+  let configService: { getOrThrow: Mock };
 
   beforeEach(async () => {
     jwtService = {
-      signAsync: jest.fn(),
-      verifyAsync: jest.fn(),
+      signAsync: vi.fn(),
+      verifyAsync: vi.fn(),
     };
     configService = {
-      getOrThrow: jest.fn().mockReturnValue('secret'),
+      getOrThrow: vi.fn().mockReturnValue('secret'),
     };
 
     const module: TestingModule = await Test.createTestingModule({

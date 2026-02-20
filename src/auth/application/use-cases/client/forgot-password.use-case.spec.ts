@@ -1,15 +1,16 @@
+import { type Mock, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
 import { ForgotPasswordUseCase } from './forgot-password.use-case.js';
 
 describe('ForgotPasswordUseCase', () => {
   let useCase: ForgotPasswordUseCase;
-  let clientRepository: { findByEmail: jest.Mock; createVerificationCode: jest.Mock };
+  let clientRepository: { findByEmail: Mock; createVerificationCode: Mock };
 
   beforeEach(async () => {
     clientRepository = {
-      findByEmail: jest.fn(),
-      createVerificationCode: jest.fn(),
+      findByEmail: vi.fn(),
+      createVerificationCode: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
