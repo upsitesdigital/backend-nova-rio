@@ -9,6 +9,7 @@ describe('PrismaHolidayRepository', () => {
     holiday: {
       create: Mock;
       findMany: Mock;
+      findFirst: Mock;
       findUnique: Mock;
       update: Mock;
       delete: Mock;
@@ -21,6 +22,7 @@ describe('PrismaHolidayRepository', () => {
       holiday: {
         create: vi.fn(),
         findMany: vi.fn(),
+        findFirst: vi.fn(),
         findUnique: vi.fn(),
         update: vi.fn(),
         delete: vi.fn(),
@@ -77,6 +79,26 @@ describe('PrismaHolidayRepository', () => {
       },
       orderBy: { date: 'asc' },
     });
+  });
+
+  it('findBlockedHolidayByDate should return blocked holiday for date', async () => {
+    const holiday = { id: 1, date: new Date('2026-03-16'), name: 'Holiday', isBlocked: true };
+    prisma.holiday.findFirst.mockResolvedValue(holiday);
+
+    const result = await repository.findBlockedHolidayByDate(new Date('2026-03-16'));
+
+    expect(result).toEqual(holiday);
+    expect(prisma.holiday.findFirst).toHaveBeenCalledWith({
+      where: { date: new Date('2026-03-16'), isBlocked: true },
+    });
+  });
+
+  it('findBlockedHolidayByDate should return null when no blocked holiday', async () => {
+    prisma.holiday.findFirst.mockResolvedValue(null);
+
+    const result = await repository.findBlockedHolidayByDate(new Date('2026-03-16'));
+
+    expect(result).toBeNull();
   });
 
   it('findHolidayById should call prisma.holiday.findUnique', async () => {
