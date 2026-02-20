@@ -870,6 +870,145 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Holidays",
+      "item": [
+        {
+          "name": "Sync Holidays",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"year\": 2026\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/holidays/sync",
+              "host": ["{{base_url}}"],
+              "path": ["holidays", "sync"]
+            },
+            "description": "Sync holidays from BrasilAPI + RJ state/municipal + pontos facultativos for a given year"
+          },
+          "response": []
+        },
+        {
+          "name": "List Holidays",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/holidays",
+              "host": ["{{base_url}}"],
+              "path": ["holidays"],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2026",
+                  "description": "Filter by year (optional)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List all holidays, optionally filtered by year"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Holiday By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/holidays/{{holiday_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["holidays", "{{holiday_id}}"]
+            },
+            "description": "Get a holiday by its ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Holiday",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-06-12\",\n  \"name\": \"Custom Holiday\",\n  \"isBlocked\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/holidays",
+              "host": ["{{base_url}}"],
+              "path": ["holidays"]
+            },
+            "description": "Create a holiday manually. isBlocked controls whether it blocks scheduling."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Holiday",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isBlocked\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/holidays/{{holiday_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["holidays", "{{holiday_id}}"]
+            },
+            "description": "Update a holiday (name, date, or isBlocked toggle)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Holiday",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/holidays/{{holiday_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["holidays", "{{holiday_id}}"]
+            },
+            "description": "Hard delete a holiday by ID"
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "auth": {
@@ -917,6 +1056,11 @@
       "key": "unit_id",
       "value": "1",
       "description": "Unit ID for parameterized requests"
+    },
+    {
+      "key": "holiday_id",
+      "value": "1",
+      "description": "Holiday ID for parameterized requests"
     }
   ]
 }
