@@ -1,0 +1,54 @@
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { type Mock, vi } from 'vitest';
+import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
+import { CompleteAppointmentUseCase } from './complete-appointment.use-case.js';
+
+describe('CompleteAppointmentUseCase', () => {
+  let useCase: CompleteAppointmentUseCase;
+  let appointmentRepository: { findAppointmentById: Mock; completeAppointmentById: Mock };
+
+  beforeEach(async () => {
+    appointmentRepository = {
+      findAppointmentById: vi.fn(),
+      completeAppointmentById: vi.fn(),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        CompleteAppointmentUseCase,
+        { provide: APPOINTMENT_REPOSITORY, useValue: appointmentRepository },
+      ],
+    }).compile();
+
+    useCase = module.get<CompleteAppointmentUseCase>(CompleteAppointmentUseCase);
+  });
+
+  it('should be defined', () => {
+    expect(useCase).toBeDefined();
+  });
+
+  it('should throw NotFoundException when not found', async () => {
+    appointmentRepository.findAppointmentById.mockResolvedValue(null);
+
+    await expect(useCase.completeAppointmentById(1)).rejects.toThrow(NotFoundException);
+  });
+
+  it('should throw BadRequestException when not SCHEDULED', async () => {
+    appointmentRepository.findAppointmentById.mockResolvedValue({ id: 1, status: 'CANCELLED' });
+
+    await expect(useCase.completeAppointmentById(1)).rejects.toThrow(BadRequestException);
+  });
+
+  it('should complete appointment', async () => {
+    const appointment = { id: 1, status: 'SCHEDULED' };
+    const completed = { ...appointment, status: 'COMPLETED' };
+    appointmentRepository.findAppointmentById.mockResolvedValue(appointment);
+    appointmentRepository.completeAppointmentById.mockResolvedValue(completed);
+
+    const result = await useCase.completeAppointmentById(1);
+
+    expect(result.status).toBe('COMPLETED');
+    expect(appointmentRepository.completeAppointmentById).toHaveBeenCalledWith(1);
+  });
+});

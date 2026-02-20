@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "23a8a86b-d24d-4b63-9be0-ca4c138c58cd",
     "name": "Nova Rio Backend",
-    "description": "Nova Rio Backend API - Auth endpoints",
+    "description": "Nova Rio Backend API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "26758952"
   },
@@ -1084,6 +1084,318 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Admin Appointments",
+      "item": [
+        {
+          "name": "Create Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-03-16\",\n  \"startTime\": \"09:00\",\n  \"duration\": 120,\n  \"clientId\": 1,\n  \"serviceId\": {{service_id}},\n  \"employeeId\": {{employee_id}},\n  \"packageId\": {{package_id}},\n  \"unitId\": {{unit_id}},\n  \"recurrenceType\": \"SINGLE\",\n  \"locationZip\": \"20040-020\",\n  \"locationAddress\": \"Rua das Flores, 123\",\n  \"notes\": \"Levar produtos de limpeza\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/appointments",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "appointments"]
+            },
+            "description": "Create a new appointment (Admin only). Date must be a weekday and not a holiday. Duration max 480 min."
+          },
+          "response": []
+        },
+        {
+          "name": "List Appointments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/appointments",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "appointments"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-03-16",
+                  "description": "Filter by exact date (ISO format)",
+                  "disabled": true
+                },
+                {
+                  "key": "weekStart",
+                  "value": "2026-03-16",
+                  "description": "Filter by week start date",
+                  "disabled": true
+                },
+                {
+                  "key": "weekEnd",
+                  "value": "2026-03-20",
+                  "description": "Filter by week end date",
+                  "disabled": true
+                },
+                {
+                  "key": "employeeId",
+                  "value": "1",
+                  "description": "Filter by employee ID",
+                  "disabled": true
+                },
+                {
+                  "key": "unitId",
+                  "value": "1",
+                  "description": "Filter by unit ID",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "SCHEDULED",
+                  "description": "Filter by status (SCHEDULED, COMPLETED, CANCELLED)",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default 1)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Items per page (default 20, max 100)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List appointments with optional filters (Admin only). Supports date, week range, employee, unit, status, and pagination."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Appointment By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/appointments/{{appointment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "appointments", "{{appointment_id}}"]
+            },
+            "description": "Get an appointment by ID (Admin only). Returns full appointment with client, service, employee, package, and unit relations."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Appointment",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"duration\": 180,\n  \"notes\": \"Updated notes\",\n  \"employeeId\": {{employee_id}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/appointments/{{appointment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "appointments", "{{appointment_id}}"]
+            },
+            "description": "Update an appointment by ID (Admin only). All fields optional except clientId (immutable)."
+          },
+          "response": []
+        },
+        {
+          "name": "Reschedule Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-03-17\",\n  \"startTime\": \"10:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/appointments/{{appointment_id}}/reschedule",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "appointments", "{{appointment_id}}", "reschedule"]
+            },
+            "description": "Reschedule an appointment (Admin only). Creates a new SCHEDULED appointment linked via rescheduledFromId and cancels the original."
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Appointment",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/appointments/{{appointment_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "appointments", "{{appointment_id}}", "cancel"]
+            },
+            "description": "Cancel an appointment (Admin only). Only SCHEDULED appointments can be cancelled. Returns 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "Complete Appointment",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/appointments/{{appointment_id}}/complete",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "appointments", "{{appointment_id}}", "complete"]
+            },
+            "description": "Mark an appointment as completed (Admin only). Returns updated appointment with COMPLETED status."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Client Appointments",
+      "item": [
+        {
+          "name": "Create Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-03-16\",\n  \"startTime\": \"09:00\",\n  \"duration\": 120,\n  \"serviceId\": {{service_id}},\n  \"recurrenceType\": \"SINGLE\",\n  \"locationZip\": \"20040-020\",\n  \"locationAddress\": \"Rua das Flores, 123\",\n  \"notes\": \"Minha limpeza semanal\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/appointments",
+              "host": ["{{base_url}}"],
+              "path": ["appointments"]
+            },
+            "description": "Create a new appointment (Client only). clientId is extracted from JWT token. Date must be a weekday and not a holiday."
+          },
+          "response": []
+        },
+        {
+          "name": "List My Appointments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/appointments",
+              "host": ["{{base_url}}"],
+              "path": ["appointments"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default 1)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Items per page (default 20, max 100)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List authenticated client's appointments with pagination (Client only)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Appointment By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/appointments/{{appointment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["appointments", "{{appointment_id}}"]
+            },
+            "description": "Get an appointment by ID (Client only). Only returns appointments belonging to the authenticated client."
+          },
+          "response": []
+        },
+        {
+          "name": "Reschedule My Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-03-17\",\n  \"startTime\": \"10:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/appointments/{{appointment_id}}/reschedule",
+              "host": ["{{base_url}}"],
+              "path": ["appointments", "{{appointment_id}}", "reschedule"]
+            },
+            "description": "Reschedule own appointment (Client only). Creates a new SCHEDULED appointment and cancels the original."
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel My Appointment",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/appointments/{{appointment_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["appointments", "{{appointment_id}}", "cancel"]
+            },
+            "description": "Cancel own appointment (Client only). Only SCHEDULED appointments can be cancelled. Returns 204 No Content."
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "auth": {
@@ -1141,6 +1453,11 @@
       "key": "holiday_id",
       "value": "1",
       "description": "Holiday ID for parameterized requests"
+    },
+    {
+      "key": "appointment_id",
+      "value": "1",
+      "description": "Appointment ID for parameterized requests"
     }
   ]
 }

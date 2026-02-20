@@ -29,6 +29,12 @@ export class PrismaHolidayRepository implements IHolidayRepository {
     });
   }
 
+  async findBlockedHolidayByDate(date: Date): Promise<Holiday | null> {
+    return this.prisma.holiday.findFirst({
+      where: { date, isBlocked: true },
+    });
+  }
+
   async findHolidayById(id: number): Promise<Holiday | null> {
     return this.prisma.holiday.findUnique({ where: { id } });
   }

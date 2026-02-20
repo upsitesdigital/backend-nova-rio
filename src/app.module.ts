@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AdminUsersModule } from './admin-users/admin-users.module.js';
+import { AppointmentsModule } from './appointments/appointments.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
@@ -22,6 +23,7 @@ import { UnitsModule } from './units/units.module.js';
     PrismaModule,
     EmailModule,
     AuthModule,
+    AppointmentsModule,
     CardsModule,
     ServicesModule,
     AdminUsersModule,

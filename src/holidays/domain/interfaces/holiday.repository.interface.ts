@@ -19,6 +19,7 @@ export interface IHolidayRepository {
   createHoliday(data: CreateHolidayData): Promise<Holiday>;
   findAllHolidays(): Promise<Holiday[]>;
   findHolidaysByYear(year: number): Promise<Holiday[]>;
+  findBlockedHolidayByDate(date: Date): Promise<Holiday | null>;
   findHolidayById(id: number): Promise<Holiday | null>;
   updateHolidayById(id: number, data: UpdateHolidayData): Promise<Holiday>;
   deleteHolidayById(id: number): Promise<void>;
