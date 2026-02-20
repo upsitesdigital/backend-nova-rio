@@ -340,10 +340,12 @@ model Receipt {
 // ============================================================
 
 model Holiday {
-  id   Int      @id @default(autoincrement())
-  uuid String   @unique @default(uuid())
-  date DateTime @db.Date
-  name String
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid())
+  date      DateTime @db.Date
+  name      String
+  type      String   @default("national")
+  isBlocked Boolean  @default(true) @map("is_blocked")
 
   @@unique([date])
   @@map("holidays")
