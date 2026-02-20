@@ -6,6 +6,7 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
 import { ClientsModule } from './clients/clients.module.js';
+import { EmailModule } from './email/email.module.js';
 import { EmployeesModule } from './employees/employees.module.js';
 import { HolidaysModule } from './holidays/holidays.module.js';
 import { PackagesModule } from './packages/packages.module.js';
@@ -18,6 +19,7 @@ import { UnitsModule } from './units/units.module.js';
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     PrismaModule,
+    EmailModule,
     AuthModule,
     ServicesModule,
     AdminUsersModule,
