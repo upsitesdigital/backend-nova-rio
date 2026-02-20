@@ -872,6 +872,81 @@
       ]
     },
     {
+      "name": "Cards",
+      "item": [
+        {
+          "name": "Add Card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lastFourDigits\": \"1111\",\n  \"brand\": \"Visa\",\n  \"holderName\": \"João Silva\",\n  \"expiryMonth\": 12,\n  \"expiryYear\": 2028,\n  \"gatewayToken\": \"tok_abc123\",\n  \"isDefault\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/cards",
+              "host": ["{{base_url}}"],
+              "path": ["cards"]
+            },
+            "description": "Add a new card (Client only). Requires gateway token from payment provider. Frontend tokenizes card via gateway SDK."
+          },
+          "response": []
+        },
+        {
+          "name": "List Cards",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/cards",
+              "host": ["{{base_url}}"],
+              "path": ["cards"]
+            },
+            "description": "List all cards for the authenticated client (Client only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Card",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/cards/{{card_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["cards", "{{card_id}}"]
+            },
+            "description": "Remove a card by ID (Client only). Returns 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "Set Default Card",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/cards/{{card_id}}/default",
+              "host": ["{{base_url}}"],
+              "path": ["cards", "{{card_id}}", "default"]
+            },
+            "description": "Set a card as default (Client only). Unsets all other defaults first."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Holidays",
       "item": [
         {
@@ -1056,6 +1131,11 @@
       "key": "unit_id",
       "value": "1",
       "description": "Unit ID for parameterized requests"
+    },
+    {
+      "key": "card_id",
+      "value": "1",
+      "description": "Card ID for parameterized requests"
     },
     {
       "key": "holiday_id",
