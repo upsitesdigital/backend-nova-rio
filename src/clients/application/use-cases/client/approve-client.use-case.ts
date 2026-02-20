@@ -1,11 +1,14 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CLIENT_MGMT_REPOSITORY } from '../../../domain/interfaces/client-management.repository.interface.js';
 import type { IClientManagementRepository } from '../../../domain/interfaces/client-management.repository.interface.js';
+import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
+import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
 
 @Injectable()
 export class ApproveClientUseCase {
   constructor(
     @Inject(CLIENT_MGMT_REPOSITORY) private clientMgmtRepository: IClientManagementRepository,
+    @Inject(EMAIL_SERVICE) private emailService: IEmailService,
   ) {}
 
   async approveClientById(id: number): Promise<void> {
@@ -20,5 +23,7 @@ export class ApproveClientUseCase {
     }
 
     await this.clientMgmtRepository.approveClientById(id);
+
+    void this.emailService.sendClientApprovedEmail(client.email, client.name);
   }
 }

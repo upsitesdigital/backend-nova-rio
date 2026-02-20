@@ -2,6 +2,7 @@ import { type Mock, vi } from 'vitest';
 import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
+import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import { TOKEN_SERVICE } from '../../../domain/interfaces/token.service.interface.js';
 import { ClientRegisterUseCase } from './client-register.use-case.js';
@@ -13,6 +14,7 @@ describe('ClientRegisterUseCase', () => {
     create: Mock;
     updateRefreshToken: Mock;
   };
+  let emailService: { sendWelcomeEmail: Mock };
   let hashService: { hash: Mock };
   let tokenService: { generateTokens: Mock };
 
@@ -21,6 +23,9 @@ describe('ClientRegisterUseCase', () => {
       findByEmail: vi.fn(),
       create: vi.fn(),
       updateRefreshToken: vi.fn(),
+    };
+    emailService = {
+      sendWelcomeEmail: vi.fn().mockResolvedValue(undefined),
     };
     hashService = {
       hash: vi.fn(),
@@ -33,6 +38,7 @@ describe('ClientRegisterUseCase', () => {
       providers: [
         ClientRegisterUseCase,
         { provide: CLIENT_REPOSITORY, useValue: clientRepository },
+        { provide: EMAIL_SERVICE, useValue: emailService },
         { provide: HASH_SERVICE, useValue: hashService },
         { provide: TOKEN_SERVICE, useValue: tokenService },
       ],
@@ -90,5 +96,6 @@ describe('ClientRegisterUseCase', () => {
     });
     expect(hashService.hash).toHaveBeenCalledWith(tokens.refreshToken);
     expect(clientRepository.updateRefreshToken).toHaveBeenCalledWith(client.id, 'hashed_refresh');
+    expect(emailService.sendWelcomeEmail).toHaveBeenCalledWith(dto.email, dto.name);
   });
 });
