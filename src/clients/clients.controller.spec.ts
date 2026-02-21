@@ -38,17 +38,23 @@ describe('ClientsController', () => {
 
   it('listClients should call use case with query params', async () => {
     const query = { status: 'PENDING' as const };
+    const paginated = { data: [], total: 0, page: 1, limit: 20 };
+    listClientsUseCase.listClients.mockResolvedValue(paginated);
 
-    await controller.listClients(query);
+    const result = await controller.listClients(query);
 
+    expect(result).toEqual(paginated);
     expect(listClientsUseCase.listClients).toHaveBeenCalledWith(query);
   });
 
   it('listClients should call use case with search param', async () => {
     const query = { search: 'joao' };
+    const paginated = { data: [], total: 0, page: 1, limit: 20 };
+    listClientsUseCase.listClients.mockResolvedValue(paginated);
 
-    await controller.listClients(query);
+    const result = await controller.listClients(query);
 
+    expect(result).toEqual(paginated);
     expect(listClientsUseCase.listClients).toHaveBeenCalledWith(query);
   });
 
