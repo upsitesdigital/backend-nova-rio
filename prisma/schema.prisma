@@ -74,13 +74,17 @@ model AdminUser {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
-  refreshToken String?
+  refreshToken        String?
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  tokenFamily         String?
 
   // Admin master que criou este admin
   createdBy   AdminUser?  @relation("AdminCreator", fields: [createdById], references: [id])
   createdById Int?
   createdAdmins AdminUser[] @relation("AdminCreator")
 
+  @@index([createdById])
   @@map("admin_users")
 }
 
@@ -100,10 +104,13 @@ model Client {
   cpfCnpj     String?    @unique
   address     String?
   complement  String?
-  refreshToken String?
-  status       UserStatus @default(PENDING)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  refreshToken        String?
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  tokenFamily         String?
+  status              UserStatus @default(PENDING)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
 
   appointments Appointment[]
   payments     Payment[]
@@ -111,6 +118,9 @@ model Client {
   unit         Unit?        @relation(fields: [unitId], references: [id])
   unitId       Int?
 
+  verificationCodes VerificationCode[]
+
+  @@index([unitId])
   @@map("clients")
 }
 
@@ -136,6 +146,7 @@ model Card {
 
   payments Payment[]
 
+  @@index([clientId])
   @@map("cards")
 }
 
@@ -164,6 +175,7 @@ model Employee {
 
   appointments Appointment[]
 
+  @@index([unitId])
   @@map("employees")
 }
 
@@ -233,6 +245,7 @@ model Package {
 
   appointments Appointment[]
 
+  @@index([serviceId])
   @@map("packages")
 }
 
@@ -282,6 +295,7 @@ model Appointment {
   @@index([employeeId])
   @@index([employeeId, date, status])
   @@index([unitId])
+  @@index([clientId, status])
   @@map("appointments")
 }
 
@@ -367,6 +381,7 @@ model VerificationCode {
   usedAt    DateTime?
   createdAt DateTime @default(now())
 
+  client   Client @relation(fields: [clientId], references: [id])
   clientId Int
 
   @@index([clientId, type])

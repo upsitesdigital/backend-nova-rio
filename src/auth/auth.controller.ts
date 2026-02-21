@@ -1,4 +1,5 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -44,26 +45,28 @@ export class AuthController {
   @ApiBadRequestResponse({ description: 'Validation failed' })
   @ApiConflictResponse({ description: 'Email already registered' })
   clientRegister(@Body() dto: ClientRegisterDto) {
-    return this.clientRegisterUseCase.execute(dto);
+    return this.clientRegisterUseCase.registerClient(dto);
   }
 
   @Post('client/login')
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @ApiOperation({ summary: 'Client login' })
   @ApiCreatedResponse({ description: 'Login successful, returns token pair' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
   clientLogin(@Body() dto: ClientLoginDto) {
-    return this.clientLoginUseCase.execute(dto);
+    return this.clientLoginUseCase.loginClient(dto);
   }
 
   @Post('admin/login')
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @ApiOperation({ summary: 'Admin login' })
   @ApiCreatedResponse({ description: 'Login successful, returns token pair' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
   @ApiForbiddenResponse({ description: 'Account is not active' })
   adminLogin(@Body() dto: AdminLoginDto) {
-    return this.adminLoginUseCase.execute(dto);
+    return this.adminLoginUseCase.loginAdmin(dto);
   }
 
   @Post('refresh')
@@ -72,16 +75,17 @@ export class AuthController {
   @ApiBadRequestResponse({ description: 'Validation failed' })
   @ApiUnauthorizedResponse({ description: 'Invalid or revoked refresh token' })
   refreshToken(@Body() dto: RefreshTokenDto) {
-    return this.refreshTokenUseCase.execute(dto);
+    return this.refreshTokenUseCase.refreshTokens(dto);
   }
 
   @Post('forgot-password')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request password reset' })
   @ApiOkResponse({ description: 'Verification code sent if email exists' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
   forgotPassword(@Body() dto: ForgotPasswordDto) {
-    return this.forgotPasswordUseCase.execute(dto);
+    return this.forgotPasswordUseCase.requestPasswordReset(dto);
   }
 
   @ApiBearerAuth()
@@ -92,6 +96,6 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
   @ApiNotFoundResponse({ description: 'User profile not found' })
   getProfile(@CurrentUser() user: AuthUser) {
-    return this.getProfileUseCase.execute(user);
+    return this.getProfileUseCase.getProfile(user);
   }
 }

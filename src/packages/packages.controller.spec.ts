@@ -50,24 +50,16 @@ describe('PackagesController', () => {
     expect(createPackageUseCase.createPackage).toHaveBeenCalledWith(dto);
   });
 
-  it('listPackages should call listPackagesUseCase with no filters', async () => {
-    await controller.listPackages();
-    expect(listPackagesUseCase.listPackages).toHaveBeenCalledWith(false, undefined);
+  it('listPackages should call listPackagesUseCase with query', async () => {
+    const query = { page: 1, limit: 20 };
+    await controller.listPackages(query);
+    expect(listPackagesUseCase.listPackages).toHaveBeenCalledWith(query);
   });
 
-  it('listPackages should call listPackagesUseCase with active=true', async () => {
-    await controller.listPackages('true');
-    expect(listPackagesUseCase.listPackages).toHaveBeenCalledWith(true, undefined);
-  });
-
-  it('listPackages should call listPackagesUseCase with serviceId', async () => {
-    await controller.listPackages(undefined, '1');
-    expect(listPackagesUseCase.listPackages).toHaveBeenCalledWith(false, 1);
-  });
-
-  it('listPackages should call listPackagesUseCase with both filters', async () => {
-    await controller.listPackages('true', '1');
-    expect(listPackagesUseCase.listPackages).toHaveBeenCalledWith(true, 1);
+  it('listPackages should pass active and serviceId filters', async () => {
+    const query = { page: 1, limit: 20, active: true, serviceId: 1 };
+    await controller.listPackages(query);
+    expect(listPackagesUseCase.listPackages).toHaveBeenCalledWith(query);
   });
 
   it('getPackageById should call getPackageUseCase', async () => {

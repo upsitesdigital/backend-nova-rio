@@ -11,15 +11,16 @@ export class CreateEmployeeUseCase {
   constructor(@Inject(EMPLOYEE_REPOSITORY) private employeeRepository: IEmployeeRepository) {}
 
   async createEmployee(dto: CreateEmployeeDto): Promise<EmployeeSafe> {
-    const existingEmail = await this.employeeRepository.findEmployeeByEmail(dto.email);
+    const [existingByEmail, existingByCpf] = await Promise.all([
+      this.employeeRepository.findEmployeeByEmail(dto.email),
+      this.employeeRepository.findEmployeeByCpf(dto.cpf),
+    ]);
 
-    if (existingEmail) {
+    if (existingByEmail) {
       throw new ConflictException('Email already in use');
     }
 
-    const existingCpf = await this.employeeRepository.findEmployeeByCpf(dto.cpf);
-
-    if (existingCpf) {
+    if (existingByCpf) {
       throw new ConflictException('CPF already in use');
     }
 

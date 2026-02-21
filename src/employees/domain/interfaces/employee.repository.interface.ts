@@ -1,4 +1,5 @@
 import type { EmployeeStatus } from '@prisma/client';
+import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 
 export const EMPLOYEE_REPOSITORY = Symbol('EMPLOYEE_REPOSITORY');
 
@@ -49,11 +50,13 @@ export interface UpdateEmployeeData {
 export interface ListEmployeesFilters {
   status?: EmployeeStatus;
   search?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface IEmployeeRepository {
   createEmployee(data: CreateEmployeeData): Promise<EmployeeSafe>;
-  listEmployees(filters: ListEmployeesFilters): Promise<EmployeeSafe[]>;
+  listEmployees(filters: ListEmployeesFilters): Promise<PaginatedResponse<EmployeeSafe>>;
   findEmployeeById(id: number): Promise<EmployeeSafe | null>;
   findEmployeeByEmail(email: string): Promise<EmployeeSafe | null>;
   findEmployeeByCpf(cpf: string): Promise<EmployeeSafe | null>;

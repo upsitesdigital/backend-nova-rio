@@ -11,6 +11,7 @@ describe('PrismaPackageRepository', () => {
       findMany: Mock;
       findFirst: Mock;
       update: Mock;
+      count: Mock;
     };
   };
 
@@ -21,6 +22,7 @@ describe('PrismaPackageRepository', () => {
         findMany: vi.fn(),
         findFirst: vi.fn(),
         update: vi.fn(),
+        count: vi.fn(),
       },
     };
 
@@ -47,53 +49,83 @@ describe('PrismaPackageRepository', () => {
     expect(prisma.package.create).toHaveBeenCalledWith({ data });
   });
 
-  it('findPackages should return all packages when no filters', async () => {
+  it('findPackages should return paginated packages when no filters', async () => {
     const packages = [
       { id: 1, name: 'Pacote 10 horas', isActive: true },
       { id: 2, name: 'Pacote 20 horas', isActive: false },
     ];
 
     prisma.package.findMany.mockResolvedValue(packages);
+    prisma.package.count.mockResolvedValue(2);
 
-    const result = await repository.findPackages({});
+    const result = await repository.findPackages({ page: 1, limit: 20 });
 
-    expect(result).toEqual(packages);
-    expect(prisma.package.findMany).toHaveBeenCalledWith({ where: {} });
+    expect(result).toEqual({ data: packages, total: 2, page: 1, limit: 20 });
+    expect(prisma.package.findMany).toHaveBeenCalledWith({ where: {}, skip: 0, take: 20 });
+    expect(prisma.package.count).toHaveBeenCalledWith({ where: {} });
   });
 
   it('findPackages should filter by isActive when active is true', async () => {
     const packages = [{ id: 1, name: 'Pacote 10 horas', isActive: true }];
 
     prisma.package.findMany.mockResolvedValue(packages);
+    prisma.package.count.mockResolvedValue(1);
 
-    const result = await repository.findPackages({ active: true });
+    const result = await repository.findPackages({ page: 1, limit: 20, active: true });
 
-    expect(result).toEqual(packages);
-    expect(prisma.package.findMany).toHaveBeenCalledWith({ where: { isActive: true } });
+    expect(result).toEqual({ data: packages, total: 1, page: 1, limit: 20 });
+    expect(prisma.package.findMany).toHaveBeenCalledWith({
+      where: { isActive: true },
+      skip: 0,
+      take: 20,
+    });
   });
 
   it('findPackages should filter by serviceId', async () => {
     const packages = [{ id: 1, name: 'Pacote 10 horas', serviceId: 1 }];
 
     prisma.package.findMany.mockResolvedValue(packages);
+    prisma.package.count.mockResolvedValue(1);
 
-    const result = await repository.findPackages({ serviceId: 1 });
+    const result = await repository.findPackages({ page: 1, limit: 20, serviceId: 1 });
 
-    expect(result).toEqual(packages);
-    expect(prisma.package.findMany).toHaveBeenCalledWith({ where: { serviceId: 1 } });
+    expect(result).toEqual({ data: packages, total: 1, page: 1, limit: 20 });
+    expect(prisma.package.findMany).toHaveBeenCalledWith({
+      where: { serviceId: 1 },
+      skip: 0,
+      take: 20,
+    });
   });
 
   it('findPackages should combine active and serviceId filters', async () => {
     const packages = [{ id: 1, name: 'Pacote 10 horas', serviceId: 1, isActive: true }];
 
     prisma.package.findMany.mockResolvedValue(packages);
+    prisma.package.count.mockResolvedValue(1);
 
-    const result = await repository.findPackages({ active: true, serviceId: 1 });
+    const result = await repository.findPackages({
+      page: 1,
+      limit: 20,
+      active: true,
+      serviceId: 1,
+    });
 
-    expect(result).toEqual(packages);
+    expect(result).toEqual({ data: packages, total: 1, page: 1, limit: 20 });
     expect(prisma.package.findMany).toHaveBeenCalledWith({
       where: { isActive: true, serviceId: 1 },
+      skip: 0,
+      take: 20,
     });
+  });
+
+  it('findPackages should calculate skip for page 2', async () => {
+    prisma.package.findMany.mockResolvedValue([]);
+    prisma.package.count.mockResolvedValue(25);
+
+    const result = await repository.findPackages({ page: 2, limit: 10 });
+
+    expect(result).toEqual({ data: [], total: 25, page: 2, limit: 10 });
+    expect(prisma.package.findMany).toHaveBeenCalledWith({ where: {}, skip: 10, take: 10 });
   });
 
   it('findPackageById should filter by id and isActive true', async () => {

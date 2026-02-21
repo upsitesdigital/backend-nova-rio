@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
 import type {
   AppointmentResponse,
+  ClientConflictCheckParams,
   ConflictCheckParams,
   IAppointmentRepository,
 } from '../../../domain/interfaces/appointment.repository.interface.js';
@@ -30,6 +31,17 @@ export class CreateAppointmentUseCase {
       };
     }
 
-    return this.appointmentRepository.createAppointment({ ...dto, date }, conflictCheck);
+    const clientConflictCheck: ClientConflictCheckParams = {
+      clientId: dto.clientId,
+      date,
+      startTime: dto.startTime,
+      duration: dto.duration,
+    };
+
+    return this.appointmentRepository.createAppointment(
+      { ...dto, date },
+      conflictCheck,
+      clientConflictCheck,
+    );
   }
 }

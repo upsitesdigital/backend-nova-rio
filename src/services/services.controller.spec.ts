@@ -46,9 +46,10 @@ describe('ServicesController', () => {
     expect(createServiceUseCase.createService).toHaveBeenCalledWith(dto);
   });
 
-  it('listServices should call listServicesUseCase', async () => {
-    await controller.listServices();
-    expect(listServicesUseCase.listActiveServices).toHaveBeenCalled();
+  it('listServices should call listServicesUseCase with query', async () => {
+    const query = { page: 1, limit: 20 };
+    await controller.listServices(query);
+    expect(listServicesUseCase.listActiveServices).toHaveBeenCalledWith(query);
   });
 
   it('getServiceById should call getServiceUseCase', async () => {

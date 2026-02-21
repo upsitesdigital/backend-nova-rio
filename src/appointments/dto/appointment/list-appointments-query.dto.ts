@@ -1,9 +1,10 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsDateString, IsEnum, IsInt, IsOptional, IsPositive, Max, Min } from 'class-validator';
+import { IsDateString, IsEnum, IsInt, IsOptional, IsPositive } from 'class-validator';
 import { AppointmentStatus } from '@prisma/client';
+import { PaginationQueryDto } from '../../../shared/dto/pagination-query.dto.js';
 
-export class ListAppointmentsQueryDto {
+export class ListAppointmentsQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({ example: '2026-03-15' })
   @IsDateString()
   @IsOptional()
@@ -37,19 +38,4 @@ export class ListAppointmentsQueryDto {
   @IsEnum(AppointmentStatus)
   @IsOptional()
   status?: AppointmentStatus;
-
-  @ApiPropertyOptional({ example: 1, default: 1 })
-  @Transform(({ value }) => (value ? parseInt(value as string, 10) : 1))
-  @IsInt()
-  @Min(1)
-  @IsOptional()
-  page?: number = 1;
-
-  @ApiPropertyOptional({ example: 20, default: 20 })
-  @Transform(({ value }) => (value ? parseInt(value as string, 10) : 20))
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  @IsOptional()
-  limit?: number = 20;
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
+import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 import type {
   ClientSafe,
   IClientManagementRepository,
@@ -28,8 +29,10 @@ const CLIENT_SAFE_SELECT = {
 export class PrismaClientManagementRepository implements IClientManagementRepository {
   constructor(private prisma: PrismaService) {}
 
-  async listClients(filters: ListClientsFilters): Promise<ClientSafe[]> {
+  async listClients(filters: ListClientsFilters): Promise<PaginatedResponse<ClientSafe>> {
     const where: Prisma.ClientWhereInput = {};
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 20;
 
     if (filters.status) {
       where.status = filters.status;
@@ -43,11 +46,18 @@ export class PrismaClientManagementRepository implements IClientManagementReposi
       ];
     }
 
-    return this.prisma.client.findMany({
-      where,
-      select: CLIENT_SAFE_SELECT,
-      orderBy: { createdAt: 'desc' },
-    });
+    const [data, total] = await Promise.all([
+      this.prisma.client.findMany({
+        where,
+        select: CLIENT_SAFE_SELECT,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.client.count({ where }),
+    ]);
+
+    return { data, total, page, limit };
   }
 
   async findClientById(id: number): Promise<ClientSafe | null> {

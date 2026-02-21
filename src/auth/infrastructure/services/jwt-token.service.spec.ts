@@ -17,7 +17,7 @@ describe('JwtTokenService', () => {
       verifyAsync: vi.fn(),
     };
     configService = {
-      getOrThrow: vi.fn().mockReturnValue('secret'),
+      getOrThrow: vi.fn().mockReturnValueOnce('secret').mockReturnValueOnce('refresh-secret'),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -52,7 +52,7 @@ describe('JwtTokenService', () => {
     const result = await service.verifyRefreshToken('token');
 
     expect(result).toBe(payload);
-    expect(jwtService.verifyAsync).toHaveBeenCalledWith('token', { secret: 'secret' });
+    expect(jwtService.verifyAsync).toHaveBeenCalledWith('token', { secret: 'refresh-secret' });
   });
 
   it('verifyRefreshToken should throw UnauthorizedException if invalid', async () => {

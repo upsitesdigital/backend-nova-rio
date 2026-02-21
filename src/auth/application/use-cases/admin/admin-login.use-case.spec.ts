@@ -8,7 +8,13 @@ import { AdminLoginUseCase } from './admin-login.use-case.js';
 
 describe('AdminLoginUseCase', () => {
   let useCase: AdminLoginUseCase;
-  let adminRepository: { findByEmail: Mock; updateRefreshToken: Mock };
+  let adminRepository: {
+    findByEmail: Mock;
+    updateRefreshToken: Mock;
+    incrementFailedLoginAttempts: Mock;
+    resetFailedLoginAttempts: Mock;
+    updateRefreshTokenWithFamily: Mock;
+  };
   let hashService: { compare: Mock; hash: Mock };
   let tokenService: { generateTokens: Mock };
 
@@ -16,6 +22,9 @@ describe('AdminLoginUseCase', () => {
     adminRepository = {
       findByEmail: vi.fn(),
       updateRefreshToken: vi.fn(),
+      incrementFailedLoginAttempts: vi.fn(),
+      resetFailedLoginAttempts: vi.fn(),
+      updateRefreshTokenWithFamily: vi.fn(),
     };
     hashService = {
       compare: vi.fn(),
@@ -45,7 +54,7 @@ describe('AdminLoginUseCase', () => {
     adminRepository.findByEmail.mockResolvedValue(null);
 
     await expect(
-      useCase.execute({ email: 'test@example.com', password: 'password' }),
+      useCase.loginAdmin({ email: 'test@example.com', password: 'password' }),
     ).rejects.toThrow(UnauthorizedException);
   });
 
@@ -54,34 +63,40 @@ describe('AdminLoginUseCase', () => {
       id: 1,
       email: 'test@example.com',
       status: 'INACTIVE',
+      lockedUntil: null,
     });
 
     await expect(
-      useCase.execute({ email: 'test@example.com', password: 'password' }),
+      useCase.loginAdmin({ email: 'test@example.com', password: 'password' }),
     ).rejects.toThrow(ForbiddenException);
   });
 
-  it('should throw UnauthorizedException if password is invalid', async () => {
+  it('should throw UnauthorizedException and increment failed attempts if password is invalid', async () => {
     adminRepository.findByEmail.mockResolvedValue({
       id: 1,
       email: 'test@example.com',
       password: 'hashedPassword',
       status: 'ACTIVE',
+      lockedUntil: null,
+      failedLoginAttempts: 0,
     });
     hashService.compare.mockResolvedValue(false);
 
     await expect(
-      useCase.execute({ email: 'test@example.com', password: 'password' }),
+      useCase.loginAdmin({ email: 'test@example.com', password: 'password' }),
     ).rejects.toThrow(UnauthorizedException);
+    expect(adminRepository.incrementFailedLoginAttempts).toHaveBeenCalledWith(1);
   });
 
-  it('should return tokens and update refresh token on success', async () => {
+  it('should return tokens, reset attempts, and store token family on success', async () => {
     const admin = {
       id: 1,
       email: 'test@example.com',
       password: 'hashedPassword',
       status: 'ACTIVE',
       role: 'ADMIN',
+      lockedUntil: null,
+      failedLoginAttempts: 0,
     };
     const tokens = {
       accessToken: 'access',
@@ -93,12 +108,13 @@ describe('AdminLoginUseCase', () => {
     tokenService.generateTokens.mockResolvedValue(tokens);
     hashService.hash.mockResolvedValue('hashedRefresh');
 
-    const result = await useCase.execute({
+    const result = await useCase.loginAdmin({
       email: 'test@example.com',
       password: 'password',
     });
 
     expect(result).toEqual(tokens);
+    expect(adminRepository.resetFailedLoginAttempts).toHaveBeenCalledWith(admin.id);
     expect(tokenService.generateTokens).toHaveBeenCalledWith({
       sub: admin.id,
       email: admin.email,
@@ -106,6 +122,10 @@ describe('AdminLoginUseCase', () => {
       role: admin.role,
     });
     expect(hashService.hash).toHaveBeenCalledWith(tokens.refreshToken);
-    expect(adminRepository.updateRefreshToken).toHaveBeenCalledWith(admin.id, 'hashedRefresh');
+    expect(adminRepository.updateRefreshTokenWithFamily).toHaveBeenCalledWith(
+      admin.id,
+      'hashedRefresh',
+      expect.any(String),
+    );
   });
 });

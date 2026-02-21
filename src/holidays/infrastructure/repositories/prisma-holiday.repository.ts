@@ -54,4 +54,25 @@ export class PrismaHolidayRepository implements IHolidayRepository {
       create: data,
     });
   }
+
+  async bulkUpsertHolidays(holidays: CreateHolidayData[]): Promise<void> {
+    await this.prisma.$transaction(
+      holidays.map((holiday) =>
+        this.prisma.holiday.upsert({
+          where: { date: holiday.date },
+          update: {
+            name: holiday.name,
+            type: holiday.type ?? 'national',
+            isBlocked: holiday.isBlocked ?? true,
+          },
+          create: {
+            date: holiday.date,
+            name: holiday.name,
+            type: holiday.type ?? 'national',
+            isBlocked: holiday.isBlocked ?? true,
+          },
+        }),
+      ),
+    );
+  }
 }

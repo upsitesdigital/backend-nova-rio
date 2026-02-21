@@ -46,9 +46,10 @@ describe('UnitsController', () => {
     expect(createUnitUseCase.createUnit).toHaveBeenCalledWith(dto);
   });
 
-  it('listUnits should call listUnitsUseCase', async () => {
-    await controller.listUnits();
-    expect(listUnitsUseCase.listUnits).toHaveBeenCalled();
+  it('listUnits should call listUnitsUseCase with query', async () => {
+    const query = { page: 1, limit: 20 };
+    await controller.listUnits(query);
+    expect(listUnitsUseCase.listUnits).toHaveBeenCalledWith(query);
   });
 
   it('getUnitById should call getUnitUseCase', async () => {

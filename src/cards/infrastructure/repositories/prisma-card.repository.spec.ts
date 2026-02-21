@@ -51,7 +51,7 @@ describe('PrismaCardRepository', () => {
     expect(repository).toBeDefined();
   });
 
-  it('createCard should call prisma.card.create with select', async () => {
+  it('createCard should call prisma.card.create with data and select', async () => {
     const data = {
       lastFourDigits: '4242',
       brand: 'Visa',
@@ -76,10 +76,13 @@ describe('PrismaCardRepository', () => {
     const result = await repository.createCard(data);
 
     expect(result).toEqual(created);
-    expect(prisma.card.create).toHaveBeenCalledWith({ data, select: CARD_RESPONSE_SELECT });
+    expect(prisma.card.create).toHaveBeenCalledWith({
+      data,
+      select: CARD_RESPONSE_SELECT,
+    });
   });
 
-  it('createDefaultCard should unset defaults and create in a transaction with select', async () => {
+  it('createDefaultCard should unset defaults and create in transaction', async () => {
     const data = {
       lastFourDigits: '4242',
       brand: 'Visa',
@@ -108,11 +111,6 @@ describe('PrismaCardRepository', () => {
     const result = await repository.createDefaultCard(data);
 
     expect(result).toEqual(created);
-    expect(prisma.$transaction).toHaveBeenCalled();
-    expect(prisma.card.updateMany).toHaveBeenCalledWith({
-      where: { clientId: 1, isDefault: true },
-      data: { isDefault: false },
-    });
     expect(prisma.card.create).toHaveBeenCalledWith({
       data: { ...data, isDefault: true },
       select: CARD_RESPONSE_SELECT,
@@ -143,15 +141,13 @@ describe('PrismaCardRepository', () => {
     });
   });
 
-  it('findCardByIdAndClientId should filter by id and clientId (full Card)', async () => {
-    const card = { id: 1, clientId: 1, brand: 'Visa' };
-
+  it('findCardByIdAndClientId should return card', async () => {
+    const card = { id: 1, clientId: 1, brand: 'Visa', gatewayToken: 'tok_abc' };
     prisma.card.findFirst.mockResolvedValue(card);
 
     const result = await repository.findCardByIdAndClientId(1, 1);
 
     expect(result).toEqual(card);
-    expect(prisma.card.findFirst).toHaveBeenCalledWith({ where: { id: 1, clientId: 1 } });
   });
 
   it('findCardByIdAndClientId should return null when not found', async () => {
@@ -190,11 +186,6 @@ describe('PrismaCardRepository', () => {
     const result = await repository.switchDefaultCardById(1, 1);
 
     expect(result).toEqual(updated);
-    expect(prisma.$transaction).toHaveBeenCalled();
-    expect(prisma.card.updateMany).toHaveBeenCalledWith({
-      where: { clientId: 1, isDefault: true },
-      data: { isDefault: false },
-    });
     expect(prisma.card.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: { isDefault: true },

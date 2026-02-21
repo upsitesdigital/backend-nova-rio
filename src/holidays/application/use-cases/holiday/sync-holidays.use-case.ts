@@ -72,10 +72,8 @@ export class SyncHolidaysUseCase {
       );
     }
 
-    const upserted = await Promise.all(
-      allHolidays.map((h) => this.holidayRepository.upsertHolidayByDate(h)),
-    );
+    await this.holidayRepository.bulkUpsertHolidays(allHolidays);
 
-    return { synced: upserted.length, holidays: upserted };
+    return { synced: allHolidays.length, holidays: allHolidays };
   }
 }

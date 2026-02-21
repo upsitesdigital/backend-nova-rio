@@ -22,7 +22,10 @@ export class PrismaCardRepository implements ICardRepository {
   constructor(private prisma: PrismaService) {}
 
   async createCard(data: CreateCardData): Promise<CardResponse> {
-    return this.prisma.card.create({ data, select: CARD_RESPONSE_SELECT });
+    return this.prisma.card.create({
+      data,
+      select: CARD_RESPONSE_SELECT,
+    });
   }
 
   async createDefaultCard(data: CreateCardData): Promise<CardResponse> {
@@ -31,7 +34,10 @@ export class PrismaCardRepository implements ICardRepository {
         where: { clientId: data.clientId, isDefault: true },
         data: { isDefault: false },
       });
-      return tx.card.create({ data: { ...data, isDefault: true }, select: CARD_RESPONSE_SELECT });
+      return tx.card.create({
+        data: { ...data, isDefault: true },
+        select: CARD_RESPONSE_SELECT,
+      });
     });
   }
 

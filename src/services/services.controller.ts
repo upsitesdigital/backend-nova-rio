@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -31,6 +32,7 @@ import { GetServiceUseCase } from './application/use-cases/service/get-service.u
 import { ListServicesUseCase } from './application/use-cases/service/list-services.use-case.js';
 import { UpdateServiceUseCase } from './application/use-cases/service/update-service.use-case.js';
 import { CreateServiceDto } from './dto/service/create-service.dto.js';
+import { ListServicesQueryDto } from './dto/service/list-services-query.dto.js';
 import { UpdateServiceDto } from './dto/service/update-service.dto.js';
 
 @ApiTags('Services')
@@ -58,10 +60,10 @@ export class ServicesController {
 
   @Get()
   @ApiOperation({ summary: 'List all active services' })
-  @ApiOkResponse({ description: 'Returns list of active services' })
+  @ApiOkResponse({ description: 'Returns paginated list of active services' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
-  listServices() {
-    return this.listServicesUseCase.listActiveServices();
+  listServices(@Query() query: ListServicesQueryDto) {
+    return this.listServicesUseCase.listActiveServices(query);
   }
 
   @Get(':id')

@@ -25,26 +25,45 @@ describe('ListClientsUseCase', () => {
   });
 
   it('should list clients without filters', async () => {
-    const clients = [{ id: 1, name: 'João' }];
-    clientMgmtRepository.listClients.mockResolvedValue(clients);
+    const paginated = { data: [{ id: 1, name: 'João' }], total: 1, page: 1, limit: 20 };
+    clientMgmtRepository.listClients.mockResolvedValue(paginated);
 
     const result = await useCase.listClients({});
 
-    expect(result).toEqual(clients);
+    expect(result).toEqual(paginated);
     expect(clientMgmtRepository.listClients).toHaveBeenCalledWith({
       status: undefined,
       search: undefined,
+      page: undefined,
+      limit: undefined,
     });
   });
 
   it('should pass status and search filters to repository', async () => {
-    clientMgmtRepository.listClients.mockResolvedValue([]);
+    const paginated = { data: [], total: 0, page: 1, limit: 20 };
+    clientMgmtRepository.listClients.mockResolvedValue(paginated);
 
     await useCase.listClients({ status: 'PENDING', search: 'maria' });
 
     expect(clientMgmtRepository.listClients).toHaveBeenCalledWith({
       status: 'PENDING',
       search: 'maria',
+      page: undefined,
+      limit: undefined,
+    });
+  });
+
+  it('should pass page and limit to repository', async () => {
+    const paginated = { data: [], total: 0, page: 2, limit: 10 };
+    clientMgmtRepository.listClients.mockResolvedValue(paginated);
+
+    await useCase.listClients({ page: 2, limit: 10 });
+
+    expect(clientMgmtRepository.listClients).toHaveBeenCalledWith({
+      status: undefined,
+      search: undefined,
+      page: 2,
+      limit: 10,
     });
   });
 });

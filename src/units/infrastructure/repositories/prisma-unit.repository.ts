@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import type { Unit } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
+import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 import type {
   CreateUnitData,
   IUnitRepository,
+  ListUnitsFilters,
   UpdateUnitData,
 } from '../../domain/interfaces/unit.repository.interface.js';
 
@@ -15,8 +17,15 @@ export class PrismaUnitRepository implements IUnitRepository {
     return this.prisma.unit.create({ data });
   }
 
-  async listUnits(): Promise<Unit[]> {
-    return this.prisma.unit.findMany({ orderBy: { name: 'asc' } });
+  async listUnits(filters: ListUnitsFilters): Promise<PaginatedResponse<Unit>> {
+    const skip = (filters.page - 1) * filters.limit;
+
+    const [data, total] = await Promise.all([
+      this.prisma.unit.findMany({ orderBy: { name: 'asc' }, skip, take: filters.limit }),
+      this.prisma.unit.count(),
+    ]);
+
+    return { data, total, page: filters.page, limit: filters.limit };
   }
 
   async findUnitById(id: number): Promise<Unit | null> {

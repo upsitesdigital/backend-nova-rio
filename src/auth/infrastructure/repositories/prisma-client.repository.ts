@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
-import {
+import type {
   ClientData,
   ClientProfile,
   CreateClientData,
   IClientRepository,
+  VerificationCodeRecord,
 } from '../../domain/interfaces/client.repository.interface.js';
+
+const LOCKOUT_THRESHOLD = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 
 @Injectable()
 export class PrismaClientRepository implements IClientRepository {
@@ -56,6 +60,59 @@ export class PrismaClientRepository implements IClientRepository {
     return result?.refreshToken ?? null;
   }
 
+  async incrementFailedLoginAttempts(id: number): Promise<void> {
+    const client = await this.prisma.client.update({
+      where: { id },
+      data: { failedLoginAttempts: { increment: 1 } },
+      select: { failedLoginAttempts: true },
+    });
+
+    if (client.failedLoginAttempts >= LOCKOUT_THRESHOLD) {
+      await this.prisma.client.update({
+        where: { id },
+        data: { lockedUntil: new Date(Date.now() + LOCKOUT_DURATION_MS) },
+      });
+    }
+  }
+
+  async resetFailedLoginAttempts(id: number): Promise<void> {
+    await this.prisma.client.update({
+      where: { id },
+      data: { failedLoginAttempts: 0, lockedUntil: null },
+    });
+  }
+
+  async updateRefreshTokenWithFamily(
+    id: number,
+    refreshToken: string,
+    tokenFamily: string,
+  ): Promise<void> {
+    await this.prisma.client.update({
+      where: { id },
+      data: { refreshToken, tokenFamily },
+    });
+  }
+
+  async getRefreshTokenAndFamily(
+    id: number,
+  ): Promise<{ refreshToken: string | null; tokenFamily: string | null }> {
+    const result = await this.prisma.client.findUnique({
+      where: { id },
+      select: { refreshToken: true, tokenFamily: true },
+    });
+    return {
+      refreshToken: result?.refreshToken ?? null,
+      tokenFamily: (result?.tokenFamily as string | null) ?? null,
+    };
+  }
+
+  async revokeTokenFamily(id: number): Promise<void> {
+    await this.prisma.client.update({
+      where: { id },
+      data: { refreshToken: null, tokenFamily: null },
+    });
+  }
+
   async createVerificationCode(
     clientId: number,
     code: string,
@@ -65,6 +122,34 @@ export class PrismaClientRepository implements IClientRepository {
   ): Promise<void> {
     await this.prisma.verificationCode.create({
       data: { code, type, channel, expiresAt, clientId },
+    });
+  }
+
+  async deleteVerificationCodesByClientId(clientId: number, type: string): Promise<void> {
+    await this.prisma.verificationCode.deleteMany({
+      where: { clientId, type },
+    });
+  }
+
+  async findActiveVerificationCodes(
+    clientId: number,
+    type: string,
+  ): Promise<VerificationCodeRecord[]> {
+    return this.prisma.verificationCode.findMany({
+      where: {
+        clientId,
+        type,
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      select: { id: true, code: true, expiresAt: true },
+    });
+  }
+
+  async markVerificationCodeAsUsed(id: number): Promise<void> {
+    await this.prisma.verificationCode.update({
+      where: { id },
+      data: { usedAt: new Date() },
     });
   }
 }

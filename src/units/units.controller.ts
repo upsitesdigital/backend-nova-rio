@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -32,6 +33,7 @@ import { GetUnitUseCase } from './application/use-cases/unit/get-unit.use-case.j
 import { ListUnitsUseCase } from './application/use-cases/unit/list-units.use-case.js';
 import { UpdateUnitUseCase } from './application/use-cases/unit/update-unit.use-case.js';
 import { CreateUnitDto } from './dto/unit/create-unit.dto.js';
+import { ListUnitsQueryDto } from './dto/unit/list-units-query.dto.js';
 import { UpdateUnitDto } from './dto/unit/update-unit.dto.js';
 
 @ApiTags('Units')
@@ -60,10 +62,10 @@ export class UnitsController {
 
   @Get()
   @ApiOperation({ summary: 'List all units' })
-  @ApiOkResponse({ description: 'Returns list of units' })
+  @ApiOkResponse({ description: 'Returns paginated list of units' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
-  listUnits() {
-    return this.listUnitsUseCase.listUnits();
+  listUnits(@Query() query: ListUnitsQueryDto) {
+    return this.listUnitsUseCase.listUnits(query);
   }
 
   @Get(':id')
