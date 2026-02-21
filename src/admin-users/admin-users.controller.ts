@@ -55,6 +55,7 @@ export class AdminUsersController {
   ) {}
 
   @Post()
+  @Roles('ADMIN_MASTER')
   @ApiOperation({ summary: 'Create a new admin user' })
   @ApiCreatedResponse({ description: 'Admin user created successfully' })
   @ApiConflictResponse({ description: 'Email already in use' })
@@ -82,6 +83,7 @@ export class AdminUsersController {
   }
 
   @Delete(':id')
+  @Roles('ADMIN_MASTER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Soft delete an admin user (set status INACTIVE)' })
   @ApiNoContentResponse({ description: 'Admin user deactivated successfully' })

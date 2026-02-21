@@ -1,8 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { UserStatus } from '@prisma/client';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { PaginationQueryDto } from '../../../shared/dto/pagination-query.dto.js';
 
-export class ListAdminUsersQueryDto {
+export class ListAdminUsersQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({ enum: UserStatus })
   @IsEnum(UserStatus)
   @IsOptional()

@@ -49,9 +49,12 @@ describe('AdminUsersController', () => {
 
   it('listAdminUsers should call use case with query params', async () => {
     const query = { status: 'ACTIVE' as const };
+    const paginated = { data: [], total: 0, page: 1, limit: 20 };
+    listAdminUsersUseCase.listAdminUsers.mockResolvedValue(paginated);
 
-    await controller.listAdminUsers(query);
+    const result = await controller.listAdminUsers(query);
 
+    expect(result).toEqual(paginated);
     expect(listAdminUsersUseCase.listAdminUsers).toHaveBeenCalledWith(query);
   });
 
