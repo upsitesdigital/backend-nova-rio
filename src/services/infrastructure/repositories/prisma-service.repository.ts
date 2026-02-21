@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import type { Service } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
+import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 import type {
   CreateServiceData,
   IServiceRepository,
+  ListServicesFilters,
   UpdateServiceData,
 } from '../../domain/interfaces/service.repository.interface.js';
 
@@ -15,8 +17,16 @@ export class PrismaServiceRepository implements IServiceRepository {
     return this.prisma.service.create({ data });
   }
 
-  async findAllActiveServices(): Promise<Service[]> {
-    return this.prisma.service.findMany({ where: { isActive: true } });
+  async findAllActiveServices(filters: ListServicesFilters): Promise<PaginatedResponse<Service>> {
+    const where = { isActive: true };
+    const skip = (filters.page - 1) * filters.limit;
+
+    const [data, total] = await Promise.all([
+      this.prisma.service.findMany({ where, skip, take: filters.limit }),
+      this.prisma.service.count({ where }),
+    ]);
+
+    return { data, total, page: filters.page, limit: filters.limit };
   }
 
   async findServiceById(id: number): Promise<Service | null> {
