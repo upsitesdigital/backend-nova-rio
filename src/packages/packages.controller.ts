@@ -20,7 +20,6 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -34,6 +33,7 @@ import { ListPackagesUseCase } from './application/use-cases/package/list-packag
 import { ReactivatePackageUseCase } from './application/use-cases/package/reactivate-package.use-case.js';
 import { UpdatePackageUseCase } from './application/use-cases/package/update-package.use-case.js';
 import { CreatePackageDto } from './dto/package/create-package.dto.js';
+import { ListPackagesQueryDto } from './dto/package/list-packages-query.dto.js';
 import { UpdatePackageDto } from './dto/package/update-package.dto.js';
 
 @ApiTags('Packages')
@@ -62,26 +62,11 @@ export class PackagesController {
 
   @Get()
   @ApiOperation({ summary: 'List packages with optional filters' })
-  @ApiQuery({
-    name: 'active',
-    required: false,
-    type: Boolean,
-    description: 'Filter by active status',
-  })
-  @ApiQuery({
-    name: 'serviceId',
-    required: false,
-    type: Number,
-    description: 'Filter by service ID',
-  })
-  @ApiOkResponse({ description: 'Returns list of packages' })
+  @ApiOkResponse({ description: 'Returns paginated list of packages' })
   @ApiBadRequestResponse({ description: 'Service not found or inactive' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
-  listPackages(@Query('active') active?: string, @Query('serviceId') serviceId?: string) {
-    return this.listPackagesUseCase.listPackages(
-      active === 'true',
-      serviceId ? Number(serviceId) : undefined,
-    );
+  listPackages(@Query() query: ListPackagesQueryDto) {
+    return this.listPackagesUseCase.listPackages(query);
   }
 
   @Get(':id')

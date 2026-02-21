@@ -24,4 +24,5 @@ export interface IHolidayRepository {
   updateHolidayById(id: number, data: UpdateHolidayData): Promise<Holiday>;
   deleteHolidayById(id: number): Promise<void>;
   upsertHolidayByDate(data: CreateHolidayData): Promise<Holiday>;
+  bulkUpsertHolidays(holidays: CreateHolidayData[]): Promise<void>;
 }

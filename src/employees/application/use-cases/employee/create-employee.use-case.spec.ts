@@ -63,6 +63,7 @@ describe('CreateEmployeeUseCase', () => {
     };
 
     employeeRepository.findEmployeeByEmail.mockResolvedValue({ id: 2, email: 'maria@example.com' });
+    employeeRepository.findEmployeeByCpf.mockResolvedValue(null);
 
     await expect(useCase.createEmployee(dto)).rejects.toThrow(ConflictException);
     expect(employeeRepository.createEmployee).not.toHaveBeenCalled();

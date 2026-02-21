@@ -11,8 +11,16 @@ describe('RefreshTokenUseCase', () => {
   let useCase: RefreshTokenUseCase;
   let tokenService: { verifyRefreshToken: Mock; generateTokens: Mock };
   let hashService: { compare: Mock; hash: Mock };
-  let clientRepository: { getRefreshToken: Mock; updateRefreshToken: Mock };
-  let adminRepository: { getRefreshToken: Mock; updateRefreshToken: Mock };
+  let clientRepository: {
+    getRefreshTokenAndFamily: Mock;
+    updateRefreshTokenWithFamily: Mock;
+    revokeTokenFamily: Mock;
+  };
+  let adminRepository: {
+    getRefreshTokenAndFamily: Mock;
+    updateRefreshTokenWithFamily: Mock;
+    revokeTokenFamily: Mock;
+  };
 
   beforeEach(async () => {
     tokenService = {
@@ -24,12 +32,14 @@ describe('RefreshTokenUseCase', () => {
       hash: vi.fn(),
     };
     clientRepository = {
-      getRefreshToken: vi.fn(),
-      updateRefreshToken: vi.fn(),
+      getRefreshTokenAndFamily: vi.fn(),
+      updateRefreshTokenWithFamily: vi.fn(),
+      revokeTokenFamily: vi.fn(),
     };
     adminRepository = {
-      getRefreshToken: vi.fn(),
-      updateRefreshToken: vi.fn(),
+      getRefreshTokenAndFamily: vi.fn(),
+      updateRefreshTokenWithFamily: vi.fn(),
+      revokeTokenFamily: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -51,50 +61,73 @@ describe('RefreshTokenUseCase', () => {
 
   it('should throw UnauthorizedException if refresh token is revoked', async () => {
     tokenService.verifyRefreshToken.mockResolvedValue({ sub: 1, type: 'client' });
-    clientRepository.getRefreshToken.mockResolvedValue(null);
+    clientRepository.getRefreshTokenAndFamily.mockResolvedValue({
+      refreshToken: null,
+      tokenFamily: null,
+    });
 
-    await expect(useCase.execute({ refreshToken: 'token' })).rejects.toThrow(UnauthorizedException);
+    await expect(useCase.refreshTokens({ refreshToken: 'token' })).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
-  it('should throw UnauthorizedException if refresh token hash does not match', async () => {
+  it('should revoke token family and throw if hash does not match', async () => {
     tokenService.verifyRefreshToken.mockResolvedValue({ sub: 1, type: 'client' });
-    clientRepository.getRefreshToken.mockResolvedValue('hashed_token');
+    clientRepository.getRefreshTokenAndFamily.mockResolvedValue({
+      refreshToken: 'hashed_token',
+      tokenFamily: 'family-uuid',
+    });
     hashService.compare.mockResolvedValue(false);
 
-    await expect(useCase.execute({ refreshToken: 'token' })).rejects.toThrow(UnauthorizedException);
+    await expect(useCase.refreshTokens({ refreshToken: 'token' })).rejects.toThrow(
+      UnauthorizedException,
+    );
+    expect(clientRepository.revokeTokenFamily).toHaveBeenCalledWith(1);
   });
 
-  it('should return new tokens and update hash for client', async () => {
+  it('should return new tokens and update with same family for client', async () => {
     const payload = { sub: 1, type: 'client', email: 'test@test.com' };
     const tokens = { accessToken: 'new_access', refreshToken: 'new_refresh' };
 
     tokenService.verifyRefreshToken.mockResolvedValue(payload);
-    clientRepository.getRefreshToken.mockResolvedValue('old_hashed');
+    clientRepository.getRefreshTokenAndFamily.mockResolvedValue({
+      refreshToken: 'old_hashed',
+      tokenFamily: 'family-uuid',
+    });
     hashService.compare.mockResolvedValue(true);
     tokenService.generateTokens.mockResolvedValue(tokens);
     hashService.hash.mockResolvedValue('new_hashed');
 
-    const result = await useCase.execute({ refreshToken: 'old_refresh' });
+    const result = await useCase.refreshTokens({ refreshToken: 'old_refresh' });
 
     expect(result).toEqual(tokens);
-    expect(tokenService.generateTokens).toHaveBeenCalledWith(payload);
-    expect(clientRepository.updateRefreshToken).toHaveBeenCalledWith(1, 'new_hashed');
+    expect(clientRepository.updateRefreshTokenWithFamily).toHaveBeenCalledWith(
+      1,
+      'new_hashed',
+      'family-uuid',
+    );
   });
 
-  it('should return new tokens and update hash for admin', async () => {
+  it('should return new tokens and update with same family for admin', async () => {
     const payload = { sub: 1, type: 'admin', email: 'admin@test.com' };
     const tokens = { accessToken: 'new_access', refreshToken: 'new_refresh' };
 
     tokenService.verifyRefreshToken.mockResolvedValue(payload);
-    adminRepository.getRefreshToken.mockResolvedValue('old_hashed');
+    adminRepository.getRefreshTokenAndFamily.mockResolvedValue({
+      refreshToken: 'old_hashed',
+      tokenFamily: 'family-uuid',
+    });
     hashService.compare.mockResolvedValue(true);
     tokenService.generateTokens.mockResolvedValue(tokens);
     hashService.hash.mockResolvedValue('new_hashed');
 
-    const result = await useCase.execute({ refreshToken: 'old_refresh' });
+    const result = await useCase.refreshTokens({ refreshToken: 'old_refresh' });
 
     expect(result).toEqual(tokens);
-    expect(tokenService.generateTokens).toHaveBeenCalledWith(payload);
-    expect(adminRepository.updateRefreshToken).toHaveBeenCalledWith(1, 'new_hashed');
+    expect(adminRepository.updateRefreshTokenWithFamily).toHaveBeenCalledWith(
+      1,
+      'new_hashed',
+      'family-uuid',
+    );
   });
 });

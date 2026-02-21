@@ -1,4 +1,5 @@
 import type { AppointmentStatus, RecurrenceType } from '@prisma/client';
+import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 
 export const APPOINTMENT_REPOSITORY = Symbol('APPOINTMENT_REPOSITORY');
 
@@ -23,12 +24,7 @@ export interface AppointmentResponse {
   unit: { id: number; name: string } | null;
 }
 
-export interface PaginatedAppointments {
-  data: AppointmentResponse[];
-  total: number;
-  page: number;
-  limit: number;
-}
+export type PaginatedAppointments = PaginatedResponse<AppointmentResponse>;
 
 export interface CreateAppointmentData {
   date: Date;
@@ -67,6 +63,14 @@ export interface ConflictCheckParams {
   excludeId?: number;
 }
 
+export interface ClientConflictCheckParams {
+  clientId: number;
+  date: Date;
+  startTime: string;
+  duration: number;
+  excludeId?: number;
+}
+
 export interface ListAppointmentsFilters {
   date?: Date;
   weekStart?: Date;
@@ -82,6 +86,7 @@ export interface IAppointmentRepository {
   createAppointment(
     data: CreateAppointmentData,
     conflictCheck?: ConflictCheckParams,
+    clientConflictCheck?: ClientConflictCheckParams,
   ): Promise<AppointmentResponse>;
   listAppointments(filters: ListAppointmentsFilters): Promise<PaginatedAppointments>;
   listAppointmentsByClientId(
@@ -102,5 +107,6 @@ export interface IAppointmentRepository {
     originalId: number,
     data: CreateAppointmentData,
     conflictCheck?: ConflictCheckParams,
+    clientConflictCheck?: ClientConflictCheckParams,
   ): Promise<AppointmentResponse>;
 }

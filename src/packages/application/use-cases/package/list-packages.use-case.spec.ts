@@ -34,32 +34,46 @@ describe('ListPackagesUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should return all packages when no filters', async () => {
-    const packages = [
-      { id: 1, name: 'Pacote 10 horas', isActive: true },
-      { id: 2, name: 'Pacote 20 horas', isActive: false },
-    ];
+  it('should return paginated packages when no filters', async () => {
+    const paginatedResult = {
+      data: [
+        { id: 1, name: 'Pacote 10 horas', isActive: true },
+        { id: 2, name: 'Pacote 20 horas', isActive: false },
+      ],
+      total: 2,
+      page: 1,
+      limit: 20,
+    };
 
-    packageRepository.findPackages.mockResolvedValue(packages);
+    packageRepository.findPackages.mockResolvedValue(paginatedResult);
 
-    const result = await useCase.listPackages();
+    const result = await useCase.listPackages({ page: 1, limit: 20 });
 
-    expect(result).toEqual(packages);
+    expect(result).toEqual(paginatedResult);
     expect(packageRepository.findPackages).toHaveBeenCalledWith({
+      page: 1,
+      limit: 20,
       active: undefined,
       serviceId: undefined,
     });
   });
 
   it('should return only active packages when active is true', async () => {
-    const packages = [{ id: 1, name: 'Pacote 10 horas', isActive: true }];
+    const paginatedResult = {
+      data: [{ id: 1, name: 'Pacote 10 horas', isActive: true }],
+      total: 1,
+      page: 1,
+      limit: 20,
+    };
 
-    packageRepository.findPackages.mockResolvedValue(packages);
+    packageRepository.findPackages.mockResolvedValue(paginatedResult);
 
-    const result = await useCase.listPackages(true);
+    const result = await useCase.listPackages({ page: 1, limit: 20, active: true });
 
-    expect(result).toEqual(packages);
+    expect(result).toEqual(paginatedResult);
     expect(packageRepository.findPackages).toHaveBeenCalledWith({
+      page: 1,
+      limit: 20,
       active: true,
       serviceId: undefined,
     });
@@ -67,16 +81,23 @@ describe('ListPackagesUseCase', () => {
 
   it('should filter by serviceId when provided', async () => {
     const service = { id: 1, name: 'Faxina Regular', isActive: true };
-    const packages = [{ id: 1, name: 'Pacote 10 horas', serviceId: 1 }];
+    const paginatedResult = {
+      data: [{ id: 1, name: 'Pacote 10 horas', serviceId: 1 }],
+      total: 1,
+      page: 1,
+      limit: 20,
+    };
 
     serviceRepository.findServiceById.mockResolvedValue(service);
-    packageRepository.findPackages.mockResolvedValue(packages);
+    packageRepository.findPackages.mockResolvedValue(paginatedResult);
 
-    const result = await useCase.listPackages(undefined, 1);
+    const result = await useCase.listPackages({ page: 1, limit: 20, serviceId: 1 });
 
-    expect(result).toEqual(packages);
+    expect(result).toEqual(paginatedResult);
     expect(serviceRepository.findServiceById).toHaveBeenCalledWith(1);
     expect(packageRepository.findPackages).toHaveBeenCalledWith({
+      page: 1,
+      limit: 20,
       active: undefined,
       serviceId: 1,
     });
@@ -84,15 +105,22 @@ describe('ListPackagesUseCase', () => {
 
   it('should combine active and serviceId filters', async () => {
     const service = { id: 1, name: 'Faxina Regular', isActive: true };
-    const packages = [{ id: 1, name: 'Pacote 10 horas', serviceId: 1, isActive: true }];
+    const paginatedResult = {
+      data: [{ id: 1, name: 'Pacote 10 horas', serviceId: 1, isActive: true }],
+      total: 1,
+      page: 1,
+      limit: 20,
+    };
 
     serviceRepository.findServiceById.mockResolvedValue(service);
-    packageRepository.findPackages.mockResolvedValue(packages);
+    packageRepository.findPackages.mockResolvedValue(paginatedResult);
 
-    const result = await useCase.listPackages(true, 1);
+    const result = await useCase.listPackages({ page: 1, limit: 20, active: true, serviceId: 1 });
 
-    expect(result).toEqual(packages);
+    expect(result).toEqual(paginatedResult);
     expect(packageRepository.findPackages).toHaveBeenCalledWith({
+      page: 1,
+      limit: 20,
       active: true,
       serviceId: 1,
     });
@@ -101,15 +129,19 @@ describe('ListPackagesUseCase', () => {
   it('should throw BadRequestException when serviceId is invalid', async () => {
     serviceRepository.findServiceById.mockResolvedValue(null);
 
-    await expect(useCase.listPackages(undefined, 999)).rejects.toThrow(BadRequestException);
+    await expect(useCase.listPackages({ page: 1, limit: 20, serviceId: 999 })).rejects.toThrow(
+      BadRequestException,
+    );
     expect(packageRepository.findPackages).not.toHaveBeenCalled();
   });
 
-  it('should return empty array when no packages', async () => {
-    packageRepository.findPackages.mockResolvedValue([]);
+  it('should return empty data when no packages', async () => {
+    const paginatedResult = { data: [], total: 0, page: 1, limit: 20 };
 
-    const result = await useCase.listPackages();
+    packageRepository.findPackages.mockResolvedValue(paginatedResult);
 
-    expect(result).toEqual([]);
+    const result = await useCase.listPackages({ page: 1, limit: 20 });
+
+    expect(result).toEqual(paginatedResult);
   });
 });

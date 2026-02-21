@@ -23,6 +23,7 @@ describe('PrismaAdminUserRepository', () => {
       findUnique: Mock;
       findFirst: Mock;
       findMany: Mock;
+      count: Mock;
       update: Mock;
     };
   };
@@ -34,6 +35,7 @@ describe('PrismaAdminUserRepository', () => {
         findUnique: vi.fn(),
         findFirst: vi.fn(),
         findMany: vi.fn(),
+        count: vi.fn(),
         update: vi.fn(),
       },
     };
@@ -101,11 +103,19 @@ describe('PrismaAdminUserRepository', () => {
     expect(result).toBeNull();
   });
 
-  it('listAdminUsers should call prisma.adminUser.findMany with filters', async () => {
-    prisma.adminUser.findMany.mockResolvedValue([]);
+  it('listAdminUsers should call prisma.adminUser.findMany with filters and pagination', async () => {
+    const users = [{ id: 1, name: 'Maria' }];
+    prisma.adminUser.findMany.mockResolvedValue(users);
+    prisma.adminUser.count.mockResolvedValue(1);
 
-    await repository.listAdminUsers({ status: 'ACTIVE', search: 'maria' });
+    const result = await repository.listAdminUsers({
+      status: 'ACTIVE',
+      search: 'maria',
+      page: 1,
+      limit: 20,
+    });
 
+    expect(result).toEqual({ data: users, total: 1, page: 1, limit: 20 });
     expect(prisma.adminUser.findMany).toHaveBeenCalledWith({
       where: {
         status: 'ACTIVE',
@@ -116,18 +126,48 @@ describe('PrismaAdminUserRepository', () => {
       },
       select: SAFE_SELECT,
       orderBy: { createdAt: 'desc' },
+      skip: 0,
+      take: 20,
+    });
+    expect(prisma.adminUser.count).toHaveBeenCalledWith({
+      where: {
+        status: 'ACTIVE',
+        OR: [
+          { name: { contains: 'maria', mode: 'insensitive' } },
+          { email: { contains: 'maria', mode: 'insensitive' } },
+        ],
+      },
     });
   });
 
   it('listAdminUsers should not add OR when search is empty', async () => {
     prisma.adminUser.findMany.mockResolvedValue([]);
+    prisma.adminUser.count.mockResolvedValue(0);
 
-    await repository.listAdminUsers({});
+    const result = await repository.listAdminUsers({});
+
+    expect(result).toEqual({ data: [], total: 0, page: 1, limit: 20 });
+    expect(prisma.adminUser.findMany).toHaveBeenCalledWith({
+      where: {},
+      select: SAFE_SELECT,
+      orderBy: { createdAt: 'desc' },
+      skip: 0,
+      take: 20,
+    });
+  });
+
+  it('listAdminUsers should calculate skip based on page and limit', async () => {
+    prisma.adminUser.findMany.mockResolvedValue([]);
+    prisma.adminUser.count.mockResolvedValue(0);
+
+    await repository.listAdminUsers({ page: 3, limit: 10 });
 
     expect(prisma.adminUser.findMany).toHaveBeenCalledWith({
       where: {},
       select: SAFE_SELECT,
       orderBy: { createdAt: 'desc' },
+      skip: 20,
+      take: 10,
     });
   });
 

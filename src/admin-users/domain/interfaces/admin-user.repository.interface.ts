@@ -1,4 +1,5 @@
 import type { AdminRole, UserStatus } from '@prisma/client';
+import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 
 export const ADMIN_USER_REPOSITORY = Symbol('ADMIN_USER_REPOSITORY');
 
@@ -25,12 +26,14 @@ export interface CreateAdminUserData {
 export interface ListAdminUsersFilters {
   status?: UserStatus;
   search?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface IAdminUserRepository {
   createAdminUser(data: CreateAdminUserData): Promise<AdminUserSafe>;
   findAdminUserByEmail(email: string): Promise<AdminUserSafe | null>;
   findAdminUserById(id: number): Promise<AdminUserSafe | null>;
-  listAdminUsers(filters: ListAdminUsersFilters): Promise<AdminUserSafe[]>;
+  listAdminUsers(filters: ListAdminUsersFilters): Promise<PaginatedResponse<AdminUserSafe>>;
   deactivateAdminUserById(id: number): Promise<void>;
 }

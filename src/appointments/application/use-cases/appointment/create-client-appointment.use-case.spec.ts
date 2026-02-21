@@ -47,6 +47,7 @@ describe('CreateClientAppointmentUseCase', () => {
     expect(appointmentRepository.createAppointment).toHaveBeenCalledWith(
       expect.objectContaining({ clientId: 1 }),
       undefined,
+      expect.objectContaining({ clientId: 1 }),
     );
     expect(emailService.sendAppointmentConfirmedEmail).toHaveBeenCalled();
   });
@@ -71,6 +72,7 @@ describe('CreateClientAppointmentUseCase', () => {
     expect(appointmentRepository.createAppointment).toHaveBeenCalledWith(
       expect.objectContaining({ employeeId: 2 }),
       expect.objectContaining({ employeeId: 2, duration: 120 }),
+      expect.objectContaining({ clientId: 1 }),
     );
   });
 });

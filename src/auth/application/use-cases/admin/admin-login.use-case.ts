@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ADMIN_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
 import type { IAdminRepository } from '../../../domain/interfaces/admin.repository.interface.js';
@@ -18,11 +19,15 @@ export class AdminLoginUseCase {
     @Inject(TOKEN_SERVICE) private tokenService: ITokenService,
   ) {}
 
-  async execute(dto: AdminLoginDto): Promise<TokenPair> {
+  async loginAdmin(dto: AdminLoginDto): Promise<TokenPair> {
     const admin = await this.adminRepository.findByEmail(dto.email);
 
     if (!admin) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (admin.lockedUntil && admin.lockedUntil > new Date()) {
+      throw new ForbiddenException('Account is temporarily locked. Try again later');
     }
 
     if (admin.status !== 'ACTIVE') {
@@ -32,8 +37,11 @@ export class AdminLoginUseCase {
     const passwordValid = await this.hashService.compare(dto.password, admin.password);
 
     if (!passwordValid) {
+      await this.adminRepository.incrementFailedLoginAttempts(admin.id);
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    await this.adminRepository.resetFailedLoginAttempts(admin.id);
 
     const tokens = await this.tokenService.generateTokens({
       sub: admin.id,
@@ -43,7 +51,8 @@ export class AdminLoginUseCase {
     });
 
     const hashedRefresh = await this.hashService.hash(tokens.refreshToken);
-    await this.adminRepository.updateRefreshToken(admin.id, hashedRefresh);
+    const family = randomUUID();
+    await this.adminRepository.updateRefreshTokenWithFamily(admin.id, hashedRefresh, family);
 
     return tokens;
   }

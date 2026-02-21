@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
+import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 import type {
   AdminUserSafe,
   CreateAdminUserData,
@@ -45,8 +46,10 @@ export class PrismaAdminUserRepository implements IAdminUserRepository {
     });
   }
 
-  async listAdminUsers(filters: ListAdminUsersFilters): Promise<AdminUserSafe[]> {
+  async listAdminUsers(filters: ListAdminUsersFilters): Promise<PaginatedResponse<AdminUserSafe>> {
     const where: Prisma.AdminUserWhereInput = {};
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 20;
 
     if (filters.status) {
       where.status = filters.status;
@@ -59,11 +62,18 @@ export class PrismaAdminUserRepository implements IAdminUserRepository {
       ];
     }
 
-    return this.prisma.adminUser.findMany({
-      where,
-      select: ADMIN_USER_SAFE_SELECT,
-      orderBy: { createdAt: 'desc' },
-    });
+    const [data, total] = await Promise.all([
+      this.prisma.adminUser.findMany({
+        where,
+        select: ADMIN_USER_SAFE_SELECT,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.adminUser.count({ where }),
+    ]);
+
+    return { data, total, page, limit };
   }
 
   async deactivateAdminUserById(id: number): Promise<void> {

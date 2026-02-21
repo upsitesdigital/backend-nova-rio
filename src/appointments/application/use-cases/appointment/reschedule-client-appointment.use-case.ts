@@ -4,6 +4,7 @@ import type { IEmailService } from '../../../../email/domain/interfaces/email.se
 import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
 import type {
   AppointmentResponse,
+  ClientConflictCheckParams,
   ConflictCheckParams,
   IAppointmentRepository,
 } from '../../../domain/interfaces/appointment.repository.interface.js';
@@ -50,6 +51,14 @@ export class RescheduleClientAppointmentUseCase {
       };
     }
 
+    const clientConflictCheck: ClientConflictCheckParams = {
+      clientId,
+      date: newDate,
+      startTime: dto.startTime,
+      duration: existing.duration,
+      excludeId: id,
+    };
+
     const rescheduled = await this.appointmentRepository.rescheduleAppointment(
       id,
       {
@@ -67,6 +76,7 @@ export class RescheduleClientAppointmentUseCase {
         unitId: existing.unit?.id,
       },
       conflictCheck,
+      clientConflictCheck,
     );
 
     this.emailService

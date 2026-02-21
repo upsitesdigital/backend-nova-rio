@@ -11,6 +11,7 @@ describe('PrismaServiceRepository', () => {
       findMany: Mock;
       findFirst: Mock;
       update: Mock;
+      count: Mock;
     };
   };
 
@@ -21,6 +22,7 @@ describe('PrismaServiceRepository', () => {
         findMany: vi.fn(),
         findFirst: vi.fn(),
         update: vi.fn(),
+        count: vi.fn(),
       },
     };
 
@@ -47,15 +49,35 @@ describe('PrismaServiceRepository', () => {
     expect(prisma.service.create).toHaveBeenCalledWith({ data });
   });
 
-  it('findAllActiveServices should filter by isActive true', async () => {
+  it('findAllActiveServices should return paginated results', async () => {
     const services = [{ id: 1, name: 'Faxina Regular', isActive: true }];
 
     prisma.service.findMany.mockResolvedValue(services);
+    prisma.service.count.mockResolvedValue(1);
 
-    const result = await repository.findAllActiveServices();
+    const result = await repository.findAllActiveServices({ page: 1, limit: 20 });
 
-    expect(result).toEqual(services);
-    expect(prisma.service.findMany).toHaveBeenCalledWith({ where: { isActive: true } });
+    expect(result).toEqual({ data: services, total: 1, page: 1, limit: 20 });
+    expect(prisma.service.findMany).toHaveBeenCalledWith({
+      where: { isActive: true },
+      skip: 0,
+      take: 20,
+    });
+    expect(prisma.service.count).toHaveBeenCalledWith({ where: { isActive: true } });
+  });
+
+  it('findAllActiveServices should calculate skip for page 2', async () => {
+    prisma.service.findMany.mockResolvedValue([]);
+    prisma.service.count.mockResolvedValue(25);
+
+    const result = await repository.findAllActiveServices({ page: 2, limit: 20 });
+
+    expect(result).toEqual({ data: [], total: 25, page: 2, limit: 20 });
+    expect(prisma.service.findMany).toHaveBeenCalledWith({
+      where: { isActive: true },
+      skip: 20,
+      take: 20,
+    });
   });
 
   it('findServiceById should filter by id and isActive true', async () => {

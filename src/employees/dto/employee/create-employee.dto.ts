@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsEmail,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -7,6 +8,7 @@ import {
   IsPositive,
   IsString,
   Matches,
+  MaxLength,
 } from 'class-validator';
 import { IsCPF } from 'class-validator-cpf';
 
@@ -14,11 +16,11 @@ export class CreateEmployeeDto {
   @ApiProperty({ example: 'Maria Silva' })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   name: string;
 
   @ApiProperty({ example: 'maria@example.com' })
-  @IsString()
-  @IsNotEmpty()
+  @IsEmail()
   email: string;
 
   @ApiProperty({ example: '12345678900' })
@@ -34,6 +36,7 @@ export class CreateEmployeeDto {
   @ApiPropertyOptional({ example: 'Rua das Flores, 123' })
   @IsString()
   @IsOptional()
+  @MaxLength(500)
   address?: string;
 
   @ApiPropertyOptional({ example: 'https://cdn.example.com/avatar.jpg' })
@@ -56,6 +59,7 @@ export class CreateEmployeeDto {
   @ApiPropertyOptional({ example: 'Experienced cleaner' })
   @IsString()
   @IsOptional()
+  @MaxLength(1000)
   notes?: string;
 
   @ApiPropertyOptional({ example: 1 })

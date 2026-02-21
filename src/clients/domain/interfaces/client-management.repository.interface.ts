@@ -1,4 +1,5 @@
 import type { UserStatus } from '@prisma/client';
+import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 
 export const CLIENT_MGMT_REPOSITORY = Symbol('CLIENT_MGMT_REPOSITORY');
 
@@ -22,10 +23,12 @@ export interface ClientSafe {
 export interface ListClientsFilters {
   status?: UserStatus;
   search?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface IClientManagementRepository {
-  listClients(filters: ListClientsFilters): Promise<ClientSafe[]>;
+  listClients(filters: ListClientsFilters): Promise<PaginatedResponse<ClientSafe>>;
   findClientById(id: number): Promise<ClientSafe | null>;
   approveClientById(id: number): Promise<void>;
   rejectClientById(id: number): Promise<void>;

@@ -26,6 +26,7 @@ describe('PrismaClientManagementRepository', () => {
     client: {
       findMany: Mock;
       findFirst: Mock;
+      count: Mock;
       update: Mock;
     };
   };
@@ -35,6 +36,7 @@ describe('PrismaClientManagementRepository', () => {
       client: {
         findMany: vi.fn(),
         findFirst: vi.fn(),
+        count: vi.fn(),
         update: vi.fn(),
       },
     };
@@ -50,20 +52,25 @@ describe('PrismaClientManagementRepository', () => {
     expect(repository).toBeDefined();
   });
 
-  it('listClients should call prisma.client.findMany with no filters', async () => {
+  it('listClients should call prisma.client.findMany with no filters and default pagination', async () => {
     prisma.client.findMany.mockResolvedValue([]);
+    prisma.client.count.mockResolvedValue(0);
 
-    await repository.listClients({});
+    const result = await repository.listClients({});
 
+    expect(result).toEqual({ data: [], total: 0, page: 1, limit: 20 });
     expect(prisma.client.findMany).toHaveBeenCalledWith({
       where: {},
       select: CLIENT_SAFE_SELECT,
       orderBy: { createdAt: 'desc' },
+      skip: 0,
+      take: 20,
     });
   });
 
   it('listClients should filter by status', async () => {
     prisma.client.findMany.mockResolvedValue([]);
+    prisma.client.count.mockResolvedValue(0);
 
     await repository.listClients({ status: 'PENDING' });
 
@@ -71,11 +78,14 @@ describe('PrismaClientManagementRepository', () => {
       where: { status: 'PENDING' },
       select: CLIENT_SAFE_SELECT,
       orderBy: { createdAt: 'desc' },
+      skip: 0,
+      take: 20,
     });
   });
 
   it('listClients should filter by search with OR conditions', async () => {
     prisma.client.findMany.mockResolvedValue([]);
+    prisma.client.count.mockResolvedValue(0);
 
     await repository.listClients({ search: 'joao' });
 
@@ -89,14 +99,24 @@ describe('PrismaClientManagementRepository', () => {
       },
       select: CLIENT_SAFE_SELECT,
       orderBy: { createdAt: 'desc' },
+      skip: 0,
+      take: 20,
     });
   });
 
   it('listClients should combine status and search filters', async () => {
-    prisma.client.findMany.mockResolvedValue([]);
+    const clients = [{ id: 1, name: 'Maria' }];
+    prisma.client.findMany.mockResolvedValue(clients);
+    prisma.client.count.mockResolvedValue(1);
 
-    await repository.listClients({ status: 'ACTIVE', search: 'maria' });
+    const result = await repository.listClients({
+      status: 'ACTIVE',
+      search: 'maria',
+      page: 1,
+      limit: 20,
+    });
 
+    expect(result).toEqual({ data: clients, total: 1, page: 1, limit: 20 });
     expect(prisma.client.findMany).toHaveBeenCalledWith({
       where: {
         status: 'ACTIVE',
@@ -108,6 +128,23 @@ describe('PrismaClientManagementRepository', () => {
       },
       select: CLIENT_SAFE_SELECT,
       orderBy: { createdAt: 'desc' },
+      skip: 0,
+      take: 20,
+    });
+  });
+
+  it('listClients should calculate skip based on page and limit', async () => {
+    prisma.client.findMany.mockResolvedValue([]);
+    prisma.client.count.mockResolvedValue(0);
+
+    await repository.listClients({ page: 3, limit: 10 });
+
+    expect(prisma.client.findMany).toHaveBeenCalledWith({
+      where: {},
+      select: CLIENT_SAFE_SELECT,
+      orderBy: { createdAt: 'desc' },
+      skip: 20,
+      take: 10,
     });
   });
 

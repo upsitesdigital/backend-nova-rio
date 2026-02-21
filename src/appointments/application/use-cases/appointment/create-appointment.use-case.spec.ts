@@ -46,6 +46,7 @@ describe('CreateAppointmentUseCase', () => {
     expect(appointmentRepository.createAppointment).toHaveBeenCalledWith(
       expect.objectContaining({ clientId: 1 }),
       undefined,
+      expect.objectContaining({ clientId: 1 }),
     );
   });
 
@@ -69,6 +70,7 @@ describe('CreateAppointmentUseCase', () => {
         startTime: '09:00',
         duration: 120,
       }),
+      expect.objectContaining({ clientId: 1 }),
     );
   });
 });

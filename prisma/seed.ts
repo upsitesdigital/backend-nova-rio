@@ -9,9 +9,20 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 async function seedAdminUser() {
+  const isProduction = process.env.NODE_ENV === 'production';
+
   const email = process.env.ADMIN_EMAIL ?? 'admin@novario.com';
-  const password = process.env.ADMIN_PASSWORD ?? 'Admin@2026!';
   const name = process.env.ADMIN_NAME ?? 'Admin Master';
+
+  let password: string;
+  if (isProduction) {
+    if (!process.env.ADMIN_PASSWORD) {
+      throw new Error('ADMIN_PASSWORD must be set in production');
+    }
+    password = process.env.ADMIN_PASSWORD;
+  } else {
+    password = process.env.ADMIN_PASSWORD ?? 'Admin@2026!';
+  }
 
   const existing = await prisma.adminUser.findUnique({ where: { email } });
 

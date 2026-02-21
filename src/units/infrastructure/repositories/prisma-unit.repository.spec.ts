@@ -12,6 +12,7 @@ describe('PrismaUnitRepository', () => {
       findUnique: Mock;
       update: Mock;
       delete: Mock;
+      count: Mock;
     };
   };
 
@@ -23,6 +24,7 @@ describe('PrismaUnitRepository', () => {
         findUnique: vi.fn(),
         update: vi.fn(),
         delete: vi.fn(),
+        count: vi.fn(),
       },
     };
 
@@ -49,15 +51,35 @@ describe('PrismaUnitRepository', () => {
     expect(prisma.unit.create).toHaveBeenCalledWith({ data });
   });
 
-  it('listUnits should return all units ordered by name', async () => {
+  it('listUnits should return paginated units ordered by name', async () => {
     const units = [{ id: 1, name: 'Unidade Centro' }];
 
     prisma.unit.findMany.mockResolvedValue(units);
+    prisma.unit.count.mockResolvedValue(1);
 
-    const result = await repository.listUnits();
+    const result = await repository.listUnits({ page: 1, limit: 20 });
 
-    expect(result).toEqual(units);
-    expect(prisma.unit.findMany).toHaveBeenCalledWith({ orderBy: { name: 'asc' } });
+    expect(result).toEqual({ data: units, total: 1, page: 1, limit: 20 });
+    expect(prisma.unit.findMany).toHaveBeenCalledWith({
+      orderBy: { name: 'asc' },
+      skip: 0,
+      take: 20,
+    });
+    expect(prisma.unit.count).toHaveBeenCalled();
+  });
+
+  it('listUnits should calculate skip for page 2', async () => {
+    prisma.unit.findMany.mockResolvedValue([]);
+    prisma.unit.count.mockResolvedValue(25);
+
+    const result = await repository.listUnits({ page: 2, limit: 20 });
+
+    expect(result).toEqual({ data: [], total: 25, page: 2, limit: 20 });
+    expect(prisma.unit.findMany).toHaveBeenCalledWith({
+      orderBy: { name: 'asc' },
+      skip: 20,
+      take: 20,
+    });
   });
 
   it('findUnitById should call prisma.unit.findUnique with id', async () => {

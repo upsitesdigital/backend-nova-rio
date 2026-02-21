@@ -5,11 +5,6 @@ import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import type { IHashService } from '../../../domain/interfaces/hash.service.interface.js';
-import { TOKEN_SERVICE } from '../../../domain/interfaces/token.service.interface.js';
-import type {
-  ITokenService,
-  TokenPair,
-} from '../../../domain/interfaces/token.service.interface.js';
 import { ClientRegisterDto } from '../../../dto/client-register.dto.js';
 
 @Injectable()
@@ -18,10 +13,9 @@ export class ClientRegisterUseCase {
     @Inject(CLIENT_REPOSITORY) private clientRepository: IClientRepository,
     @Inject(EMAIL_SERVICE) private emailService: IEmailService,
     @Inject(HASH_SERVICE) private hashService: IHashService,
-    @Inject(TOKEN_SERVICE) private tokenService: ITokenService,
   ) {}
 
-  async execute(dto: ClientRegisterDto): Promise<TokenPair> {
+  async registerClient(dto: ClientRegisterDto): Promise<{ message: string }> {
     const existing = await this.clientRepository.findByEmail(dto.email);
 
     if (existing) {
@@ -30,24 +24,27 @@ export class ClientRegisterUseCase {
 
     const hashedPassword = await this.hashService.hash(dto.password);
 
-    const client = await this.clientRepository.create({
-      name: dto.name,
-      email: dto.email,
-      phone: dto.phone,
-      password: hashedPassword,
-    });
+    try {
+      await this.clientRepository.create({
+        name: dto.name,
+        email: dto.email,
+        phone: dto.phone,
+        password: hashedPassword,
+      });
 
-    const tokens = await this.tokenService.generateTokens({
-      sub: client.id,
-      email: client.email,
-      type: 'client',
-    });
+      void this.emailService.sendWelcomeEmail(dto.email, dto.name);
 
-    const hashedRefresh = await this.hashService.hash(tokens.refreshToken);
-    await this.clientRepository.updateRefreshToken(client.id, hashedRefresh);
-
-    void this.emailService.sendWelcomeEmail(dto.email, dto.name);
-
-    return tokens;
+      return { message: 'Registration successful. Your account is pending approval.' };
+    } catch (error: unknown) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code: string }).code === 'P2002'
+      ) {
+        throw new ConflictException('Email already registered');
+      }
+      throw error;
+    }
   }
 }

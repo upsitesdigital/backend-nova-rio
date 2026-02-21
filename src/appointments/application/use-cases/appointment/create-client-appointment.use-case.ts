@@ -4,6 +4,7 @@ import type { IEmailService } from '../../../../email/domain/interfaces/email.se
 import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
 import type {
   AppointmentResponse,
+  ClientConflictCheckParams,
   ConflictCheckParams,
   IAppointmentRepository,
 } from '../../../domain/interfaces/appointment.repository.interface.js';
@@ -36,9 +37,17 @@ export class CreateClientAppointmentUseCase {
       };
     }
 
+    const clientConflictCheck: ClientConflictCheckParams = {
+      clientId,
+      date,
+      startTime: dto.startTime,
+      duration: dto.duration,
+    };
+
     const appointment = await this.appointmentRepository.createAppointment(
       { ...dto, date, clientId },
       conflictCheck,
+      clientConflictCheck,
     );
 
     this.emailService

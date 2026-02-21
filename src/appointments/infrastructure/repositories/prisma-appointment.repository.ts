@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import type {
   AppointmentResponse,
+  ClientConflictCheckParams,
   ConflictCheckParams,
   CreateAppointmentData,
   IAppointmentRepository,
@@ -26,10 +27,11 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
   async createAppointment(
     data: CreateAppointmentData,
     conflictCheck?: ConflictCheckParams,
+    clientConflictCheck?: ClientConflictCheckParams,
   ): Promise<AppointmentResponse> {
     const createData = this.buildCreateInput(data);
 
-    if (!conflictCheck) {
+    if (!conflictCheck && !clientConflictCheck) {
       return this.prisma.appointment.create({
         data: createData,
         include: APPOINTMENT_INCLUDE,
@@ -37,7 +39,12 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      await this.lockAndCheckConflict(tx, conflictCheck);
+      if (conflictCheck) {
+        await this.lockAndCheckConflict(tx, conflictCheck);
+      }
+      if (clientConflictCheck) {
+        await this.lockAndCheckClientConflict(tx, clientConflictCheck);
+      }
 
       return tx.appointment.create({
         data: createData,
@@ -47,23 +54,15 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
   }
 
   async listAppointments(filters: ListAppointmentsFilters): Promise<PaginatedAppointments> {
-    const where: Prisma.AppointmentWhereInput = {};
-
-    if (filters.date) {
-      where.date = filters.date;
-    }
-    if (filters.weekStart && filters.weekEnd) {
-      where.date = { gte: filters.weekStart, lte: filters.weekEnd };
-    }
-    if (filters.employeeId) {
-      where.employeeId = filters.employeeId;
-    }
-    if (filters.unitId) {
-      where.unitId = filters.unitId;
-    }
-    if (filters.status) {
-      where.status = filters.status;
-    }
+    const where: Prisma.AppointmentWhereInput = {
+      date:
+        filters.weekStart && filters.weekEnd
+          ? { gte: filters.weekStart, lte: filters.weekEnd }
+          : filters.date,
+      employeeId: filters.employeeId,
+      unitId: filters.unitId,
+      status: filters.status,
+    };
 
     const skip = (filters.page - 1) * filters.limit;
 
@@ -165,6 +164,7 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
     originalId: number,
     data: CreateAppointmentData,
     conflictCheck?: ConflictCheckParams,
+    clientConflictCheck?: ClientConflictCheckParams,
   ): Promise<AppointmentResponse> {
     return this.prisma.$transaction(async (tx) => {
       await tx.appointment.update({
@@ -174,6 +174,9 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
 
       if (conflictCheck) {
         await this.lockAndCheckConflict(tx, conflictCheck);
+      }
+      if (clientConflictCheck) {
+        await this.lockAndCheckClientConflict(tx, clientConflictCheck);
       }
 
       return tx.appointment.create({
@@ -200,6 +203,31 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
       FOR UPDATE
     `;
 
+    this.assertNoTimeConflict(locked, params, 'Employee already has an appointment at this time');
+  }
+
+  private async lockAndCheckClientConflict(
+    tx: Parameters<Parameters<PrismaService['$transaction']>[0]>[0],
+    params: ClientConflictCheckParams,
+  ): Promise<void> {
+    const locked = await (tx as unknown as PrismaService).$queryRaw<
+      Array<{ id: number; startTime: string; duration: number }>
+    >`
+      SELECT id, "startTime", duration FROM appointments
+      WHERE "clientId" = ${params.clientId}
+        AND date = ${params.date}
+        AND status = 'SCHEDULED'
+      FOR UPDATE
+    `;
+
+    this.assertNoTimeConflict(locked, params, 'Client already has an appointment at this time');
+  }
+
+  private assertNoTimeConflict(
+    locked: Array<{ id: number; startTime: string; duration: number }>,
+    params: { startTime: string; duration: number; excludeId?: number },
+    errorMessage: string,
+  ): void {
     const filtered = params.excludeId
       ? locked.filter((apt) => apt.id !== params.excludeId)
       : locked;
@@ -216,7 +244,7 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
     });
 
     if (conflict) {
-      throw new BadRequestException('Employee already has an appointment at this time');
+      throw new BadRequestException(errorMessage);
     }
   }
 
