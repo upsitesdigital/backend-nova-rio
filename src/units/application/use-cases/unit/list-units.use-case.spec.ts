@@ -23,17 +23,22 @@ describe('ListUnitsUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should return all units', async () => {
-    const units = [
-      { id: 1, name: 'Unidade Centro' },
-      { id: 2, name: 'Unidade Norte' },
-    ];
+  it('should return paginated units', async () => {
+    const paginatedResult = {
+      data: [
+        { id: 1, name: 'Unidade Centro' },
+        { id: 2, name: 'Unidade Norte' },
+      ],
+      total: 2,
+      page: 1,
+      limit: 20,
+    };
 
-    unitRepository.listUnits.mockResolvedValue(units);
+    unitRepository.listUnits.mockResolvedValue(paginatedResult);
 
-    const result = await useCase.listUnits();
+    const result = await useCase.listUnits({ page: 1, limit: 20 });
 
-    expect(result).toEqual(units);
-    expect(unitRepository.listUnits).toHaveBeenCalled();
+    expect(result).toEqual(paginatedResult);
+    expect(unitRepository.listUnits).toHaveBeenCalledWith({ page: 1, limit: 20 });
   });
 });
