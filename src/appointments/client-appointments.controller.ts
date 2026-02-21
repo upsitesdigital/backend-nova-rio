@@ -69,7 +69,12 @@ export class ClientAppointmentsController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
   ) {
-    return this.listClientAppointmentsUseCase.listAppointmentsByClientId(user.id, page, limit);
+    const clampedLimit = Math.min(limit, 100);
+    return this.listClientAppointmentsUseCase.listAppointmentsByClientId(
+      user.id,
+      page,
+      clampedLimit,
+    );
   }
 
   @Get(':id')

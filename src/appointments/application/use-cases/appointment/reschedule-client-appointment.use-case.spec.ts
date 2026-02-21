@@ -100,6 +100,7 @@ describe('RescheduleClientAppointmentUseCase', () => {
       1,
       expect.objectContaining({ clientId: 1 }),
       undefined,
+      expect.objectContaining({ clientId: 1, excludeId: 1 }),
     );
     expect(emailService.sendAppointmentRescheduledEmail).toHaveBeenCalled();
   });
