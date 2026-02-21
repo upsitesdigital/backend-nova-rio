@@ -20,11 +20,17 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY --from=build /app/package*.json ./
-COPY --from=build /app/node_modules ./node_modules
+RUN npm ci --omit=dev
+
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/assets ./assets
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/prisma.config.ts ./
+
+RUN DATABASE_URL="postgresql://build:build@localhost:5432/build" npx prisma generate
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
 
 EXPOSE 3000
 

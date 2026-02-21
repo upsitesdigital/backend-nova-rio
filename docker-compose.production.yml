@@ -4,20 +4,17 @@ services:
     container_name: nova_rio_postgres_prod
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-nova_rio_prod}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-    ports:
-      - '5432:5432'
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data_prod:/var/lib/postgresql/data
 
   redis:
-    image: redis:latest
+    image: redis:7-alpine
     container_name: nova_rio_redis_prod
     restart: unless-stopped
-    ports:
-      - '6379:6379'
+    command: redis-server --requirepass ${REDIS_PASSWORD}
 
   backend:
     build: .
@@ -29,14 +26,13 @@ services:
     env_file:
       - .env.production
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-nova_rio_prod}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
       REDIS_HOST: redis
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@novario.com}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@2026!}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       ADMIN_NAME: ${ADMIN_NAME:-Admin Master}
     ports:
       - '3000:3000'
 
 volumes:
   postgres_data_prod:
-

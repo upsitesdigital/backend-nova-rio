@@ -13,7 +13,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   redis:
-    image: redis:latest
+    image: redis:7-alpine
     container_name: nova_rio_redis
     restart: unless-stopped
     ports:
