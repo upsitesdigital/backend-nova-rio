@@ -21,6 +21,12 @@ export class ResendEmailService implements IEmailService {
   private readonly from: string;
   private readonly logger = new Logger(ResendEmailService.name);
 
+  private maskEmail(email: string): string {
+    const [local, domain] = email.split('@');
+    if (!local || !domain) return '***';
+    return `${local[0]}***@${domain}`;
+  }
+
   constructor(private configService: ConfigService) {
     this.resend = new Resend(this.configService.get<string>('RESEND_API_KEY'));
     this.from = this.configService.get<string>('RESEND_FROM_EMAIL') ?? 'noreply@novario.com';
@@ -35,7 +41,7 @@ export class ResendEmailService implements IEmailService {
         html: welcomeTemplate(name),
       });
     } catch (error) {
-      this.logger.error(`Failed to send welcome email to ${to}`, error);
+      this.logger.error(`Failed to send welcome email to ${this.maskEmail(to)}`, error);
     }
   }
 
@@ -48,7 +54,7 @@ export class ResendEmailService implements IEmailService {
         html: passwordResetTemplate(name, code),
       });
     } catch (error) {
-      this.logger.error(`Failed to send password reset email to ${to}`, error);
+      this.logger.error(`Failed to send password reset email to ${this.maskEmail(to)}`, error);
     }
   }
 
@@ -61,7 +67,7 @@ export class ResendEmailService implements IEmailService {
         html: clientApprovedTemplate(name),
       });
     } catch (error) {
-      this.logger.error(`Failed to send client approved email to ${to}`, error);
+      this.logger.error(`Failed to send client approved email to ${this.maskEmail(to)}`, error);
     }
   }
 
@@ -74,7 +80,7 @@ export class ResendEmailService implements IEmailService {
         html: clientRejectedTemplate(name),
       });
     } catch (error) {
-      this.logger.error(`Failed to send client rejected email to ${to}`, error);
+      this.logger.error(`Failed to send client rejected email to ${this.maskEmail(to)}`, error);
     }
   }
 
@@ -87,7 +93,7 @@ export class ResendEmailService implements IEmailService {
         html: passwordChangedTemplate(name),
       });
     } catch (error) {
-      this.logger.error(`Failed to send password changed email to ${to}`, error);
+      this.logger.error(`Failed to send password changed email to ${this.maskEmail(to)}`, error);
     }
   }
 
@@ -100,7 +106,7 @@ export class ResendEmailService implements IEmailService {
         html: emailChangeVerificationTemplate(name, code),
       });
     } catch (error) {
-      this.logger.error(`Failed to send email change verification to ${to}`, error);
+      this.logger.error(`Failed to send email change verification to ${this.maskEmail(to)}`, error);
     }
   }
 
@@ -113,7 +119,7 @@ export class ResendEmailService implements IEmailService {
         html: accountDeletedTemplate(name),
       });
     } catch (error) {
-      this.logger.error(`Failed to send account deleted email to ${to}`, error);
+      this.logger.error(`Failed to send account deleted email to ${this.maskEmail(to)}`, error);
     }
   }
 
@@ -132,7 +138,10 @@ export class ResendEmailService implements IEmailService {
         html: appointmentConfirmedTemplate(name, date, time, serviceName),
       });
     } catch (error) {
-      this.logger.error(`Failed to send appointment confirmed email to ${to}`, error);
+      this.logger.error(
+        `Failed to send appointment confirmed email to ${this.maskEmail(to)}`,
+        error,
+      );
     }
   }
 
@@ -151,7 +160,10 @@ export class ResendEmailService implements IEmailService {
         html: appointmentCancelledTemplate(name, date, time, serviceName),
       });
     } catch (error) {
-      this.logger.error(`Failed to send appointment cancelled email to ${to}`, error);
+      this.logger.error(
+        `Failed to send appointment cancelled email to ${this.maskEmail(to)}`,
+        error,
+      );
     }
   }
 
@@ -170,7 +182,10 @@ export class ResendEmailService implements IEmailService {
         html: appointmentRescheduledTemplate(name, newDate, newTime, serviceName),
       });
     } catch (error) {
-      this.logger.error(`Failed to send appointment rescheduled email to ${to}`, error);
+      this.logger.error(
+        `Failed to send appointment rescheduled email to ${this.maskEmail(to)}`,
+        error,
+      );
     }
   }
 
@@ -189,7 +204,7 @@ export class ResendEmailService implements IEmailService {
         html: paymentApprovedTemplate(name, amount, serviceName, date),
       });
     } catch (error) {
-      this.logger.error(`Failed to send payment approved email to ${to}`, error);
+      this.logger.error(`Failed to send payment approved email to ${this.maskEmail(to)}`, error);
     }
   }
 
@@ -207,7 +222,7 @@ export class ResendEmailService implements IEmailService {
         html: paymentCancelledTemplate(name, amount, serviceName),
       });
     } catch (error) {
-      this.logger.error(`Failed to send payment cancelled email to ${to}`, error);
+      this.logger.error(`Failed to send payment cancelled email to ${this.maskEmail(to)}`, error);
     }
   }
 }
