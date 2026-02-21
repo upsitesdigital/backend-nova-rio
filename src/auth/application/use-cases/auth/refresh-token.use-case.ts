@@ -21,33 +21,30 @@ export class RefreshTokenUseCase {
     @Inject(ADMIN_REPOSITORY) private adminRepository: IAdminRepository,
   ) {}
 
-  async execute(dto: RefreshTokenDto): Promise<TokenPair> {
+  async refreshTokens(dto: RefreshTokenDto): Promise<TokenPair> {
     const payload = await this.tokenService.verifyRefreshToken(dto.refreshToken);
 
-    const storedHash =
-      payload.type === 'client'
-        ? await this.clientRepository.getRefreshToken(payload.sub)
-        : await this.adminRepository.getRefreshToken(payload.sub);
+    const repo = payload.type === 'client' ? this.clientRepository : this.adminRepository;
 
-    if (!storedHash) {
+    const { refreshToken: storedHash, tokenFamily } = await repo.getRefreshTokenAndFamily(
+      payload.sub,
+    );
+
+    if (!storedHash || !tokenFamily) {
       throw new UnauthorizedException('Refresh token revoked');
     }
 
     const tokenValid = await this.hashService.compare(dto.refreshToken, storedHash);
 
     if (!tokenValid) {
+      await repo.revokeTokenFamily(payload.sub);
       throw new UnauthorizedException('Invalid refresh token');
     }
 
     const tokens = await this.tokenService.generateTokens(payload);
 
     const hashedRefresh = await this.hashService.hash(tokens.refreshToken);
-
-    if (payload.type === 'client') {
-      await this.clientRepository.updateRefreshToken(payload.sub, hashedRefresh);
-    } else {
-      await this.adminRepository.updateRefreshToken(payload.sub, hashedRefresh);
-    }
+    await repo.updateRefreshTokenWithFamily(payload.sub, hashedRefresh, tokenFamily);
 
     return tokens;
   }

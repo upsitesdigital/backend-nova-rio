@@ -16,6 +16,7 @@ import { PrismaAdminRepository } from './infrastructure/repositories/prisma-admi
 import { PrismaClientRepository } from './infrastructure/repositories/prisma-client.repository.js';
 import { BcryptHashService } from './infrastructure/services/bcrypt-hash.service.js';
 import { JwtTokenService } from './infrastructure/services/jwt-token.service.js';
+import { VerificationCodeCleanupCron } from './infrastructure/services/verification-code-cleanup.cron.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
 
 @Module({
@@ -33,6 +34,7 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
     RefreshTokenUseCase,
     ForgotPasswordUseCase,
     GetProfileUseCase,
+    VerificationCodeCleanupCron,
   ],
   exports: [HASH_SERVICE],
 })

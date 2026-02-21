@@ -1,4 +1,5 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
+import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
 import type { IClientRepository } from '../../../domain/interfaces/client.repository.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
@@ -18,18 +19,29 @@ export class ClientLoginUseCase {
     @Inject(TOKEN_SERVICE) private tokenService: ITokenService,
   ) {}
 
-  async execute(dto: ClientLoginDto): Promise<TokenPair> {
+  async loginClient(dto: ClientLoginDto): Promise<TokenPair> {
     const client = await this.clientRepository.findByEmail(dto.email);
 
     if (!client) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (client.lockedUntil && client.lockedUntil > new Date()) {
+      throw new ForbiddenException('Account is temporarily locked. Try again later');
+    }
+
     const passwordValid = await this.hashService.compare(dto.password, client.password);
 
     if (!passwordValid) {
+      await this.clientRepository.incrementFailedLoginAttempts(client.id);
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    if (client.status !== 'ACTIVE') {
+      throw new ForbiddenException('Account is not active');
+    }
+
+    await this.clientRepository.resetFailedLoginAttempts(client.id);
 
     const tokens = await this.tokenService.generateTokens({
       sub: client.id,
@@ -38,7 +50,8 @@ export class ClientLoginUseCase {
     });
 
     const hashedRefresh = await this.hashService.hash(tokens.refreshToken);
-    await this.clientRepository.updateRefreshToken(client.id, hashedRefresh);
+    const family = randomUUID();
+    await this.clientRepository.updateRefreshTokenWithFamily(client.id, hashedRefresh, family);
 
     return tokens;
   }

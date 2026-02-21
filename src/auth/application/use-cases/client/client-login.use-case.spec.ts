@@ -1,5 +1,5 @@
 import { type Mock, vi } from 'vitest';
-import { UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
@@ -8,7 +8,13 @@ import { ClientLoginUseCase } from './client-login.use-case.js';
 
 describe('ClientLoginUseCase', () => {
   let useCase: ClientLoginUseCase;
-  let clientRepository: { findByEmail: Mock; updateRefreshToken: Mock };
+  let clientRepository: {
+    findByEmail: Mock;
+    updateRefreshToken: Mock;
+    incrementFailedLoginAttempts: Mock;
+    resetFailedLoginAttempts: Mock;
+    updateRefreshTokenWithFamily: Mock;
+  };
   let hashService: { compare: Mock; hash: Mock };
   let tokenService: { generateTokens: Mock };
 
@@ -16,6 +22,9 @@ describe('ClientLoginUseCase', () => {
     clientRepository = {
       findByEmail: vi.fn(),
       updateRefreshToken: vi.fn(),
+      incrementFailedLoginAttempts: vi.fn(),
+      resetFailedLoginAttempts: vi.fn(),
+      updateRefreshTokenWithFamily: vi.fn(),
     };
     hashService = {
       compare: vi.fn(),
@@ -45,28 +54,82 @@ describe('ClientLoginUseCase', () => {
     clientRepository.findByEmail.mockResolvedValue(null);
 
     await expect(
-      useCase.execute({ email: 'test@example.com', password: 'password' }),
+      useCase.loginClient({ email: 'test@example.com', password: 'password' }),
     ).rejects.toThrow(UnauthorizedException);
   });
 
-  it('should throw UnauthorizedException if password is invalid', async () => {
+  it('should throw ForbiddenException if account is locked', async () => {
     clientRepository.findByEmail.mockResolvedValue({
       id: 1,
       email: 'test@example.com',
       password: 'hashedPassword',
+      status: 'ACTIVE',
+      lockedUntil: new Date(Date.now() + 60_000),
+      failedLoginAttempts: 5,
+    });
+
+    await expect(
+      useCase.loginClient({ email: 'test@example.com', password: 'password' }),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('should throw UnauthorizedException and increment failed attempts if password is invalid', async () => {
+    clientRepository.findByEmail.mockResolvedValue({
+      id: 1,
+      email: 'test@example.com',
+      password: 'hashedPassword',
+      status: 'ACTIVE',
+      lockedUntil: null,
+      failedLoginAttempts: 0,
     });
     hashService.compare.mockResolvedValue(false);
 
     await expect(
-      useCase.execute({ email: 'test@example.com', password: 'password' }),
+      useCase.loginClient({ email: 'test@example.com', password: 'password' }),
     ).rejects.toThrow(UnauthorizedException);
+    expect(clientRepository.incrementFailedLoginAttempts).toHaveBeenCalledWith(1);
   });
 
-  it('should return tokens and update refresh token on success', async () => {
+  it('should throw ForbiddenException if client status is PENDING', async () => {
+    clientRepository.findByEmail.mockResolvedValue({
+      id: 1,
+      email: 'test@example.com',
+      password: 'hashedPassword',
+      status: 'PENDING',
+      lockedUntil: null,
+      failedLoginAttempts: 0,
+    });
+    hashService.compare.mockResolvedValue(true);
+
+    await expect(
+      useCase.loginClient({ email: 'test@example.com', password: 'password' }),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('should throw ForbiddenException if client status is INACTIVE', async () => {
+    clientRepository.findByEmail.mockResolvedValue({
+      id: 1,
+      email: 'test@example.com',
+      password: 'hashedPassword',
+      status: 'INACTIVE',
+      lockedUntil: null,
+      failedLoginAttempts: 0,
+    });
+    hashService.compare.mockResolvedValue(true);
+
+    await expect(
+      useCase.loginClient({ email: 'test@example.com', password: 'password' }),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('should return tokens, reset failed attempts, and store token family on success', async () => {
     const client = {
       id: 1,
       email: 'test@example.com',
       password: 'hashedPassword',
+      status: 'ACTIVE',
+      lockedUntil: null,
+      failedLoginAttempts: 2,
     };
     const tokens = {
       accessToken: 'access',
@@ -78,18 +141,23 @@ describe('ClientLoginUseCase', () => {
     tokenService.generateTokens.mockResolvedValue(tokens);
     hashService.hash.mockResolvedValue('hashedRefresh');
 
-    const result = await useCase.execute({
+    const result = await useCase.loginClient({
       email: 'test@example.com',
       password: 'password',
     });
 
     expect(result).toEqual(tokens);
+    expect(clientRepository.resetFailedLoginAttempts).toHaveBeenCalledWith(client.id);
     expect(tokenService.generateTokens).toHaveBeenCalledWith({
       sub: client.id,
       email: client.email,
       type: 'client',
     });
     expect(hashService.hash).toHaveBeenCalledWith(tokens.refreshToken);
-    expect(clientRepository.updateRefreshToken).toHaveBeenCalledWith(client.id, 'hashedRefresh');
+    expect(clientRepository.updateRefreshTokenWithFamily).toHaveBeenCalledWith(
+      client.id,
+      'hashedRefresh',
+      expect.any(String),
+    );
   });
 });

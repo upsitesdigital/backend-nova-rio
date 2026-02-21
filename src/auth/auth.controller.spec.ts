@@ -11,20 +11,20 @@ import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let clientRegisterUseCase: { execute: Mock };
-  let clientLoginUseCase: { execute: Mock };
-  let adminLoginUseCase: { execute: Mock };
-  let refreshTokenUseCase: { execute: Mock };
-  let forgotPasswordUseCase: { execute: Mock };
-  let getProfileUseCase: { execute: Mock };
+  let clientRegisterUseCase: { registerClient: Mock };
+  let clientLoginUseCase: { loginClient: Mock };
+  let adminLoginUseCase: { loginAdmin: Mock };
+  let refreshTokenUseCase: { refreshTokens: Mock };
+  let forgotPasswordUseCase: { requestPasswordReset: Mock };
+  let getProfileUseCase: { getProfile: Mock };
 
   beforeEach(async () => {
-    clientRegisterUseCase = { execute: vi.fn() };
-    clientLoginUseCase = { execute: vi.fn() };
-    adminLoginUseCase = { execute: vi.fn() };
-    refreshTokenUseCase = { execute: vi.fn() };
-    forgotPasswordUseCase = { execute: vi.fn() };
-    getProfileUseCase = { execute: vi.fn() };
+    clientRegisterUseCase = { registerClient: vi.fn() };
+    clientLoginUseCase = { loginClient: vi.fn() };
+    adminLoginUseCase = { loginAdmin: vi.fn() };
+    refreshTokenUseCase = { refreshTokens: vi.fn() };
+    forgotPasswordUseCase = { requestPasswordReset: vi.fn() };
+    getProfileUseCase = { getProfile: vi.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
@@ -48,36 +48,36 @@ describe('AuthController', () => {
   it('clientRegister should call clientRegisterUseCase', async () => {
     const dto = { name: 'Test', email: 'test@test.com', password: 'pass', phone: '123' };
     await controller.clientRegister(dto);
-    expect(clientRegisterUseCase.execute).toHaveBeenCalledWith(dto);
+    expect(clientRegisterUseCase.registerClient).toHaveBeenCalledWith(dto);
   });
 
   it('clientLogin should call clientLoginUseCase', async () => {
     const dto = { email: 'test@test.com', password: 'pass' };
     await controller.clientLogin(dto);
-    expect(clientLoginUseCase.execute).toHaveBeenCalledWith(dto);
+    expect(clientLoginUseCase.loginClient).toHaveBeenCalledWith(dto);
   });
 
   it('adminLogin should call adminLoginUseCase', async () => {
     const dto = { email: 'admin@test.com', password: 'pass' };
     await controller.adminLogin(dto);
-    expect(adminLoginUseCase.execute).toHaveBeenCalledWith(dto);
+    expect(adminLoginUseCase.loginAdmin).toHaveBeenCalledWith(dto);
   });
 
   it('refreshToken should call refreshTokenUseCase', async () => {
     const dto = { refreshToken: 'token' };
     await controller.refreshToken(dto);
-    expect(refreshTokenUseCase.execute).toHaveBeenCalledWith(dto);
+    expect(refreshTokenUseCase.refreshTokens).toHaveBeenCalledWith(dto);
   });
 
   it('forgotPassword should call forgotPasswordUseCase', async () => {
     const dto = { email: 'test@test.com' };
     await controller.forgotPassword(dto);
-    expect(forgotPasswordUseCase.execute).toHaveBeenCalledWith(dto);
+    expect(forgotPasswordUseCase.requestPasswordReset).toHaveBeenCalledWith(dto);
   });
 
   it('getProfile should call getProfileUseCase', async () => {
     const user: AuthUser = { id: 1, type: 'client', email: 'test@test.com' };
     await controller.getProfile(user);
-    expect(getProfileUseCase.execute).toHaveBeenCalledWith(user);
+    expect(getProfileUseCase.getProfile).toHaveBeenCalledWith(user);
   });
 });

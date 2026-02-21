@@ -12,7 +12,7 @@ export class GetProfileUseCase {
     @Inject(ADMIN_REPOSITORY) private adminRepository: IAdminRepository,
   ) {}
 
-  async execute(user: AuthUser) {
+  async getProfile(user: AuthUser) {
     if (user.type === 'client') {
       const profile = await this.clientRepository.findProfileById(user.id);
 

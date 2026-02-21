@@ -37,7 +37,7 @@ describe('GetProfileUseCase', () => {
     const profile = { id: 1, name: 'Client' };
     clientRepository.findProfileById.mockResolvedValue(profile);
 
-    const result = await useCase.execute({ id: 1, type: 'client', email: 'test@test.com' });
+    const result = await useCase.getProfile({ id: 1, type: 'client', email: 'test@test.com' });
 
     expect(result).toEqual(profile);
     expect(clientRepository.findProfileById).toHaveBeenCalledWith(1);
@@ -47,7 +47,7 @@ describe('GetProfileUseCase', () => {
     clientRepository.findProfileById.mockResolvedValue(null);
 
     await expect(
-      useCase.execute({ id: 1, type: 'client', email: 'test@test.com' }),
+      useCase.getProfile({ id: 1, type: 'client', email: 'test@test.com' }),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -55,7 +55,7 @@ describe('GetProfileUseCase', () => {
     const profile = { id: 1, name: 'Admin' };
     adminRepository.findProfileById.mockResolvedValue(profile);
 
-    const result = await useCase.execute({ id: 1, type: 'admin', email: 'test@test.com' });
+    const result = await useCase.getProfile({ id: 1, type: 'admin', email: 'test@test.com' });
 
     expect(result).toEqual(profile);
     expect(adminRepository.findProfileById).toHaveBeenCalledWith(1);
@@ -64,8 +64,8 @@ describe('GetProfileUseCase', () => {
   it('should throw NotFoundException if admin profile not found', async () => {
     adminRepository.findProfileById.mockResolvedValue(null);
 
-    await expect(useCase.execute({ id: 1, type: 'admin', email: 'test@test.com' })).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      useCase.getProfile({ id: 1, type: 'admin', email: 'test@test.com' }),
+    ).rejects.toThrow(NotFoundException);
   });
 });
