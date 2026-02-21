@@ -106,4 +106,31 @@ describe('UpdateEmployeeUseCase', () => {
     await expect(useCase.updateEmployeeById(1, dto)).rejects.toThrow(ConflictException);
     expect(employeeRepository.updateEmployeeById).not.toHaveBeenCalled();
   });
+
+  it('should check email and cpf in parallel when both change', async () => {
+    const dto = { email: 'new@example.com', cpf: '11111111111' };
+    const updated = { ...existingEmployee, ...dto };
+
+    employeeRepository.findEmployeeById.mockResolvedValue(existingEmployee);
+    employeeRepository.findEmployeeByEmail.mockResolvedValue(null);
+    employeeRepository.findEmployeeByCpf.mockResolvedValue(null);
+    employeeRepository.updateEmployeeById.mockResolvedValue(updated);
+
+    const result = await useCase.updateEmployeeById(1, dto);
+
+    expect(result).toEqual(updated);
+    expect(employeeRepository.findEmployeeByEmail).toHaveBeenCalledWith('new@example.com');
+    expect(employeeRepository.findEmployeeByCpf).toHaveBeenCalledWith('11111111111');
+  });
+
+  it('should throw ConflictException for email when both change and email conflicts', async () => {
+    const dto = { email: 'taken@example.com', cpf: '11111111111' };
+
+    employeeRepository.findEmployeeById.mockResolvedValue(existingEmployee);
+    employeeRepository.findEmployeeByEmail.mockResolvedValue({ id: 2, email: 'taken@example.com' });
+    employeeRepository.findEmployeeByCpf.mockResolvedValue(null);
+
+    await expect(useCase.updateEmployeeById(1, dto)).rejects.toThrow(ConflictException);
+    expect(employeeRepository.updateEmployeeById).not.toHaveBeenCalled();
+  });
 });

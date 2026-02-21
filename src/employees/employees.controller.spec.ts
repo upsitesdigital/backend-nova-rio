@@ -53,13 +53,23 @@ describe('EmployeesController', () => {
 
   it('listEmployees should call listEmployeesUseCase with query', async () => {
     const query = { status: 'ACTIVE' as const };
-    await controller.listEmployees(query);
+    const paginated = { data: [], total: 0, page: 1, limit: 20 };
+    listEmployeesUseCase.listEmployees.mockResolvedValue(paginated);
+
+    const result = await controller.listEmployees(query);
+
+    expect(result).toEqual(paginated);
     expect(listEmployeesUseCase.listEmployees).toHaveBeenCalledWith(query);
   });
 
   it('listEmployees should call listEmployeesUseCase with search', async () => {
     const query = { search: 'maria' };
-    await controller.listEmployees(query);
+    const paginated = { data: [], total: 0, page: 1, limit: 20 };
+    listEmployeesUseCase.listEmployees.mockResolvedValue(paginated);
+
+    const result = await controller.listEmployees(query);
+
+    expect(result).toEqual(paginated);
     expect(listEmployeesUseCase.listEmployees).toHaveBeenCalledWith(query);
   });
 

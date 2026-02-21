@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
+import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 import type {
   CreateEmployeeData,
   EmployeeSafe,
@@ -38,8 +39,10 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
     });
   }
 
-  async listEmployees(filters: ListEmployeesFilters): Promise<EmployeeSafe[]> {
+  async listEmployees(filters: ListEmployeesFilters): Promise<PaginatedResponse<EmployeeSafe>> {
     const where: Prisma.EmployeeWhereInput = {};
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 20;
 
     if (filters.status) {
       where.status = filters.status;
@@ -52,11 +55,18 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
       ];
     }
 
-    return this.prisma.employee.findMany({
-      where,
-      select: EMPLOYEE_SAFE_SELECT,
-      orderBy: { createdAt: 'desc' },
-    });
+    const [data, total] = await Promise.all([
+      this.prisma.employee.findMany({
+        where,
+        select: EMPLOYEE_SAFE_SELECT,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.employee.count({ where }),
+    ]);
+
+    return { data, total, page, limit };
   }
 
   async findEmployeeById(id: number): Promise<EmployeeSafe | null> {

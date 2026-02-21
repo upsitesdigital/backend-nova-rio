@@ -27,23 +27,49 @@ describe('ListEmployeesUseCase', () => {
   });
 
   it('should call repository.listEmployees with filters', async () => {
-    const filters = { status: 'ACTIVE' as const };
-    const employees = [{ id: 1, name: 'Maria Silva' }];
+    const query = { status: 'ACTIVE' as const };
+    const paginated = { data: [{ id: 1, name: 'Maria Silva' }], total: 1, page: 1, limit: 20 };
 
-    employeeRepository.listEmployees.mockResolvedValue(employees);
+    employeeRepository.listEmployees.mockResolvedValue(paginated);
 
-    const result = await useCase.listEmployees(filters);
+    const result = await useCase.listEmployees(query);
 
-    expect(result).toEqual(employees);
-    expect(employeeRepository.listEmployees).toHaveBeenCalledWith(filters);
+    expect(result).toEqual(paginated);
+    expect(employeeRepository.listEmployees).toHaveBeenCalledWith({
+      status: 'ACTIVE',
+      search: undefined,
+      page: undefined,
+      limit: undefined,
+    });
   });
 
   it('should call repository.listEmployees with empty filters', async () => {
-    employeeRepository.listEmployees.mockResolvedValue([]);
+    const paginated = { data: [], total: 0, page: 1, limit: 20 };
+    employeeRepository.listEmployees.mockResolvedValue(paginated);
 
     const result = await useCase.listEmployees({});
 
-    expect(result).toEqual([]);
-    expect(employeeRepository.listEmployees).toHaveBeenCalledWith({});
+    expect(result).toEqual(paginated);
+    expect(employeeRepository.listEmployees).toHaveBeenCalledWith({
+      status: undefined,
+      search: undefined,
+      page: undefined,
+      limit: undefined,
+    });
+  });
+
+  it('should pass page and limit to repository', async () => {
+    const paginated = { data: [], total: 0, page: 2, limit: 10 };
+    employeeRepository.listEmployees.mockResolvedValue(paginated);
+
+    const result = await useCase.listEmployees({ page: 2, limit: 10 });
+
+    expect(result).toEqual(paginated);
+    expect(employeeRepository.listEmployees).toHaveBeenCalledWith({
+      status: undefined,
+      search: undefined,
+      page: 2,
+      limit: 10,
+    });
   });
 });

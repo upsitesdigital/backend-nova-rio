@@ -29,6 +29,7 @@ describe('PrismaEmployeeRepository', () => {
       findMany: Mock;
       findFirst: Mock;
       findUnique: Mock;
+      count: Mock;
       update: Mock;
     };
   };
@@ -40,6 +41,7 @@ describe('PrismaEmployeeRepository', () => {
         findMany: vi.fn(),
         findFirst: vi.fn(),
         findUnique: vi.fn(),
+        count: vi.fn(),
         update: vi.fn(),
       },
     };
@@ -72,20 +74,25 @@ describe('PrismaEmployeeRepository', () => {
     expect(prisma.employee.create).toHaveBeenCalledWith({ data, select: EMPLOYEE_SAFE_SELECT });
   });
 
-  it('listEmployees should call prisma.employee.findMany with no filters', async () => {
+  it('listEmployees should call prisma.employee.findMany with no filters and default pagination', async () => {
     prisma.employee.findMany.mockResolvedValue([]);
+    prisma.employee.count.mockResolvedValue(0);
 
-    await repository.listEmployees({});
+    const result = await repository.listEmployees({});
 
+    expect(result).toEqual({ data: [], total: 0, page: 1, limit: 20 });
     expect(prisma.employee.findMany).toHaveBeenCalledWith({
       where: {},
       select: EMPLOYEE_SAFE_SELECT,
       orderBy: { createdAt: 'desc' },
+      skip: 0,
+      take: 20,
     });
   });
 
   it('listEmployees should filter by status', async () => {
     prisma.employee.findMany.mockResolvedValue([]);
+    prisma.employee.count.mockResolvedValue(0);
 
     await repository.listEmployees({ status: 'ACTIVE' });
 
@@ -93,11 +100,14 @@ describe('PrismaEmployeeRepository', () => {
       where: { status: 'ACTIVE' },
       select: EMPLOYEE_SAFE_SELECT,
       orderBy: { createdAt: 'desc' },
+      skip: 0,
+      take: 20,
     });
   });
 
   it('listEmployees should filter by search with OR conditions', async () => {
     prisma.employee.findMany.mockResolvedValue([]);
+    prisma.employee.count.mockResolvedValue(0);
 
     await repository.listEmployees({ search: 'maria' });
 
@@ -110,14 +120,24 @@ describe('PrismaEmployeeRepository', () => {
       },
       select: EMPLOYEE_SAFE_SELECT,
       orderBy: { createdAt: 'desc' },
+      skip: 0,
+      take: 20,
     });
   });
 
   it('listEmployees should combine status and search filters', async () => {
-    prisma.employee.findMany.mockResolvedValue([]);
+    const employees = [{ id: 1, name: 'Maria Silva' }];
+    prisma.employee.findMany.mockResolvedValue(employees);
+    prisma.employee.count.mockResolvedValue(1);
 
-    await repository.listEmployees({ status: 'ACTIVE', search: 'maria' });
+    const result = await repository.listEmployees({
+      status: 'ACTIVE',
+      search: 'maria',
+      page: 1,
+      limit: 20,
+    });
 
+    expect(result).toEqual({ data: employees, total: 1, page: 1, limit: 20 });
     expect(prisma.employee.findMany).toHaveBeenCalledWith({
       where: {
         status: 'ACTIVE',
@@ -128,6 +148,23 @@ describe('PrismaEmployeeRepository', () => {
       },
       select: EMPLOYEE_SAFE_SELECT,
       orderBy: { createdAt: 'desc' },
+      skip: 0,
+      take: 20,
+    });
+  });
+
+  it('listEmployees should calculate skip based on page and limit', async () => {
+    prisma.employee.findMany.mockResolvedValue([]);
+    prisma.employee.count.mockResolvedValue(0);
+
+    await repository.listEmployees({ page: 3, limit: 10 });
+
+    expect(prisma.employee.findMany).toHaveBeenCalledWith({
+      where: {},
+      select: EMPLOYEE_SAFE_SELECT,
+      orderBy: { createdAt: 'desc' },
+      skip: 20,
+      take: 10,
     });
   });
 
