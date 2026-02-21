@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Package, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
+import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 import type {
   CreatePackageData,
   IPackageRepository,
@@ -16,7 +17,7 @@ export class PrismaPackageRepository implements IPackageRepository {
     return this.prisma.package.create({ data });
   }
 
-  async findPackages(filters: ListPackagesFilters): Promise<Package[]> {
+  async findPackages(filters: ListPackagesFilters): Promise<PaginatedResponse<Package>> {
     const where: Prisma.PackageWhereInput = {};
 
     if (filters.active) {
@@ -27,7 +28,14 @@ export class PrismaPackageRepository implements IPackageRepository {
       where.serviceId = filters.serviceId;
     }
 
-    return this.prisma.package.findMany({ where });
+    const skip = (filters.page - 1) * filters.limit;
+
+    const [data, total] = await Promise.all([
+      this.prisma.package.findMany({ where, skip, take: filters.limit }),
+      this.prisma.package.count({ where }),
+    ]);
+
+    return { data, total, page: filters.page, limit: filters.limit };
   }
 
   async findPackageById(id: number): Promise<Package | null> {
