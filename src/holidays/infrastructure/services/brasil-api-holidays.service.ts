@@ -11,7 +11,7 @@ export class BrasilApiHolidaysService implements IBrasilApiHolidaysService {
   async fetchHolidaysByYear(year: number): Promise<BrasilApiHoliday[]> {
     const url = `https://brasilapi.com.br/api/feriados/v1/${year}`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: AbortSignal.timeout(10_000) });
 
     if (!response.ok) {
       this.logger.error(`BrasilAPI returned status ${response.status} for year ${year}`);

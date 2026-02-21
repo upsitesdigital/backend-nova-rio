@@ -35,7 +35,11 @@ describe('BrasilApiHolidaysService', () => {
     const result = await service.fetchHolidaysByYear(2026);
 
     expect(result).toEqual(mockHolidays);
-    expect(fetch).toHaveBeenCalledWith('https://brasilapi.com.br/api/feriados/v1/2026');
+    expect(fetch).toHaveBeenCalledWith(
+      'https://brasilapi.com.br/api/feriados/v1/2026',
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      { signal: expect.any(AbortSignal) },
+    );
   });
 
   it('should throw error when BrasilAPI returns non-ok response', async () => {

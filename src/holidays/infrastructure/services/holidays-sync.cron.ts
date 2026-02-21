@@ -79,7 +79,7 @@ export class HolidaysSyncCron {
         );
       }
 
-      await Promise.all(allHolidays.map((h) => this.holidayRepository.upsertHolidayByDate(h)));
+      await this.holidayRepository.bulkUpsertHolidays(allHolidays);
 
       this.logger.log(`Synced ${allHolidays.length} holidays for year ${year}`);
     } catch (error) {

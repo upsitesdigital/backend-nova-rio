@@ -7,7 +7,7 @@ import { SyncHolidaysUseCase } from './sync-holidays.use-case.js';
 describe('SyncHolidaysUseCase', () => {
   let useCase: SyncHolidaysUseCase;
   let holidayRepository: {
-    upsertHolidayByDate: Mock;
+    bulkUpsertHolidays: Mock;
   };
   let brasilApiService: {
     fetchHolidaysByYear: Mock;
@@ -15,7 +15,7 @@ describe('SyncHolidaysUseCase', () => {
 
   beforeEach(async () => {
     holidayRepository = {
-      upsertHolidayByDate: vi.fn(),
+      bulkUpsertHolidays: vi.fn(),
     };
     brasilApiService = {
       fetchHolidaysByYear: vi.fn(),
@@ -42,13 +42,12 @@ describe('SyncHolidaysUseCase', () => {
       { date: '2026-04-21', name: 'Tiradentes', type: 'national' },
     ];
     brasilApiService.fetchHolidaysByYear.mockResolvedValue(nationalHolidays);
-    holidayRepository.upsertHolidayByDate.mockImplementation((data) =>
-      Promise.resolve({ id: 1, uuid: 'uuid', ...data }),
-    );
+    holidayRepository.bulkUpsertHolidays.mockResolvedValue(undefined);
 
     const result = await useCase.syncHolidaysByYear({ year: 2026 });
 
     expect(brasilApiService.fetchHolidaysByYear).toHaveBeenCalledWith(2026);
+    expect(holidayRepository.bulkUpsertHolidays).toHaveBeenCalledTimes(1);
     // 2 national + 2 municipal (São Sebastião, São Jorge) + 2 pontos facultativos (Professor, Servidor)
     expect(result.synced).toBe(6);
     expect(result.holidays).toHaveLength(6);
@@ -57,9 +56,7 @@ describe('SyncHolidaysUseCase', () => {
   it('should add carnaval-derived holidays when carnaval is present', async () => {
     const nationalHolidays = [{ date: '2026-02-17', name: 'Carnaval', type: 'national' }];
     brasilApiService.fetchHolidaysByYear.mockResolvedValue(nationalHolidays);
-    holidayRepository.upsertHolidayByDate.mockImplementation((data) =>
-      Promise.resolve({ id: 1, uuid: 'uuid', ...data }),
-    );
+    holidayRepository.bulkUpsertHolidays.mockResolvedValue(undefined);
 
     const result = await useCase.syncHolidaysByYear({ year: 2026 });
 
@@ -75,9 +72,7 @@ describe('SyncHolidaysUseCase', () => {
     brasilApiService.fetchHolidaysByYear.mockResolvedValue([
       { date: '2026-01-01', name: 'Ano Novo', type: 'national' },
     ]);
-    holidayRepository.upsertHolidayByDate.mockImplementation((data) =>
-      Promise.resolve({ id: 1, uuid: 'uuid', ...data }),
-    );
+    holidayRepository.bulkUpsertHolidays.mockResolvedValue(undefined);
 
     const result = await useCase.syncHolidaysByYear({ year: 2026 });
 
@@ -90,21 +85,20 @@ describe('SyncHolidaysUseCase', () => {
     brasilApiService.fetchHolidaysByYear.mockResolvedValue([
       { date: '2026-01-01', name: 'Ano Novo', type: 'national' },
     ]);
-    holidayRepository.upsertHolidayByDate.mockImplementation((data) =>
-      Promise.resolve({ id: 1, uuid: 'uuid', ...data }),
-    );
+    holidayRepository.bulkUpsertHolidays.mockResolvedValue(undefined);
 
     await useCase.syncHolidaysByYear({ year: 2026 });
 
-    const calls = holidayRepository.upsertHolidayByDate.mock.calls as Array<
-      [{ name: string; isBlocked: boolean }]
-    >;
-    const nationalCall = calls.find((c) => c[0].name === 'Ano Novo');
-    const municipalCall = calls.find((c) => c[0].name === 'Dia de São Sebastião');
-    const facultativoCall = calls.find((c) => c[0].name === 'Dia do Professor');
+    const holidays = holidayRepository.bulkUpsertHolidays.mock.calls[0][0] as Array<{
+      name: string;
+      isBlocked: boolean;
+    }>;
+    const nationalHoliday = holidays.find((h) => h.name === 'Ano Novo');
+    const municipalHoliday = holidays.find((h) => h.name === 'Dia de São Sebastião');
+    const facultativoHoliday = holidays.find((h) => h.name === 'Dia do Professor');
 
-    expect(nationalCall![0].isBlocked).toBe(true);
-    expect(municipalCall![0].isBlocked).toBe(true);
-    expect(facultativoCall![0].isBlocked).toBe(false);
+    expect(nationalHoliday!.isBlocked).toBe(true);
+    expect(municipalHoliday!.isBlocked).toBe(true);
+    expect(facultativoHoliday!.isBlocked).toBe(false);
   });
 });
