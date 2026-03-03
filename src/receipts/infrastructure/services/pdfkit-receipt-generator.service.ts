@@ -1,11 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { createWriteStream, existsSync, mkdirSync } from 'node:fs';
+import { createWriteStream, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import PDFDocument from 'pdfkit';
+import SVGtoPDFKit from 'svg-to-pdfkit';
 import type { PaymentResponse } from '../../../payments/domain/interfaces/payment.repository.interface.js';
 import type { IReceiptGenerator } from '../../domain/interfaces/receipt-generator.interface.js';
 
 const UPLOADS_DIR = join(process.cwd(), 'uploads', 'receipts');
+const LOGO_PATH = join(process.cwd(), 'assets', 'logo.svg');
 
 @Injectable()
 export class PdfkitReceiptGeneratorService implements IReceiptGenerator {
@@ -48,8 +50,24 @@ export class PdfkitReceiptGeneratorService implements IReceiptGenerator {
   }
 
   private renderHeader(doc: PDFKit.PDFDocument): void {
-    doc.fontSize(22).font('Helvetica-Bold').text('NOVA RIO', { align: 'center' });
-    doc.moveDown(0.3);
+    const logoWidth = 160;
+    const logoHeight = 86;
+    const pageWidth = doc.page.width;
+    const logoX = (pageWidth - logoWidth) / 2;
+
+    try {
+      const svgRaw = readFileSync(LOGO_PATH, 'utf-8');
+      const svgForPrint = svgRaw.replace(/fill="white"/g, 'fill="#1a1a1a"');
+      SVGtoPDFKit(doc, svgForPrint, logoX, doc.y, {
+        width: logoWidth,
+        height: logoHeight,
+      });
+      doc.y += logoHeight + 8;
+    } catch {
+      doc.fontSize(22).font('Helvetica-Bold').text('NOVA RIO', { align: 'center' });
+      doc.moveDown(0.3);
+    }
+
     doc.fontSize(14).font('Helvetica').text('RECIBO DE PAGAMENTO', { align: 'center' });
     doc.moveDown(1);
     doc
