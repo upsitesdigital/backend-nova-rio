@@ -20,7 +20,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY --from=build /app/package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev --ignore-scripts
 
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/assets ./assets
