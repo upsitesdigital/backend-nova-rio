@@ -1,6 +1,7 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
+import { GenerateReceiptUseCase } from '../../../../receipts/application/use-cases/receipt/generate-receipt.use-case.js';
 import { PAYMENT_REPOSITORY } from '../../../domain/interfaces/payment.repository.interface.js';
 import type {
   IPaymentRepository,
@@ -12,6 +13,7 @@ export class ApprovePaymentUseCase {
   constructor(
     @Inject(PAYMENT_REPOSITORY) private paymentRepository: IPaymentRepository,
     @Inject(EMAIL_SERVICE) private emailService: IEmailService,
+    private generateReceiptUseCase: GenerateReceiptUseCase,
   ) {}
 
   async approvePaymentById(id: number): Promise<PaymentResponse> {
@@ -36,6 +38,8 @@ export class ApprovePaymentUseCase {
         payment.appointment.date.toISOString().slice(0, 10),
       )
       .catch(() => {});
+
+    this.generateReceiptUseCase.generateReceiptForPayment(payment.id).catch(() => {});
 
     return payment;
   }
