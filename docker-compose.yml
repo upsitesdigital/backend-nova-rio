@@ -35,7 +35,7 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@2026!}
       ADMIN_NAME: ${ADMIN_NAME:-Admin Master}
     ports:
-      - '3000:3000'
+      - '8080:8080'
 
 volumes:
   postgres_data:

@@ -1396,6 +1396,228 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Admin Payments",
+      "item": [
+        {
+          "name": "List Payments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/payments",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "payments"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "description": "Filter by status (APPROVED, PENDING, CANCELLED)",
+                  "disabled": true
+                },
+                {
+                  "key": "method",
+                  "value": "PIX",
+                  "description": "Filter by method (CREDIT_CARD, DEBIT_CARD, PIX)",
+                  "disabled": true
+                },
+                {
+                  "key": "clientId",
+                  "value": "1",
+                  "description": "Filter by client ID",
+                  "disabled": true
+                },
+                {
+                  "key": "dateFrom",
+                  "value": "2026-01-01",
+                  "description": "Filter from date (ISO format)",
+                  "disabled": true
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2026-12-31",
+                  "description": "Filter to date (ISO format)",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default 1)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Items per page (default 20, max 100)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List payments with optional filters: status, method, clientId, dateFrom, dateTo, pagination (Admin only)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/payments/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "payments", "{{payment_id}}"]
+            },
+            "description": "Get a payment by ID (Admin only). Returns full payment with client, appointment, and card relations."
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Payment",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/payments/{{payment_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "payments", "{{payment_id}}", "approve"]
+            },
+            "description": "Approve a pending payment (Admin only). Only PENDING payments can be approved. Sets paidAt timestamp."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Payment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/payments/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "payments", "{{payment_id}}"]
+            },
+            "description": "Delete a payment by ID (Admin only). Returns 204 No Content."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Client Payments",
+      "item": [
+        {
+          "name": "Create Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appointmentId\": {{appointment_id}},\n  \"method\": \"PIX\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/payments",
+              "host": ["{{base_url}}"],
+              "path": ["payments"]
+            },
+            "description": "Create a payment for an appointment (Client only). Methods: PIX, CREDIT_CARD, DEBIT_CARD. Card payments require cardId. Recurrence discounts: 10% weekly/biweekly, 5% monthly."
+          },
+          "response": []
+        },
+        {
+          "name": "List My Payments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payments",
+              "host": ["{{base_url}}"],
+              "path": ["payments"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default 1)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Items per page (default 20, max 100)",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "APPROVED",
+                  "description": "Filter by status (APPROVED, PENDING, CANCELLED)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List authenticated client's payments with pagination and optional status filter (Client only)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Payment By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payments/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "{{payment_id}}"]
+            },
+            "description": "Get a payment by ID (Client only). Only returns payments belonging to the authenticated client."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "Vindi Webhook",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": {\n    \"type\": \"bill_paid\",\n    \"data\": {\n      \"bill\": {\n        \"id\": 100,\n        \"status\": \"paid\",\n        \"amount\": \"200.00\",\n        \"charges\": [],\n        \"customer\": { \"id\": 50 }\n      }\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/webhooks/vindi",
+              "host": ["{{base_url}}"],
+              "path": ["webhooks", "vindi"]
+            },
+            "description": "Vindi payment gateway webhook. Handles bill_paid, charge_rejected, and bill_canceled events. No auth required."
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "auth": {
@@ -1458,6 +1680,11 @@
       "key": "appointment_id",
       "value": "1",
       "description": "Appointment ID for parameterized requests"
+    },
+    {
+      "key": "payment_id",
+      "value": "1",
+      "description": "Payment ID for parameterized requests"
     }
   ]
 }
