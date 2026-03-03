@@ -72,7 +72,7 @@ describe('CreateClientPaymentUseCase', () => {
     gatewayTransactionId: '100',
     pixCode: 'pix-code-from-vindi',
     pixQrCodeUrl: 'https://vindi.com/qr/abc123',
-    client: { id: 1, name: 'João', email: 'joao@test.com' },
+    client: { id: 1, name: 'João', email: 'joao@test.com', cpfCnpj: null },
     appointment: {
       id: 1,
       date: new Date('2026-03-16'),

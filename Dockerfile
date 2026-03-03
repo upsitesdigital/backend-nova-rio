@@ -30,6 +30,7 @@ COPY --from=build /app/prisma.config.ts ./
 RUN DATABASE_URL="postgresql://build:build@localhost:5432/build" npx prisma generate
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN mkdir -p /app/uploads/receipts && chown -R appuser:appgroup /app/uploads
 USER appuser
 
 EXPOSE 3000

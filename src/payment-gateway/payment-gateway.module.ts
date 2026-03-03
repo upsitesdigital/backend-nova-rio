@@ -1,5 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { PaymentsModule } from '../payments/payments.module.js';
+import { ReceiptsModule } from '../receipts/receipts.module.js';
 import { HandleVindiBillPaidUseCase } from './application/use-cases/webhook/handle-vindi-bill-paid.use-case.js';
 import { HandleVindiChargeRejectedUseCase } from './application/use-cases/webhook/handle-vindi-charge-rejected.use-case.js';
 import { PAYMENT_GATEWAY_SERVICE } from './domain/interfaces/payment-gateway.service.interface.js';
@@ -9,7 +10,7 @@ import { VindiWebhooksController } from './vindi-webhooks.controller.js';
 
 @Global()
 @Module({
-  imports: [PaymentsModule],
+  imports: [PaymentsModule, ReceiptsModule],
   controllers: [VindiWebhooksController],
   providers: [
     VindiHttpClient,

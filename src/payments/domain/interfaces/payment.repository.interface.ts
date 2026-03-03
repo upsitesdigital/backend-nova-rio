@@ -19,7 +19,7 @@ export interface PaymentResponse {
   paidAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-  client: { id: number; name: string; email: string };
+  client: { id: number; name: string; email: string; cpfCnpj: string | null };
   appointment: {
     id: number;
     date: Date;
