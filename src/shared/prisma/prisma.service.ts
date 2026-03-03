@@ -8,7 +8,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     const poolSize = parseInt(process.env.DATABASE_POOL_SIZE ?? '10', 10);
     const adapter = new PrismaPg({
       connectionString: process.env.DATABASE_URL,
-      options: { max: poolSize },
+      max: poolSize,
     });
     super({ adapter });
   }
