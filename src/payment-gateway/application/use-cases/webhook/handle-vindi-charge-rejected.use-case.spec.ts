@@ -16,7 +16,7 @@ describe('HandleVindiChargeRejectedUseCase', () => {
     id: 1,
     status: 'PENDING',
     amount: 200,
-    client: { id: 1, name: 'João', email: 'joao@test.com' },
+    client: { id: 1, name: 'João', email: 'joao@test.com', cpfCnpj: null },
     appointment: {
       id: 1,
       date: new Date('2026-03-16'),
