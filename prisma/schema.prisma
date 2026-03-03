@@ -118,6 +118,8 @@ model Client {
   unit         Unit?        @relation(fields: [unitId], references: [id])
   unitId       Int?
 
+  vindiCustomerId Int?
+
   verificationCodes VerificationCode[]
 
   @@index([unitId])
@@ -315,6 +317,7 @@ model Payment {
   cancellationReason String?
   gatewayTransactionId String?  // ID da transação no gateway
   pixCode         String?       // Código PIX quando aplicável
+  pixQrCodeUrl    String?       // URL do QR Code PIX
   paidAt          DateTime?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
