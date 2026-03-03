@@ -11,7 +11,7 @@ import type {
 import type { PaymentStatus } from '@prisma/client';
 
 const PAYMENT_INCLUDE = {
-  client: { select: { id: true, name: true, email: true } },
+  client: { select: { id: true, name: true, email: true, cpfCnpj: true } },
   appointment: {
     select: {
       id: true,
