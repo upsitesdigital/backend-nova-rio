@@ -8,6 +8,7 @@ import { passwordChangedTemplate } from '../templates/password-changed.template.
 import { clientApprovedTemplate } from '../templates/client-approved.template.js';
 import { clientRejectedTemplate } from '../templates/client-rejected.template.js';
 import { emailChangeVerificationTemplate } from '../templates/email-change-verification.template.js';
+import { emailChangedTemplate } from '../templates/email-changed.template.js';
 import { accountDeletedTemplate } from '../templates/account-deleted.template.js';
 import { appointmentConfirmedTemplate } from '../templates/appointment-confirmed.template.js';
 import { appointmentCancelledTemplate } from '../templates/appointment-cancelled.template.js';
@@ -107,6 +108,22 @@ export class ResendEmailService implements IEmailService {
       });
     } catch (error) {
       this.logger.error(`Failed to send email change verification to ${this.maskEmail(to)}`, error);
+    }
+  }
+
+  async sendEmailChangedEmail(to: string, name: string, newEmail: string): Promise<void> {
+    try {
+      await this.resend.emails.send({
+        from: this.from,
+        to,
+        subject: 'E-mail alterado com sucesso - Nova Rio',
+        html: emailChangedTemplate(name, newEmail),
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to send email changed notification to ${this.maskEmail(to)}`,
+        error,
+      );
     }
   }
 
