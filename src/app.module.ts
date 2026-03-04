@@ -13,6 +13,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { CardsModule } from './cards/cards.module.js';
 import { ClientProfileModule } from './client-profile/client-profile.module.js';
 import { ClientsModule } from './clients/clients.module.js';
+import { DashboardModule } from './dashboard/dashboard.module.js';
 import { EmailModule } from './email/email.module.js';
 import { EmployeesModule } from './employees/employees.module.js';
 import { HealthModule } from './health/health.module.js';
@@ -45,6 +46,7 @@ import { UnitsModule } from './units/units.module.js';
     ServicesModule,
     AdminUsersModule,
     ClientsModule,
+    DashboardModule,
     EmployeesModule,
     HealthModule,
     HolidaysModule,
