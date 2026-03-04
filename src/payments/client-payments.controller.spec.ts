@@ -5,6 +5,7 @@ import { ClientPaymentsController } from './client-payments.controller.js';
 import { CreateClientPaymentUseCase } from './application/use-cases/payment/create-client-payment.use-case.js';
 import { ListClientPaymentsUseCase } from './application/use-cases/payment/list-client-payments.use-case.js';
 import { GetClientPaymentUseCase } from './application/use-cases/payment/get-client-payment.use-case.js';
+import type { ListClientPaymentsQueryDto } from './dto/payment/list-client-payments-query.dto.js';
 
 describe('ClientPaymentsController', () => {
   let controller: ClientPaymentsController;
@@ -42,7 +43,8 @@ describe('ClientPaymentsController', () => {
   });
 
   it('listClientPayments should call use case with user.id and pagination', async () => {
-    await controller.listClientPayments(clientUser, 1, 20);
+    const query = { page: 1, limit: 20 } as ListClientPaymentsQueryDto;
+    await controller.listClientPayments(clientUser, query);
     expect(listClientPaymentsUseCase.listPaymentsByClientId).toHaveBeenCalledWith(
       1,
       1,
@@ -52,7 +54,8 @@ describe('ClientPaymentsController', () => {
   });
 
   it('listClientPayments should clamp limit to 100', async () => {
-    await controller.listClientPayments(clientUser, 1, 200);
+    const query = { page: 1, limit: 200 } as ListClientPaymentsQueryDto;
+    await controller.listClientPayments(clientUser, query);
     expect(listClientPaymentsUseCase.listPaymentsByClientId).toHaveBeenCalledWith(
       1,
       1,
