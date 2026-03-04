@@ -1,27 +1,26 @@
+import type { AdminUser } from '@prisma/client';
+
 export const ADMIN_REPOSITORY = Symbol('ADMIN_REPOSITORY');
 
-export interface AdminData {
-  id: number;
-  name: string;
-  email: string;
-  password: string;
-  role: string;
-  status: string;
-  refreshToken: string | null;
-  failedLoginAttempts: number;
-  lockedUntil: Date | null;
-  tokenFamily: string | null;
-  createdAt: Date;
-}
+export type AdminData = Pick<
+  AdminUser,
+  | 'id'
+  | 'name'
+  | 'email'
+  | 'password'
+  | 'role'
+  | 'status'
+  | 'refreshToken'
+  | 'failedLoginAttempts'
+  | 'lockedUntil'
+  | 'tokenFamily'
+  | 'createdAt'
+>;
 
-export interface AdminProfile {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  createdAt: Date;
-}
+export type AdminProfile = Pick<
+  AdminUser,
+  'id' | 'name' | 'email' | 'role' | 'status' | 'createdAt'
+>;
 
 export interface IAdminRepository {
   findByEmail(email: string): Promise<AdminData | null>;
