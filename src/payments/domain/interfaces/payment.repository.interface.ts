@@ -1,4 +1,4 @@
-import type { PaymentMethod, PaymentStatus, RecurrenceType } from '@prisma/client';
+import type { PaymentMethod, PaymentStatus, Prisma, RecurrenceType } from '@prisma/client';
 import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 
 export const PAYMENT_REPOSITORY = Symbol('PAYMENT_REPOSITORY');
@@ -6,10 +6,10 @@ export const PAYMENT_REPOSITORY = Symbol('PAYMENT_REPOSITORY');
 export interface PaymentResponse {
   id: number;
   uuid: string;
-  amount: unknown;
-  subtotal: unknown;
-  serviceFee: unknown;
-  discount: unknown;
+  amount: Prisma.Decimal;
+  subtotal: Prisma.Decimal;
+  serviceFee: Prisma.Decimal;
+  discount: Prisma.Decimal;
   method: PaymentMethod;
   status: PaymentStatus;
   cancellationReason: string | null;

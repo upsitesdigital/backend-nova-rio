@@ -9,6 +9,7 @@ import {
   IsString,
   Matches,
   Max,
+  MaxLength,
 } from 'class-validator';
 import { RecurrenceType } from '@prisma/client';
 
@@ -37,16 +38,19 @@ export class CreateClientAppointmentDto {
   @ApiPropertyOptional({ example: '20040-020' })
   @IsString()
   @IsOptional()
+  @MaxLength(10)
   locationZip?: string;
 
   @ApiPropertyOptional({ example: 'Rua das Flores, 123' })
   @IsString()
   @IsOptional()
+  @MaxLength(500)
   locationAddress?: string;
 
   @ApiPropertyOptional({ example: 'Levar produtos de limpeza' })
   @IsString()
   @IsOptional()
+  @MaxLength(2000)
   notes?: string;
 
   @ApiPropertyOptional({ example: 1 })

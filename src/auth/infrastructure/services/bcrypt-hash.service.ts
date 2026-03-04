@@ -5,7 +5,7 @@ import { IHashService } from '../../domain/interfaces/hash.service.interface.js'
 @Injectable()
 export class BcryptHashService implements IHashService {
   async hash(value: string): Promise<string> {
-    return bcrypt.hash(value, 10);
+    return bcrypt.hash(value, 12);
   }
 
   async compare(value: string, hashed: string): Promise<boolean> {

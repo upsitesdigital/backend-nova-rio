@@ -8,6 +8,6 @@ export interface TransactionsFilters {
 
 export interface TransactionGroupItem {
   period: string;
-  total: unknown;
+  total: number;
   count: number;
 }

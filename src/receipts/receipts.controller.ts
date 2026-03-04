@@ -1,5 +1,6 @@
 import {
   Controller,
+  ForbiddenException,
   Get,
   Header,
   Param,
@@ -18,7 +19,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { createReadStream } from 'node:fs';
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { ClientGuard } from '../auth/guards/client.guard.js';
@@ -33,8 +34,8 @@ import { GetReceiptUseCase } from './application/use-cases/receipt/get-receipt.u
 @Controller()
 export class ReceiptsController {
   constructor(
-    private getReceiptUseCase: GetReceiptUseCase,
-    private getClientReceiptUseCase: GetClientReceiptUseCase,
+    private readonly getReceiptUseCase: GetReceiptUseCase,
+    private readonly getClientReceiptUseCase: GetClientReceiptUseCase,
   ) {}
 
   @Get('clients/payments/:id/receipt')
@@ -54,7 +55,7 @@ export class ReceiptsController {
       id,
       user.id,
     );
-    const filePath = join(process.cwd(), 'uploads', receipt.fileUrl);
+    const filePath = this.resolveSafeFilePath(receipt.fileUrl);
     const stream = createReadStream(filePath);
     return new StreamableFile(stream, {
       type: 'application/pdf',
@@ -73,11 +74,22 @@ export class ReceiptsController {
   @Header('Content-Type', 'application/pdf')
   async downloadAdminReceipt(@Param('id', ParseIntPipe) id: number): Promise<StreamableFile> {
     const receipt = await this.getReceiptUseCase.getReceiptByPaymentId(id);
-    const filePath = join(process.cwd(), 'uploads', receipt.fileUrl);
+    const filePath = this.resolveSafeFilePath(receipt.fileUrl);
     const stream = createReadStream(filePath);
     return new StreamableFile(stream, {
       type: 'application/pdf',
       disposition: `attachment; filename="receipt-${receipt.paymentId}.pdf"`,
     });
+  }
+
+  private resolveSafeFilePath(fileUrl: string): string {
+    const uploadsDir = resolve(process.cwd(), 'uploads');
+    const filePath = resolve(uploadsDir, fileUrl);
+
+    if (!filePath.startsWith(uploadsDir + '/')) {
+      throw new ForbiddenException('Invalid file path');
+    }
+
+    return filePath;
   }
 }

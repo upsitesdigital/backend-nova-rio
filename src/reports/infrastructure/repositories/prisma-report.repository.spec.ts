@@ -11,6 +11,7 @@ describe('PrismaReportRepository', () => {
     unit: { findMany: Mock };
     appointment: { groupBy: Mock };
     service: { findMany: Mock };
+    $queryRawUnsafe: Mock;
   };
 
   beforeEach(async () => {
@@ -20,6 +21,7 @@ describe('PrismaReportRepository', () => {
       unit: { findMany: vi.fn() },
       appointment: { groupBy: vi.fn() },
       service: { findMany: vi.fn() },
+      $queryRawUnsafe: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -112,29 +114,46 @@ describe('PrismaReportRepository', () => {
   });
 
   describe('getTransactions', () => {
-    it('should group payments by month', async () => {
-      prisma.payment.findMany.mockResolvedValue([
-        { amount: 100, paidAt: new Date('2026-01-15'), createdAt: new Date('2026-01-15') },
-        { amount: 200, paidAt: new Date('2026-01-20'), createdAt: new Date('2026-01-20') },
-        { amount: 300, paidAt: new Date('2026-02-10'), createdAt: new Date('2026-02-10') },
+    it('should group payments by month using SQL', async () => {
+      prisma.$queryRawUnsafe.mockResolvedValue([
+        { period: '2026-01-01', total: 300, count: 2n },
+        { period: '2026-02-01', total: 300, count: 1n },
       ]);
 
       const result = await repository.getTransactions({ groupBy: 'month' });
 
+      expect(prisma.$queryRawUnsafe).toHaveBeenCalledWith(
+        expect.stringContaining("DATE_TRUNC('month'"),
+      );
       expect(result).toEqual([
-        { period: '2026-01', total: 300, count: 2 },
-        { period: '2026-02', total: 300, count: 1 },
+        { period: '2026-01-01', total: 300, count: 2 },
+        { period: '2026-02-01', total: 300, count: 1 },
       ]);
     });
 
-    it('should group payments by day', async () => {
-      prisma.payment.findMany.mockResolvedValue([
-        { amount: 100, paidAt: new Date('2026-01-15'), createdAt: new Date('2026-01-15') },
-      ]);
+    it('should group payments by day using SQL', async () => {
+      prisma.$queryRawUnsafe.mockResolvedValue([{ period: '2026-01-15', total: 100, count: 1n }]);
 
       const result = await repository.getTransactions({ groupBy: 'day' });
 
+      expect(prisma.$queryRawUnsafe).toHaveBeenCalledWith(
+        expect.stringContaining("DATE_TRUNC('day'"),
+      );
       expect(result).toEqual([{ period: '2026-01-15', total: 100, count: 1 }]);
+    });
+
+    it('should pass date filters as parameters', async () => {
+      prisma.$queryRawUnsafe.mockResolvedValue([]);
+      const dateFrom = new Date('2026-01-01');
+      const dateTo = new Date('2026-12-31');
+
+      await repository.getTransactions({ groupBy: 'week', dateFrom, dateTo });
+
+      expect(prisma.$queryRawUnsafe).toHaveBeenCalledWith(
+        expect.stringContaining("DATE_TRUNC('week'"),
+        dateFrom,
+        dateTo,
+      );
     });
   });
 

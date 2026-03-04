@@ -31,15 +31,16 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 @Controller('auth')
 export class AuthController {
   constructor(
-    private clientRegisterUseCase: ClientRegisterUseCase,
-    private clientLoginUseCase: ClientLoginUseCase,
-    private adminLoginUseCase: AdminLoginUseCase,
-    private refreshTokenUseCase: RefreshTokenUseCase,
-    private forgotPasswordUseCase: ForgotPasswordUseCase,
-    private getProfileUseCase: GetProfileUseCase,
+    private readonly clientRegisterUseCase: ClientRegisterUseCase,
+    private readonly clientLoginUseCase: ClientLoginUseCase,
+    private readonly adminLoginUseCase: AdminLoginUseCase,
+    private readonly refreshTokenUseCase: RefreshTokenUseCase,
+    private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
+    private readonly getProfileUseCase: GetProfileUseCase,
   ) {}
 
   @Post('client/register')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: 'Register a new client' })
   @ApiCreatedResponse({ description: 'Client registered, returns token pair' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
@@ -70,6 +71,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiCreatedResponse({ description: 'Tokens refreshed, returns new token pair' })
   @ApiBadRequestResponse({ description: 'Validation failed' })

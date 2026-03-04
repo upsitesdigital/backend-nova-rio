@@ -47,20 +47,20 @@ export class PrismaAdminUserRepository implements IAdminUserRepository {
   }
 
   async listAdminUsers(filters: ListAdminUsersFilters): Promise<PaginatedResponse<AdminUserSafe>> {
-    const where: Prisma.AdminUserWhereInput = {};
     const page = filters.page ?? 1;
     const limit = filters.limit ?? 20;
 
-    if (filters.status) {
-      where.status = filters.status;
-    }
-
-    if (filters.search) {
-      where.OR = [
-        { name: { contains: filters.search, mode: 'insensitive' } },
-        { email: { contains: filters.search, mode: 'insensitive' } },
-      ];
-    }
+    const where: Prisma.AdminUserWhereInput = {
+      ...(filters.status ? { status: filters.status } : {}),
+      ...(filters.search
+        ? {
+            OR: [
+              { name: { contains: filters.search, mode: 'insensitive' as const } },
+              { email: { contains: filters.search, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+    };
 
     const [data, total] = await Promise.all([
       this.prisma.adminUser.findMany({

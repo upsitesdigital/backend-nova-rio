@@ -1,8 +1,21 @@
+import { ConfigService } from '@nestjs/config';
+import { UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { createHmac } from 'node:crypto';
 import { type Mock, vi } from 'vitest';
 import { HandleVindiBillPaidUseCase } from './application/use-cases/webhook/handle-vindi-bill-paid.use-case.js';
 import { HandleVindiChargeRejectedUseCase } from './application/use-cases/webhook/handle-vindi-charge-rejected.use-case.js';
 import { VindiWebhooksController } from './vindi-webhooks.controller.js';
+
+const WEBHOOK_SECRET = 'test-webhook-secret';
+
+function signPayload(payload: unknown): string {
+  return createHmac('sha256', WEBHOOK_SECRET).update(JSON.stringify(payload)).digest('hex');
+}
+
+function fakeReq(payload: unknown) {
+  return { body: payload } as never;
+}
 
 describe('VindiWebhooksController', () => {
   let controller: VindiWebhooksController;
@@ -18,6 +31,10 @@ describe('VindiWebhooksController', () => {
       providers: [
         { provide: HandleVindiBillPaidUseCase, useValue: handleBillPaid },
         { provide: HandleVindiChargeRejectedUseCase, useValue: handleChargeRejected },
+        {
+          provide: ConfigService,
+          useValue: { getOrThrow: vi.fn().mockReturnValue(WEBHOOK_SECRET) },
+        },
       ],
     }).compile();
 
@@ -28,7 +45,22 @@ describe('VindiWebhooksController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should handle bill_paid event', async () => {
+  it('should reject request with invalid signature', async () => {
+    const payload = {
+      event: {
+        type: 'bill_paid',
+        data: {
+          bill: { id: 1, status: 'paid', amount: '100.00', charges: [], customer: { id: 1 } },
+        },
+      },
+    };
+
+    await expect(
+      controller.receiveVindiWebhook('invalid-sig', fakeReq(payload), payload),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should handle bill_paid event with valid signature', async () => {
     const payload = {
       event: {
         type: 'bill_paid',
@@ -37,8 +69,9 @@ describe('VindiWebhooksController', () => {
         },
       },
     };
+    const signature = signPayload(payload);
 
-    const result = await controller.receiveVindiWebhook(payload);
+    const result = await controller.receiveVindiWebhook(signature, fakeReq(payload), payload);
 
     expect(handleBillPaid.handleBillPaid).toHaveBeenCalledWith(100);
     expect(result).toEqual({ received: true });
@@ -59,8 +92,9 @@ describe('VindiWebhooksController', () => {
         },
       },
     };
+    const signature = signPayload(payload);
 
-    const result = await controller.receiveVindiWebhook(payload);
+    const result = await controller.receiveVindiWebhook(signature, fakeReq(payload), payload);
 
     expect(handleChargeRejected.handleChargeRejected).toHaveBeenCalledWith(
       100,
@@ -78,8 +112,9 @@ describe('VindiWebhooksController', () => {
         },
       },
     };
+    const signature = signPayload(payload);
 
-    const result = await controller.receiveVindiWebhook(payload);
+    const result = await controller.receiveVindiWebhook(signature, fakeReq(payload), payload);
 
     expect(handleChargeRejected.handleChargeRejected).toHaveBeenCalledWith(
       100,
@@ -95,8 +130,9 @@ describe('VindiWebhooksController', () => {
         data: { bill: { id: 0, status: '', amount: '0', charges: [], customer: { id: 0 } } },
       },
     };
+    const signature = signPayload(payload);
 
-    const result = await controller.receiveVindiWebhook(payload);
+    const result = await controller.receiveVindiWebhook(signature, fakeReq(payload), payload);
 
     expect(result).toEqual({ received: true });
   });
@@ -112,8 +148,9 @@ describe('VindiWebhooksController', () => {
         },
       },
     };
+    const signature = signPayload(payload);
 
-    const result = await controller.receiveVindiWebhook(payload);
+    const result = await controller.receiveVindiWebhook(signature, fakeReq(payload), payload);
 
     expect(result).toEqual({ received: true });
   });
