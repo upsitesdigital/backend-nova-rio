@@ -36,6 +36,6 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
     GetProfileUseCase,
     VerificationCodeCleanupCron,
   ],
-  exports: [HASH_SERVICE],
+  exports: [HASH_SERVICE, CLIENT_REPOSITORY],
 })
 export class AuthModule {}

@@ -174,6 +174,29 @@ describe('ResendEmailService', () => {
     });
   });
 
+  describe('sendEmailChangedEmail', () => {
+    it('should send email changed notification with new email', async () => {
+      mockSend.mockResolvedValue({ id: 'email-id' });
+
+      await service.sendEmailChangedEmail('old@example.com', 'João', 'new@example.com');
+
+      expect(mockSend).toHaveBeenCalledWith({
+        from: 'test@novario.com',
+        to: 'old@example.com',
+        subject: expect.stringContaining('alterado') as string,
+        html: expect.stringContaining('new@example.com') as string,
+      });
+    });
+
+    it('should not throw on error', async () => {
+      mockSend.mockRejectedValue(new Error('API error'));
+
+      await expect(
+        service.sendEmailChangedEmail('old@example.com', 'João', 'new@example.com'),
+      ).resolves.toBeUndefined();
+    });
+  });
+
   describe('sendAccountDeletedEmail', () => {
     it('should send account deleted email with correct params', async () => {
       mockSend.mockResolvedValue({ id: 'email-id' });
