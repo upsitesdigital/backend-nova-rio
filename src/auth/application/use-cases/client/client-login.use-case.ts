@@ -30,15 +30,15 @@ export class ClientLoginUseCase {
       throw new ForbiddenException('Account is temporarily locked. Try again later');
     }
 
+    if (client.status !== 'ACTIVE') {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     const passwordValid = await this.hashService.compare(dto.password, client.password);
 
     if (!passwordValid) {
       await this.clientRepository.incrementFailedLoginAttempts(client.id);
       throw new UnauthorizedException('Invalid credentials');
-    }
-
-    if (client.status !== 'ACTIVE') {
-      throw new ForbiddenException('Account is not active');
     }
 
     await this.clientRepository.resetFailedLoginAttempts(client.id);
