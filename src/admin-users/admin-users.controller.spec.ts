@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
+import type { AuthUser } from '../shared/types/auth-user.type.js';
 import { AdminUsersController } from './admin-users.controller.js';
 import { CreateAdminUserUseCase } from './application/use-cases/admin-user/create-admin-user.use-case.js';
 import { DeleteAdminUserUseCase } from './application/use-cases/admin-user/delete-admin-user.use-case.js';
@@ -13,8 +14,18 @@ describe('AdminUsersController', () => {
   let getAdminUserUseCase: { getAdminUserById: Mock };
   let deleteAdminUserUseCase: { deactivateAdminUserById: Mock };
 
-  const masterUser = { id: 1, email: 'admin@novario.com', type: 'admin', role: 'ADMIN_MASTER' };
-  const basicUser = { id: 2, email: 'maria@novario.com', type: 'admin', role: 'ADMIN_BASIC' };
+  const masterUser: AuthUser = {
+    id: 1,
+    email: 'admin@novario.com',
+    type: 'admin',
+    role: 'ADMIN_MASTER',
+  };
+  const basicUser: AuthUser = {
+    id: 2,
+    email: 'maria@novario.com',
+    type: 'admin',
+    role: 'ADMIN_BASIC',
+  };
 
   beforeEach(async () => {
     createAdminUserUseCase = { createAdminUser: vi.fn() };

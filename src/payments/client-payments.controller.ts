@@ -1,14 +1,4 @@
-import {
-  Body,
-  Controller,
-  DefaultValuePipe,
-  Get,
-  Param,
-  ParseIntPipe,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -20,7 +10,6 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { PaymentStatus } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { ClientGuard } from '../auth/guards/client.guard.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -29,6 +18,7 @@ import { CreateClientPaymentUseCase } from './application/use-cases/payment/crea
 import { GetClientPaymentUseCase } from './application/use-cases/payment/get-client-payment.use-case.js';
 import { ListClientPaymentsUseCase } from './application/use-cases/payment/list-client-payments.use-case.js';
 import { CreatePaymentDto } from './dto/payment/create-payment.dto.js';
+import { ListClientPaymentsQueryDto } from './dto/payment/list-client-payments-query.dto.js';
 
 @ApiTags('Payments')
 @ApiBearerAuth()
@@ -36,9 +26,9 @@ import { CreatePaymentDto } from './dto/payment/create-payment.dto.js';
 @Controller('payments')
 export class ClientPaymentsController {
   constructor(
-    private createClientPaymentUseCase: CreateClientPaymentUseCase,
-    private listClientPaymentsUseCase: ListClientPaymentsUseCase,
-    private getClientPaymentUseCase: GetClientPaymentUseCase,
+    private readonly createClientPaymentUseCase: CreateClientPaymentUseCase,
+    private readonly listClientPaymentsUseCase: ListClientPaymentsUseCase,
+    private readonly getClientPaymentUseCase: GetClientPaymentUseCase,
   ) {}
 
   @Post()
@@ -57,18 +47,13 @@ export class ClientPaymentsController {
   @ApiOkResponse({ description: 'Returns paginated list of client payments' })
   @ApiForbiddenResponse({ description: 'Only clients can manage payments' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
-  listClientPayments(
-    @CurrentUser() user: AuthUser,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
-    @Query('status') status?: PaymentStatus,
-  ) {
-    const clampedLimit = Math.min(limit, 100);
+  listClientPayments(@CurrentUser() user: AuthUser, @Query() query: ListClientPaymentsQueryDto) {
+    const clampedLimit = Math.min(query.limit ?? 20, 100);
     return this.listClientPaymentsUseCase.listPaymentsByClientId(
       user.id,
-      page,
+      query.page ?? 1,
       clampedLimit,
-      status,
+      query.status,
     );
   }
 

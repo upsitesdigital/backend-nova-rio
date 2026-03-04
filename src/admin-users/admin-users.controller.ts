@@ -27,19 +27,13 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
+import type { AuthUser } from '../shared/types/auth-user.type.js';
 import { CreateAdminUserUseCase } from './application/use-cases/admin-user/create-admin-user.use-case.js';
 import { DeleteAdminUserUseCase } from './application/use-cases/admin-user/delete-admin-user.use-case.js';
 import { GetAdminUserUseCase } from './application/use-cases/admin-user/get-admin-user.use-case.js';
 import { ListAdminUsersUseCase } from './application/use-cases/admin-user/list-admin-users.use-case.js';
 import { CreateAdminUserDto } from './dto/admin-user/create-admin-user.dto.js';
 import { ListAdminUsersQueryDto } from './dto/admin-user/list-admin-users-query.dto.js';
-
-interface AuthUser {
-  id: number;
-  email: string;
-  type: string;
-  role?: string;
-}
 
 @ApiTags('Admin Users')
 @ApiBearerAuth()
@@ -48,10 +42,10 @@ interface AuthUser {
 @Controller('admin-users')
 export class AdminUsersController {
   constructor(
-    private createAdminUserUseCase: CreateAdminUserUseCase,
-    private listAdminUsersUseCase: ListAdminUsersUseCase,
-    private getAdminUserUseCase: GetAdminUserUseCase,
-    private deleteAdminUserUseCase: DeleteAdminUserUseCase,
+    private readonly createAdminUserUseCase: CreateAdminUserUseCase,
+    private readonly listAdminUsersUseCase: ListAdminUsersUseCase,
+    private readonly getAdminUserUseCase: GetAdminUserUseCase,
+    private readonly deleteAdminUserUseCase: DeleteAdminUserUseCase,
   ) {}
 
   @Post()

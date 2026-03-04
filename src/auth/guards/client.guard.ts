@@ -1,11 +1,6 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Request } from 'express';
-
-interface AuthUser {
-  id: number;
-  email: string;
-  type: string;
-}
+import type { AuthUser } from '../../shared/types/auth-user.type.js';
 
 @Injectable()
 export class ClientGuard implements CanActivate {
