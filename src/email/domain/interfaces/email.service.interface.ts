@@ -7,6 +7,7 @@ export interface IEmailService {
   sendClientApprovedEmail(to: string, name: string): Promise<void>;
   sendClientRejectedEmail(to: string, name: string): Promise<void>;
   sendEmailChangeVerification(to: string, name: string, code: string): Promise<void>;
+  sendEmailChangedEmail(to: string, name: string, newEmail: string): Promise<void>;
   sendAccountDeletedEmail(to: string, name: string): Promise<void>;
   sendAppointmentConfirmedEmail(
     to: string,

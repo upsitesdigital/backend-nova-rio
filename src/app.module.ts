@@ -11,6 +11,7 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CardsModule } from './cards/cards.module.js';
+import { ClientProfileModule } from './client-profile/client-profile.module.js';
 import { ClientsModule } from './clients/clients.module.js';
 import { EmailModule } from './email/email.module.js';
 import { EmployeesModule } from './employees/employees.module.js';
@@ -37,6 +38,7 @@ import { UnitsModule } from './units/units.module.js';
     PrismaModule,
     EmailModule,
     AuthModule,
+    ClientProfileModule,
     AppointmentsModule,
     CardsModule,
     ServicesModule,

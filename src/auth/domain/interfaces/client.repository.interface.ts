@@ -72,4 +72,7 @@ export interface IClientRepository {
   deleteVerificationCodesByClientId(clientId: number, type: string): Promise<void>;
   findActiveVerificationCodes(clientId: number, type: string): Promise<VerificationCodeRecord[]>;
   markVerificationCodeAsUsed(id: number): Promise<void>;
+  updateEmail(id: number, email: string): Promise<void>;
+  updatePassword(id: number, password: string): Promise<void>;
+  deactivateClient(id: number): Promise<void>;
 }

@@ -152,4 +152,25 @@ export class PrismaClientRepository implements IClientRepository {
       data: { usedAt: new Date() },
     });
   }
+
+  async updateEmail(id: number, email: string): Promise<void> {
+    await this.prisma.client.update({
+      where: { id },
+      data: { email },
+    });
+  }
+
+  async updatePassword(id: number, password: string): Promise<void> {
+    await this.prisma.client.update({
+      where: { id },
+      data: { password },
+    });
+  }
+
+  async deactivateClient(id: number): Promise<void> {
+    await this.prisma.client.update({
+      where: { id },
+      data: { status: 'INACTIVE', refreshToken: null, tokenFamily: null },
+    });
+  }
 }
