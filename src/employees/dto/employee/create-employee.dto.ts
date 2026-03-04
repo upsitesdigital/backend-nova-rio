@@ -7,6 +7,7 @@ import {
   IsPhoneNumber,
   IsPositive,
   IsString,
+  IsUrl,
   Matches,
   MaxLength,
 } from 'class-validator';
@@ -40,7 +41,10 @@ export class CreateEmployeeDto {
   address?: string;
 
   @ApiPropertyOptional({ example: 'https://cdn.example.com/avatar.jpg' })
-  @IsString()
+  @IsUrl(
+    { protocols: ['https'], require_protocol: true },
+    { message: 'avatarUrl must be a valid HTTPS URL' },
+  )
   @IsOptional()
   avatarUrl?: string;
 

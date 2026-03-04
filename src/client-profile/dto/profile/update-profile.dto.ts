@@ -11,6 +11,7 @@ export class UpdateProfileDto {
   @ApiPropertyOptional({ example: '+5521999999999' })
   @IsString()
   @IsOptional()
+  @MaxLength(20)
   phone?: string;
 
   @ApiPropertyOptional({ example: 'Acme Corp' })
