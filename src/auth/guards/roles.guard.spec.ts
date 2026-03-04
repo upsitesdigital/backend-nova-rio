@@ -29,14 +29,14 @@ describe('RolesGuard', () => {
     expect(guard).toBeDefined();
   });
 
-  it('should return true if no roles are required', () => {
+  it('should return false (fail-closed) if no roles are required', () => {
     vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(null);
     const context = {
       getHandler: vi.fn(),
       getClass: vi.fn(),
     } as unknown as ExecutionContext;
 
-    expect(guard.canActivate(context)).toBe(true);
+    expect(guard.canActivate(context)).toBe(false);
   });
 
   it('should return true if user has required role', () => {

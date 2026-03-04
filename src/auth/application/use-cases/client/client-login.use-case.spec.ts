@@ -90,7 +90,7 @@ describe('ClientLoginUseCase', () => {
     expect(clientRepository.incrementFailedLoginAttempts).toHaveBeenCalledWith(1);
   });
 
-  it('should throw ForbiddenException if client status is PENDING', async () => {
+  it('should throw UnauthorizedException if client status is PENDING (before password check)', async () => {
     clientRepository.findByEmail.mockResolvedValue({
       id: 1,
       email: 'test@example.com',
@@ -99,14 +99,14 @@ describe('ClientLoginUseCase', () => {
       lockedUntil: null,
       failedLoginAttempts: 0,
     });
-    hashService.compare.mockResolvedValue(true);
 
     await expect(
       useCase.loginClient({ email: 'test@example.com', password: 'password' }),
-    ).rejects.toThrow(ForbiddenException);
+    ).rejects.toThrow(UnauthorizedException);
+    expect(hashService.compare).not.toHaveBeenCalled();
   });
 
-  it('should throw ForbiddenException if client status is INACTIVE', async () => {
+  it('should throw UnauthorizedException if client status is INACTIVE (before password check)', async () => {
     clientRepository.findByEmail.mockResolvedValue({
       id: 1,
       email: 'test@example.com',
@@ -115,11 +115,11 @@ describe('ClientLoginUseCase', () => {
       lockedUntil: null,
       failedLoginAttempts: 0,
     });
-    hashService.compare.mockResolvedValue(true);
 
     await expect(
       useCase.loginClient({ email: 'test@example.com', password: 'password' }),
-    ).rejects.toThrow(ForbiddenException);
+    ).rejects.toThrow(UnauthorizedException);
+    expect(hashService.compare).not.toHaveBeenCalled();
   });
 
   it('should return tokens, reset failed attempts, and store token family on success', async () => {

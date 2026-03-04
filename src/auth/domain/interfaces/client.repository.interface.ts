@@ -1,48 +1,45 @@
+import type { Client, VerificationCode } from '@prisma/client';
+
 export const CLIENT_REPOSITORY = Symbol('CLIENT_REPOSITORY');
 
-export interface ClientData {
-  id: number;
-  name: string;
-  email: string;
-  phone: string | null;
-  password: string;
-  avatarUrl: string | null;
-  company: string | null;
-  cpfCnpj: string | null;
-  address: string | null;
-  status: string;
-  refreshToken: string | null;
-  failedLoginAttempts: number;
-  lockedUntil: Date | null;
-  tokenFamily: string | null;
-  createdAt: Date;
-}
+export type ClientData = Pick<
+  Client,
+  | 'id'
+  | 'name'
+  | 'email'
+  | 'phone'
+  | 'password'
+  | 'avatarUrl'
+  | 'company'
+  | 'cpfCnpj'
+  | 'address'
+  | 'status'
+  | 'refreshToken'
+  | 'failedLoginAttempts'
+  | 'lockedUntil'
+  | 'tokenFamily'
+  | 'createdAt'
+>;
 
-export interface CreateClientData {
-  name: string;
-  email: string;
+export type CreateClientData = Pick<Client, 'name' | 'email' | 'password'> & {
   phone?: string;
-  password: string;
-}
+};
 
-export interface ClientProfile {
-  id: number;
-  name: string;
-  email: string;
-  phone: string | null;
-  avatarUrl: string | null;
-  company: string | null;
-  cpfCnpj: string | null;
-  address: string | null;
-  status: string;
-  createdAt: Date;
-}
+export type ClientProfile = Pick<
+  Client,
+  | 'id'
+  | 'name'
+  | 'email'
+  | 'phone'
+  | 'avatarUrl'
+  | 'company'
+  | 'cpfCnpj'
+  | 'address'
+  | 'status'
+  | 'createdAt'
+>;
 
-export interface VerificationCodeRecord {
-  id: number;
-  code: string;
-  expiresAt: Date;
-}
+export type VerificationCodeRecord = Pick<VerificationCode, 'id' | 'code' | 'expiresAt'>;
 
 export interface IClientRepository {
   findByEmail(email: string): Promise<ClientData | null>;

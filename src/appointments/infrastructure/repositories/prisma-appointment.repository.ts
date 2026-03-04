@@ -12,6 +12,13 @@ import type {
   UpdateAppointmentData,
 } from '../../domain/interfaces/appointment.repository.interface.js';
 
+/** Columns selected by raw SQL conflict-check queries — must match the appointments table schema */
+interface LockedAppointmentRow {
+  id: number;
+  startTime: string;
+  duration: number;
+}
+
 const APPOINTMENT_INCLUDE = {
   client: { select: { id: true, name: true, email: true } },
   service: { select: { id: true, name: true } },
@@ -193,9 +200,7 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
     tx: Parameters<Parameters<PrismaService['$transaction']>[0]>[0],
     params: ConflictCheckParams,
   ): Promise<void> {
-    const locked = await (tx as unknown as PrismaService).$queryRaw<
-      Array<{ id: number; startTime: string; duration: number }>
-    >`
+    const locked = await (tx as unknown as PrismaService).$queryRaw<LockedAppointmentRow[]>`
       SELECT id, "startTime", duration FROM appointments
       WHERE "employeeId" = ${params.employeeId}
         AND date = ${params.date}
@@ -210,9 +215,7 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
     tx: Parameters<Parameters<PrismaService['$transaction']>[0]>[0],
     params: ClientConflictCheckParams,
   ): Promise<void> {
-    const locked = await (tx as unknown as PrismaService).$queryRaw<
-      Array<{ id: number; startTime: string; duration: number }>
-    >`
+    const locked = await (tx as unknown as PrismaService).$queryRaw<LockedAppointmentRow[]>`
       SELECT id, "startTime", duration FROM appointments
       WHERE "clientId" = ${params.clientId}
         AND date = ${params.date}
@@ -224,7 +227,7 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
   }
 
   private assertNoTimeConflict(
-    locked: Array<{ id: number; startTime: string; duration: number }>,
+    locked: LockedAppointmentRow[],
     params: { startTime: string; duration: number; excludeId?: number },
     errorMessage: string,
   ): void {

@@ -12,13 +12,13 @@ vi.mock('resend', () => ({
 
 describe('ResendEmailService', () => {
   let service: ResendEmailService;
-  let configService: { get: Mock };
+  let configService: { getOrThrow: Mock };
 
   beforeEach(async () => {
     mockSend.mockReset();
 
     configService = {
-      get: vi.fn().mockImplementation((key: string) => {
+      getOrThrow: vi.fn().mockImplementation((key: string) => {
         const config: Record<string, string> = {
           RESEND_API_KEY: 'test-api-key',
           RESEND_FROM_EMAIL: 'test@novario.com',

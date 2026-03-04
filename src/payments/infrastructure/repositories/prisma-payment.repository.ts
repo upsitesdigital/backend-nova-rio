@@ -59,17 +59,19 @@ export class PrismaPaymentRepository implements IPaymentRepository {
   }
 
   async listPayments(filters: ListPaymentsFilters): Promise<PaginatedPayments> {
-    const where: Prisma.PaymentWhereInput = {};
-
-    if (filters.status) where.status = filters.status;
-    if (filters.method) where.method = filters.method;
-    if (filters.clientId) where.clientId = filters.clientId;
-    if (filters.dateFrom || filters.dateTo) {
-      where.createdAt = {
-        ...(filters.dateFrom ? { gte: filters.dateFrom } : {}),
-        ...(filters.dateTo ? { lte: filters.dateTo } : {}),
-      };
-    }
+    const where: Prisma.PaymentWhereInput = {
+      ...(filters.status ? { status: filters.status } : {}),
+      ...(filters.method ? { method: filters.method } : {}),
+      ...(filters.clientId ? { clientId: filters.clientId } : {}),
+      ...(filters.dateFrom || filters.dateTo
+        ? {
+            createdAt: {
+              ...(filters.dateFrom ? { gte: filters.dateFrom } : {}),
+              ...(filters.dateTo ? { lte: filters.dateTo } : {}),
+            },
+          }
+        : {}),
+    };
 
     const skip = (filters.page - 1) * filters.limit;
 
@@ -93,8 +95,10 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     limit: number,
     status?: PaymentStatus,
   ): Promise<PaginatedPayments> {
-    const where: Prisma.PaymentWhereInput = { clientId };
-    if (status) where.status = status;
+    const where: Prisma.PaymentWhereInput = {
+      clientId,
+      ...(status ? { status } : {}),
+    };
 
     const skip = (page - 1) * limit;
 
@@ -150,6 +154,9 @@ export class PrismaPaymentRepository implements IPaymentRepository {
   }
 
   async deletePaymentById(id: number): Promise<void> {
-    await this.prisma.payment.delete({ where: { id } });
+    await this.prisma.payment.update({
+      where: { id },
+      data: { status: 'CANCELLED', cancellationReason: 'Deleted by admin' },
+    });
   }
 }

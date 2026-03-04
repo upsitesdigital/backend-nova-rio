@@ -29,8 +29,8 @@ export class ResendEmailService implements IEmailService {
   }
 
   constructor(private configService: ConfigService) {
-    this.resend = new Resend(this.configService.get<string>('RESEND_API_KEY'));
-    this.from = this.configService.get<string>('RESEND_FROM_EMAIL') ?? 'noreply@novario.com';
+    this.resend = new Resend(this.configService.getOrThrow<string>('RESEND_API_KEY'));
+    this.from = this.configService.getOrThrow<string>('RESEND_FROM_EMAIL');
   }
 
   async sendWelcomeEmail(to: string, name: string): Promise<void> {

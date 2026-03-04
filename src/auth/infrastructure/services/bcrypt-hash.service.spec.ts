@@ -24,7 +24,7 @@ describe('BcryptHashService', () => {
     (bcrypt.hash as Mock).mockResolvedValue('hashed');
     const result = await service.hash('value');
     expect(result).toBe('hashed');
-    expect(bcrypt.hash).toHaveBeenCalledWith('value', 10);
+    expect(bcrypt.hash).toHaveBeenCalledWith('value', 12);
   });
 
   it('compare should call bcrypt.compare', async () => {
