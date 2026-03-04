@@ -1,6 +1,18 @@
-import { Body, Controller, HttpCode, Logger, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Headers,
+  HttpCode,
+  Logger,
+  Post,
+  Req,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
+import { createHmac, timingSafeEqual } from 'node:crypto';
+import type { Request } from 'express';
 import type {
   VindiWebhookBillData,
   VindiWebhookChargeData,
@@ -18,11 +30,18 @@ export class VindiWebhooksController {
   constructor(
     private readonly handleBillPaid: HandleVindiBillPaidUseCase,
     private readonly handleChargeRejected: HandleVindiChargeRejectedUseCase,
+    private readonly configService: ConfigService,
   ) {}
 
   @Post()
   @HttpCode(200)
-  async receiveVindiWebhook(@Body() payload: VindiWebhookPayload): Promise<{ received: true }> {
+  async receiveVindiWebhook(
+    @Headers('x-vindi-signature') signature: string,
+    @Req() req: Request,
+    @Body() payload: VindiWebhookPayload,
+  ): Promise<{ received: true }> {
+    this.verifyWebhookSignature(signature, req);
+
     const eventType = payload?.event?.type;
     this.logger.log(`Received Vindi webhook: ${eventType}`);
 
@@ -55,5 +74,18 @@ export class VindiWebhooksController {
     }
 
     return { received: true };
+  }
+
+  private verifyWebhookSignature(signature: string | undefined, req: Request): void {
+    const webhookSecret = this.configService.getOrThrow<string>('VINDI_WEBHOOK_SECRET');
+    const rawBody = (req as Request & { rawBody?: Buffer }).rawBody;
+    const bodyToHash = rawBody ?? JSON.stringify(req.body);
+    const expected = createHmac('sha256', webhookSecret).update(bodyToHash).digest('hex');
+    const received = Buffer.from(signature ?? '', 'utf-8');
+    const expectedBuf = Buffer.from(expected, 'utf-8');
+
+    if (received.length !== expectedBuf.length || !timingSafeEqual(received, expectedBuf)) {
+      throw new UnauthorizedException('Invalid webhook signature');
+    }
   }
 }
