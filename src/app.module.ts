@@ -21,6 +21,7 @@ import { PackagesModule } from './packages/packages.module.js';
 import { PaymentGatewayModule } from './payment-gateway/payment-gateway.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
 import { ReceiptsModule } from './receipts/receipts.module.js';
+import { ReportsModule } from './reports/reports.module.js';
 import { ServicesModule } from './services/services.module.js';
 import { PrismaModule } from './shared/prisma/prisma.module.js';
 import { UnitsModule } from './units/units.module.js';
@@ -50,6 +51,7 @@ import { UnitsModule } from './units/units.module.js';
     PackagesModule,
     PaymentsModule,
     ReceiptsModule,
+    ReportsModule,
     PaymentGatewayModule,
     UnitsModule,
   ],
