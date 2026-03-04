@@ -37,8 +37,10 @@ export class PrismaReportRepository implements IReportRepository {
   }
 
   async getActiveClients(filters: ActiveClientsFilters): Promise<ActiveClientsResponse> {
-    const clientWhere: Prisma.ClientWhereInput = { status: 'ACTIVE' };
-    if (filters.unitId) clientWhere.unitId = filters.unitId;
+    const clientWhere: Prisma.ClientWhereInput = {
+      status: 'ACTIVE',
+      ...(filters.unitId ? { unitId: filters.unitId } : {}),
+    };
 
     const totalActive = await this.prisma.client.count({ where: clientWhere });
 
@@ -72,15 +74,18 @@ export class PrismaReportRepository implements IReportRepository {
   }
 
   async getHoursByService(filters: HoursByServiceFilters): Promise<HoursByServiceItem[]> {
-    const where: Prisma.AppointmentWhereInput = { status: 'COMPLETED' };
-
-    if (filters.unitId) where.unitId = filters.unitId;
-    if (filters.dateFrom || filters.dateTo) {
-      where.date = {
-        ...(filters.dateFrom ? { gte: filters.dateFrom } : {}),
-        ...(filters.dateTo ? { lte: filters.dateTo } : {}),
-      };
-    }
+    const where: Prisma.AppointmentWhereInput = {
+      status: 'COMPLETED',
+      ...(filters.unitId ? { unitId: filters.unitId } : {}),
+      ...(filters.dateFrom || filters.dateTo
+        ? {
+            date: {
+              ...(filters.dateFrom ? { gte: filters.dateFrom } : {}),
+              ...(filters.dateTo ? { lte: filters.dateTo } : {}),
+            },
+          }
+        : {}),
+    };
 
     const groups = await this.prisma.appointment.groupBy({
       by: ['serviceId'],
@@ -108,29 +113,51 @@ export class PrismaReportRepository implements IReportRepository {
   }
 
   async getTransactions(filters: TransactionsFilters): Promise<TransactionGroupItem[]> {
-    const where = this.buildPaymentWhere(filters);
+    const trunc = filters.groupBy === 'day' ? 'day' : filters.groupBy === 'week' ? 'week' : 'month';
+    const conditions: string[] = [`status = 'APPROVED'`];
+    const params: unknown[] = [];
 
-    const payments = await this.prisma.payment.findMany({
-      where,
-      select: { amount: true, paidAt: true, createdAt: true },
-      orderBy: { paidAt: 'asc' },
-    });
-
-    const grouped = new Map<string, { total: number; count: number }>();
-
-    for (const payment of payments) {
-      const date = payment.paidAt ?? payment.createdAt;
-      const period = this.truncateDate(date, filters.groupBy);
-      const existing = grouped.get(period) ?? { total: 0, count: 0 };
-      existing.total += Number(payment.amount);
-      existing.count += 1;
-      grouped.set(period, existing);
+    if (filters.dateFrom) {
+      params.push(filters.dateFrom);
+      conditions.push(`"paidAt" >= $${params.length}`);
+    }
+    if (filters.dateTo) {
+      params.push(filters.dateTo);
+      conditions.push(`"paidAt" <= $${params.length}`);
+    }
+    if (filters.unitId) {
+      params.push(filters.unitId);
+      conditions.push(
+        `"appointmentId" IN (SELECT id FROM appointments WHERE "unitId" = $${params.length})`,
+      );
+    }
+    if (filters.serviceId) {
+      params.push(filters.serviceId);
+      conditions.push(
+        `"appointmentId" IN (SELECT id FROM appointments WHERE "serviceId" = $${params.length})`,
+      );
     }
 
-    return Array.from(grouped.entries()).map(([period, data]) => ({
-      period,
-      total: data.total,
-      count: data.count,
+    const whereClause = conditions.join(' AND ');
+
+    const rows = await this.prisma.$queryRawUnsafe<
+      Array<{ period: string; total: number; count: bigint }>
+    >(
+      `SELECT
+        TO_CHAR(DATE_TRUNC('${trunc}', COALESCE("paidAt", "createdAt")), 'YYYY-MM-DD') AS period,
+        SUM(amount)::float AS total,
+        COUNT(*)::bigint AS count
+      FROM payments
+      WHERE ${whereClause}
+      GROUP BY period
+      ORDER BY period ASC`,
+      ...params,
+    );
+
+    return rows.map((row) => ({
+      period: row.period,
+      total: row.total,
+      count: Number(row.count),
     }));
   }
 
@@ -171,45 +198,24 @@ export class PrismaReportRepository implements IReportRepository {
   private buildPaymentWhere(
     filters: Pick<SalesSummaryFilters, 'dateFrom' | 'dateTo' | 'unitId' | 'serviceId'>,
   ): Prisma.PaymentWhereInput {
-    const where: Prisma.PaymentWhereInput = { status: 'APPROVED' };
-
-    if (filters.dateFrom || filters.dateTo) {
-      where.paidAt = {
-        ...(filters.dateFrom ? { gte: filters.dateFrom } : {}),
-        ...(filters.dateTo ? { lte: filters.dateTo } : {}),
-      };
-    }
-
-    if (filters.unitId || filters.serviceId) {
-      where.appointment = {
-        ...(filters.unitId ? { unitId: filters.unitId } : {}),
-        ...(filters.serviceId ? { serviceId: filters.serviceId } : {}),
-      };
-    }
-
-    return where;
-  }
-
-  private truncateDate(date: Date, groupBy: 'day' | 'week' | 'month'): string {
-    const d = new Date(date);
-    const year = d.getUTCFullYear();
-    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(d.getUTCDate()).padStart(2, '0');
-
-    if (groupBy === 'day') {
-      return `${year}-${month}-${day}`;
-    }
-
-    if (groupBy === 'week') {
-      const dayOfWeek = d.getUTCDay();
-      const monday = new Date(d);
-      monday.setUTCDate(d.getUTCDate() - ((dayOfWeek + 6) % 7));
-      const wy = monday.getUTCFullYear();
-      const wm = String(monday.getUTCMonth() + 1).padStart(2, '0');
-      const wd = String(monday.getUTCDate()).padStart(2, '0');
-      return `${wy}-${wm}-${wd}`;
-    }
-
-    return `${year}-${month}`;
+    return {
+      status: 'APPROVED',
+      ...(filters.dateFrom || filters.dateTo
+        ? {
+            paidAt: {
+              ...(filters.dateFrom ? { gte: filters.dateFrom } : {}),
+              ...(filters.dateTo ? { lte: filters.dateTo } : {}),
+            },
+          }
+        : {}),
+      ...(filters.unitId || filters.serviceId
+        ? {
+            appointment: {
+              ...(filters.unitId ? { unitId: filters.unitId } : {}),
+              ...(filters.serviceId ? { serviceId: filters.serviceId } : {}),
+            },
+          }
+        : {}),
+    };
   }
 }
