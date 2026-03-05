@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "units" ADD COLUMN     "latitude" DOUBLE PRECISION,
+ADD COLUMN     "longitude" DOUBLE PRECISION,
+ADD COLUMN     "service_radius_km" DOUBLE PRECISION NOT NULL DEFAULT 5;

@@ -6,6 +6,7 @@ import { ListUnitsUseCase } from './application/use-cases/unit/list-units.use-ca
 import { GetUnitUseCase } from './application/use-cases/unit/get-unit.use-case.js';
 import { UpdateUnitUseCase } from './application/use-cases/unit/update-unit.use-case.js';
 import { DeleteUnitUseCase } from './application/use-cases/unit/delete-unit.use-case.js';
+import { ValidateServiceCoverageUseCase } from './application/use-cases/unit/validate-service-coverage.use-case.js';
 
 describe('UnitsController', () => {
   let controller: UnitsController;
@@ -14,6 +15,7 @@ describe('UnitsController', () => {
   let getUnitUseCase: { getUnitById: Mock };
   let updateUnitUseCase: { updateUnitById: Mock };
   let deleteUnitUseCase: { deleteUnitById: Mock };
+  let validateServiceCoverageUseCase: { validateCoverageByCep: Mock };
 
   beforeEach(async () => {
     createUnitUseCase = { createUnit: vi.fn() };
@@ -21,6 +23,7 @@ describe('UnitsController', () => {
     getUnitUseCase = { getUnitById: vi.fn() };
     updateUnitUseCase = { updateUnitById: vi.fn() };
     deleteUnitUseCase = { deleteUnitById: vi.fn() };
+    validateServiceCoverageUseCase = { validateCoverageByCep: vi.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UnitsController],
@@ -30,6 +33,7 @@ describe('UnitsController', () => {
         { provide: GetUnitUseCase, useValue: getUnitUseCase },
         { provide: UpdateUnitUseCase, useValue: updateUnitUseCase },
         { provide: DeleteUnitUseCase, useValue: deleteUnitUseCase },
+        { provide: ValidateServiceCoverageUseCase, useValue: validateServiceCoverageUseCase },
       ],
     }).compile();
 
@@ -66,5 +70,11 @@ describe('UnitsController', () => {
   it('deleteUnitById should call deleteUnitUseCase', async () => {
     await controller.deleteUnitById(1);
     expect(deleteUnitUseCase.deleteUnitById).toHaveBeenCalledWith(1);
+  });
+
+  it('validateServiceCoverage should call validateServiceCoverageUseCase', async () => {
+    const query = { cep: '20040-020' };
+    await controller.validateServiceCoverage(query);
+    expect(validateServiceCoverageUseCase.validateCoverageByCep).toHaveBeenCalledWith('20040-020');
   });
 });
