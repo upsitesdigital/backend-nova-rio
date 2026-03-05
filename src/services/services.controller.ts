@@ -36,9 +36,6 @@ import { ListServicesQueryDto } from './dto/service/list-services-query.dto.js';
 import { UpdateServiceDto } from './dto/service/update-service.dto.js';
 
 @ApiTags('Services')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN_MASTER', 'ADMIN_BASIC')
 @Controller('services')
 export class ServicesController {
   constructor(
@@ -49,7 +46,17 @@ export class ServicesController {
     private deleteServiceUseCase: DeleteServiceUseCase,
   ) {}
 
+  @Get('public')
+  @ApiOperation({ summary: 'List active services (public)' })
+  @ApiOkResponse({ description: 'Returns paginated list of active services' })
+  listPublicServices(@Query() query: ListServicesQueryDto) {
+    return this.listServicesUseCase.listActiveServices(query);
+  }
+
   @Post()
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN_MASTER', 'ADMIN_BASIC')
   @ApiOperation({ summary: 'Create a new service' })
   @ApiCreatedResponse({ description: 'Service created successfully' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
@@ -59,6 +66,9 @@ export class ServicesController {
   }
 
   @Get()
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN_MASTER', 'ADMIN_BASIC')
   @ApiOperation({ summary: 'List all active services' })
   @ApiOkResponse({ description: 'Returns paginated list of active services' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
@@ -67,6 +77,9 @@ export class ServicesController {
   }
 
   @Get(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN_MASTER', 'ADMIN_BASIC')
   @ApiOperation({ summary: 'Get a service by ID' })
   @ApiOkResponse({ description: 'Returns the service' })
   @ApiNotFoundResponse({ description: 'Service not found' })
@@ -76,6 +89,9 @@ export class ServicesController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN_MASTER', 'ADMIN_BASIC')
   @ApiOperation({ summary: 'Update a service' })
   @ApiOkResponse({ description: 'Service updated successfully' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
@@ -87,6 +103,9 @@ export class ServicesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN_MASTER', 'ADMIN_BASIC')
   @ApiOperation({ summary: 'Soft delete a service' })
   @ApiNoContentResponse({ description: 'Service deactivated successfully' })
   @ApiNotFoundResponse({ description: 'Service not found' })
