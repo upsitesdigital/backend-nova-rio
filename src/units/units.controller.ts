@@ -32,14 +32,13 @@ import { DeleteUnitUseCase } from './application/use-cases/unit/delete-unit.use-
 import { GetUnitUseCase } from './application/use-cases/unit/get-unit.use-case.js';
 import { ListUnitsUseCase } from './application/use-cases/unit/list-units.use-case.js';
 import { UpdateUnitUseCase } from './application/use-cases/unit/update-unit.use-case.js';
+import { ValidateServiceCoverageUseCase } from './application/use-cases/unit/validate-service-coverage.use-case.js';
 import { CreateUnitDto } from './dto/unit/create-unit.dto.js';
 import { ListUnitsQueryDto } from './dto/unit/list-units-query.dto.js';
 import { UpdateUnitDto } from './dto/unit/update-unit.dto.js';
+import { ValidateCoverageQueryDto } from './dto/unit/validate-coverage-query.dto.js';
 
 @ApiTags('Units')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN_MASTER', 'ADMIN_BASIC')
 @Controller('units')
 export class UnitsController {
   constructor(
@@ -48,9 +47,21 @@ export class UnitsController {
     private getUnitUseCase: GetUnitUseCase,
     private updateUnitUseCase: UpdateUnitUseCase,
     private deleteUnitUseCase: DeleteUnitUseCase,
+    private validateServiceCoverageUseCase: ValidateServiceCoverageUseCase,
   ) {}
 
+  @Get('validate-coverage')
+  @ApiOperation({ summary: 'Validate if a CEP is within service coverage area' })
+  @ApiOkResponse({ description: 'Returns coverage validation result' })
+  @ApiBadRequestResponse({ description: 'Invalid CEP or coordinates unavailable' })
+  validateServiceCoverage(@Query() query: ValidateCoverageQueryDto) {
+    return this.validateServiceCoverageUseCase.validateCoverageByCep(query.cep);
+  }
+
   @Post()
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN_MASTER', 'ADMIN_BASIC')
   @ApiOperation({ summary: 'Create a new unit' })
   @ApiCreatedResponse({ description: 'Unit created successfully' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
@@ -61,6 +72,9 @@ export class UnitsController {
   }
 
   @Get()
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN_MASTER', 'ADMIN_BASIC')
   @ApiOperation({ summary: 'List all units' })
   @ApiOkResponse({ description: 'Returns paginated list of units' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
@@ -69,6 +83,9 @@ export class UnitsController {
   }
 
   @Get(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN_MASTER', 'ADMIN_BASIC')
   @ApiOperation({ summary: 'Get a unit by ID' })
   @ApiOkResponse({ description: 'Returns the unit' })
   @ApiNotFoundResponse({ description: 'Unit not found' })
@@ -78,11 +95,13 @@ export class UnitsController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN_MASTER', 'ADMIN_BASIC')
   @ApiOperation({ summary: 'Update a unit' })
   @ApiOkResponse({ description: 'Unit updated successfully' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
-  @ApiNotFoundResponse({ description: 'Unit not found' })
-  @ApiConflictResponse({ description: 'Unit name already in use' })
+  @ApiNotFoundResponse({ description: 'Unit name already in use' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
   updateUnitById(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUnitDto) {
     return this.updateUnitUseCase.updateUnitById(id, dto);
@@ -90,6 +109,9 @@ export class UnitsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN_MASTER', 'ADMIN_BASIC')
   @ApiOperation({ summary: 'Delete a unit' })
   @ApiNoContentResponse({ description: 'Unit deleted successfully' })
   @ApiNotFoundResponse({ description: 'Unit not found' })

@@ -186,12 +186,15 @@ model Employee {
 // ============================================================
 
 model Unit {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(uuid())
-  name      String   @unique
-  address   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  uuid            String   @unique @default(uuid())
+  name            String   @unique
+  address         String?
+  latitude        Float?
+  longitude       Float?
+  serviceRadiusKm Float    @default(5) @map("service_radius_km")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   employees    Employee[]
   clients      Client[]

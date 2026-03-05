@@ -49,23 +49,81 @@ async function seedAdminUser() {
 async function seedDefaultUnit() {
   const unitName = 'Condomínio Le Monde';
 
+  const unitData = {
+    name: unitName,
+    address: 'Avenida das Américas, Barra da Tijuca, Rio de Janeiro - RJ, 22640-102',
+    latitude: -23.001132,
+    longitude: -43.3290548,
+    serviceRadiusKm: 5,
+  };
+
   const existing = await prisma.unit.findUnique({ where: { name: unitName } });
 
   if (existing) {
-    console.log(`Unit "${unitName}" already exists, skipping seed.`);
+    if (existing.latitude === null) {
+      await prisma.unit.update({ where: { id: existing.id }, data: unitData });
+      console.log(`Unit "${unitName}" updated with geo fields.`);
+    } else {
+      console.log(`Unit "${unitName}" already exists, skipping seed.`);
+    }
     return;
   }
 
-  await prisma.unit.create({
-    data: { name: unitName },
-  });
+  await prisma.unit.create({ data: unitData });
 
   console.log(`Unit "${unitName}" created successfully.`);
+}
+
+async function seedServices() {
+  const services = [
+    {
+      name: 'Faxina Regular',
+      description: 'Limpeza completa e manutenção periódica',
+      icon: 'broom',
+      basePrice: 50.0,
+      allowSingle: true,
+      allowPackage: true,
+      allowRecurrence: true,
+    },
+    {
+      name: 'Faxina Premium',
+      description: 'Limpeza completa e manutenção periódica',
+      icon: 'sketch-logo',
+      basePrice: 50.0,
+      allowSingle: true,
+      allowPackage: true,
+      allowRecurrence: true,
+    },
+    {
+      name: 'Faxina Pós-Obra',
+      description: 'Limpeza especializada após construção',
+      icon: 'star-four',
+      basePrice: 50.0,
+      allowSingle: true,
+      allowPackage: false,
+      allowRecurrence: false,
+    },
+  ];
+
+  for (const service of services) {
+    const existing = await prisma.service.findFirst({
+      where: { name: service.name, isActive: true },
+    });
+
+    if (existing) {
+      console.log(`Service "${service.name}" already exists, skipping.`);
+      continue;
+    }
+
+    await prisma.service.create({ data: service });
+    console.log(`Service "${service.name}" created successfully.`);
+  }
 }
 
 async function main() {
   await seedAdminUser();
   await seedDefaultUnit();
+  await seedServices();
 }
 
 main()

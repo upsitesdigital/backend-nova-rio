@@ -6,11 +6,17 @@ export const UNIT_REPOSITORY = Symbol('UNIT_REPOSITORY');
 export interface CreateUnitData {
   name: string;
   address?: string;
+  latitude?: number;
+  longitude?: number;
+  serviceRadiusKm?: number;
 }
 
 export interface UpdateUnitData {
   name?: string;
   address?: string;
+  latitude?: number;
+  longitude?: number;
+  serviceRadiusKm?: number;
 }
 
 export interface ListUnitsFilters {
