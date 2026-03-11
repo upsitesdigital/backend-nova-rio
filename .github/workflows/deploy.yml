@@ -3,7 +3,7 @@ name: CI/CD
 on:
   push:
     branches:
-      - main
+      - develop
 
 jobs:
   test:
@@ -84,7 +84,7 @@ jobs:
             cd /root/backend-nova-rio
 
             echo "📥 Atualizando código..."
-            git pull origin main
+            git pull origin develop
 
             echo "🔧 Gerando Prisma Client..."
             export NVM_DIR="$HOME/.nvm"
