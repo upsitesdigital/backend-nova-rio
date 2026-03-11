@@ -4,17 +4,23 @@ import { GetActiveClientsCountUseCase } from './application/use-cases/dashboard/
 import { GetPendingAppointmentsCountUseCase } from './application/use-cases/dashboard/get-pending-appointments-count.use-case.js';
 import { GetTodayAgendaUseCase } from './application/use-cases/dashboard/get-today-agenda.use-case.js';
 import { GetTodayAppointmentsCountUseCase } from './application/use-cases/dashboard/get-today-appointments-count.use-case.js';
+import { ClientDashboardController } from './client-dashboard.controller.js';
+import { GetClientDashboardSummaryUseCase } from './application/use-cases/client-dashboard/get-client-dashboard-summary.use-case.js';
+import { CLIENT_DASHBOARD_REPOSITORY } from './domain/interfaces/client-dashboard.repository.interface.js';
 import { DASHBOARD_REPOSITORY } from './domain/interfaces/dashboard.repository.interface.js';
+import { PrismaClientDashboardRepository } from './infrastructure/repositories/prisma-client-dashboard.repository.js';
 import { PrismaDashboardRepository } from './infrastructure/repositories/prisma-dashboard.repository.js';
 
 @Module({
-  controllers: [AdminDashboardController],
+  controllers: [AdminDashboardController, ClientDashboardController],
   providers: [
     { provide: DASHBOARD_REPOSITORY, useClass: PrismaDashboardRepository },
+    { provide: CLIENT_DASHBOARD_REPOSITORY, useClass: PrismaClientDashboardRepository },
     GetTodayAppointmentsCountUseCase,
     GetActiveClientsCountUseCase,
     GetPendingAppointmentsCountUseCase,
     GetTodayAgendaUseCase,
+    GetClientDashboardSummaryUseCase,
   ],
 })
 export class DashboardModule {}
