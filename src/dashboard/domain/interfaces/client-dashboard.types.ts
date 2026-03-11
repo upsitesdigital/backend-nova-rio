@@ -1,6 +1,7 @@
 export interface ClientDashboardSummary {
   clientName: string;
   nextAppointment: {
+    id: number;
     date: string;
     cancellationNote: string;
   } | null;
@@ -29,5 +30,7 @@ export interface ServiceHistoryEntry {
   canEdit: boolean;
   recurrenceType: string;
   locationName: string | null;
+  locationZip: string | null;
+  locationAddress: string | null;
   payment: ServiceHistoryEntryPayment | null;
 }

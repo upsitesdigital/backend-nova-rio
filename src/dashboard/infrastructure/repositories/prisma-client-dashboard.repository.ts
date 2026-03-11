@@ -32,7 +32,7 @@ export class PrismaClientDashboardRepository implements IClientDashboardReposito
         status: 'SCHEDULED',
         date: { gte: today },
       },
-      select: { date: true },
+      select: { id: true, date: true },
       orderBy: { date: 'asc' },
     });
 
@@ -53,6 +53,8 @@ export class PrismaClientDashboardRepository implements IClientDashboardReposito
         date: true,
         status: true,
         recurrenceType: true,
+        locationZip: true,
+        locationAddress: true,
         service: { select: { name: true, icon: true } },
         unit: { select: { name: true } },
         payment: {
@@ -82,6 +84,8 @@ export class PrismaClientDashboardRepository implements IClientDashboardReposito
         canEdit: apt.status === 'SCHEDULED',
         recurrenceType: apt.recurrenceType,
         locationName: apt.unit?.name ?? null,
+        locationZip: apt.locationZip ?? null,
+        locationAddress: apt.locationAddress ?? null,
         payment: apt.payment
           ? {
               cardLastFour: apt.payment.card?.lastFourDigits ?? null,
@@ -108,6 +112,7 @@ export class PrismaClientDashboardRepository implements IClientDashboardReposito
       clientName: client.name.split(' ')[0],
       nextAppointment: nextAppointment
         ? {
+            id: nextAppointment.id,
             date: format(nextAppointment.date, 'dd/MM'),
             cancellationNote: 'Cancelamento com 1h de antecedência',
           }
