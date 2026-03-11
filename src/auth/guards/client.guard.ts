@@ -12,6 +12,8 @@ export class ClientGuard implements CanActivate {
       throw new ForbiddenException('Only clients can access this resource');
     }
 
+    // TODO: Check client status === 'ACTIVE' and block PENDING/INACTIVE users (business rule from briefing)
+
     return true;
   }
 }

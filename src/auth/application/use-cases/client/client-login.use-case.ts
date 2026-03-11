@@ -30,6 +30,12 @@ export class ClientLoginUseCase {
       throw new ForbiddenException('Account is temporarily locked. Try again later');
     }
 
+    if (client.status === 'PENDING') {
+      throw new ForbiddenException(
+        'Seu cadastro está em análise. Aguarde a aprovação para fazer login.',
+      );
+    }
+
     if (client.status !== 'ACTIVE') {
       throw new UnauthorizedException('Invalid credentials');
     }
