@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - develop
+  pull_request:
+    branches:
+      - develop
 
 jobs:
   test:
@@ -73,6 +76,7 @@ jobs:
     name: Deploy VPS
     runs-on: ubuntu-latest
     needs: test
+    if: github.event_name == 'push'
 
     steps:
       - name: Preparar chave SSH
