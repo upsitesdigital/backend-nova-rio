@@ -2,49 +2,49 @@
 
 ---
 
-## 1. Clean Architecture — Uncle Bob (REGRA DE OURO)
+## 1. Clean Architecture — Uncle Bob (GOLDEN RULE)
 
-Este projeto segue rigorosamente a **Clean Architecture** de Robert C. Martin (Uncle Bob). Toda decisão de design, organização de código e criação de módulos DEVE respeitar estes princípios.
+This project strictly follows **Clean Architecture** by Robert C. Martin (Uncle Bob). Every design decision, code organization, and module creation MUST respect these principles.
 
-### 1.1 Camadas e a Dependency Rule
+### 1.1 Layers and the Dependency Rule
 
-A regra mais importante: **dependências SEMPRE apontam para dentro** (das camadas externas para as internas). Código de camadas internas NUNCA conhece camadas externas.
+The most important rule: **dependencies ALWAYS point inward** (from outer layers to inner layers). Inner layer code NEVER knows about outer layers.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  INFRASTRUCTURE (camada mais externa)                       │
-│  Prisma repositories, Resend email, Vindi gateway,         │
-│  JWT service, Bcrypt hash, Crons                           │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  INTERFACE ADAPTERS                                  │   │
-│  │  Controllers, DTOs, Guards, Decorators, Pipes        │   │
-│  │  ┌─────────────────────────────────────────────┐    │   │
-│  │  │  APPLICATION (Use Cases)                     │    │   │
-│  │  │  Business rules específicas da aplicação     │    │   │
-│  │  │  1 classe = 1 operação                       │    │   │
-│  │  │  ┌─────────────────────────────────────┐    │    │   │
-│  │  │  │  DOMAIN (camada mais interna)        │    │    │   │
-│  │  │  │  Interfaces, Types, Symbols,         │    │    │   │
-│  │  │  │  Business rules do domínio            │    │    │   │
-│  │  │  └─────────────────────────────────────┘    │    │   │
-│  │  └─────────────────────────────────────────────┘    │   │
-│  └─────────────────────────────────────────────────────┘   │
+│  INFRASTRUCTURE (outermost layer)                            │
+│  Prisma repositories, Resend email, Vindi gateway,          │
+│  JWT service, Bcrypt hash, Crons                            │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  INTERFACE ADAPTERS                                  │    │
+│  │  Controllers, DTOs, Guards, Decorators, Pipes        │    │
+│  │  ┌─────────────────────────────────────────────┐    │    │
+│  │  │  APPLICATION (Use Cases)                     │    │    │
+│  │  │  Application-specific business rules         │    │    │
+│  │  │  1 class = 1 operation                       │    │    │
+│  │  │  ┌─────────────────────────────────────┐    │    │    │
+│  │  │  │  DOMAIN (innermost layer)            │    │    │    │
+│  │  │  │  Interfaces, Types, Symbols,         │    │    │    │
+│  │  │  │  Domain business rules               │    │    │    │
+│  │  │  └─────────────────────────────────────┘    │    │    │
+│  │  └─────────────────────────────────────────────┘    │    │
+│  └─────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 1.2 Mapeamento das camadas no projeto
+### 1.2 Layer mapping in the project
 
-| Camada Clean Arch      | Path no projeto                                            | Conteúdo                                                            |
+| Clean Arch Layer       | Project Path                                               | Contents                                                            |
 | ---------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------- |
 | **Domain**             | `domain/interfaces/`                                       | Repository interfaces, service interfaces, DI Symbols, domain types |
-| **Application**        | `application/use-cases/`                                   | Use cases (1 por operação), validators de domínio                   |
-| **Interface Adapters** | `<module>.controller.ts`, `dto/`                           | Controllers HTTP, DTOs de entrada/saída                             |
+| **Application**        | `application/use-cases/`                                   | Use cases (1 per operation), domain validators                      |
+| **Interface Adapters** | `<module>.controller.ts`, `dto/`                           | HTTP controllers, input/output DTOs                                 |
 | **Infrastructure**     | `infrastructure/repositories/`, `infrastructure/services/` | Prisma repos, email, gateway, crons                                 |
 
-### 1.3 Dependency Rule — exemplos concretos
+### 1.3 Dependency Rule — concrete examples
 
 ```typescript
-// ✅ CORRETO: Use case depende da INTERFACE (domain), não da implementação
+// CORRECT: use case depends on INTERFACE (domain), not on implementation
 import type { IServiceRepository } from '../../../domain/interfaces/service.repository.interface.js';
 
 @Injectable()
@@ -52,27 +52,27 @@ export class CreateServiceUseCase {
   constructor(@Inject(SERVICE_REPOSITORY) private serviceRepository: IServiceRepository) {}
 }
 
-// ❌ ERRADO: Use case depende diretamente do Prisma (infrastructure)
+// WRONG: use case depends directly on Prisma (infrastructure)
 import { PrismaServiceRepository } from '../../../infrastructure/repositories/prisma-service.repository.js';
 
 @Injectable()
 export class CreateServiceUseCase {
-  constructor(private repo: PrismaServiceRepository) {} // VIOLA Dependency Rule
+  constructor(private repo: PrismaServiceRepository) {} // VIOLATES Dependency Rule
 }
 ```
 
 ```typescript
-// ✅ CORRETO: Repository interface (domain) não conhece Prisma
+// CORRECT: repository interface (domain) does not know about Prisma
 export interface IServiceRepository {
   createService(data: CreateServiceData): Promise<Service>;
 }
 
-// ❌ ERRADO: Interface do domain importando algo de infrastructure
-import { PrismaClient } from '@prisma/client'; // VIOLA — domain não conhece infra
+// WRONG: domain interface importing from infrastructure
+import { PrismaClient } from '@prisma/client'; // VIOLATES — domain must not know infra
 ```
 
 ```typescript
-// ✅ CORRETO: Controller depende do Use Case, NUNCA do repository diretamente
+// CORRECT: controller depends on use case, NEVER on repository directly
 export class ServicesController {
   constructor(private createServiceUseCase: CreateServiceUseCase) {}
 
@@ -81,23 +81,23 @@ export class ServicesController {
   }
 }
 
-// ❌ ERRADO: Controller acessando repository diretamente (pula a camada application)
+// WRONG: controller accessing repository directly (skips the application layer)
 export class ServicesController {
   constructor(@Inject(SERVICE_REPOSITORY) private repo: IServiceRepository) {}
 
   createService(@Body() dto: CreateServiceDto) {
-    return this.repo.createService(dto); // VIOLA — controller não pode acessar domain diretamente
+    return this.repo.createService(dto); // VIOLATES — controller must not access domain directly
   }
 }
 ```
 
-### 1.4 Estrutura de um módulo
+### 1.4 Module structure
 
 ```
 src/<module>/
   ├── application/
-  │   ├── use-cases/<entity>/          # Business logic (1 classe por use case)
-  │   └── validators/                  # Validadores de domínio (opcional)
+  │   ├── use-cases/<entity>/          # Business logic (1 class per use case)
+  │   └── validators/                  # Domain validators (optional)
   ├── domain/
   │   └── interfaces/                  # Repository interfaces + DI Symbols + types
   ├── dto/<entity>/                    # class-validator DTOs (interface adapters)
@@ -109,27 +109,27 @@ src/<module>/
   └── <module>.module.ts               # NestJS module wiring (composition root)
 ```
 
-### 1.5 Regras de organização
+### 1.5 Organization rules
 
-- **1 classe por arquivo** — sem exceções
-- **1 use case por arquivo** — cada use case é uma classe `@Injectable()` isolada
-- **Subpastas por entidade** — sempre criar subpastas por domínio dentro das camadas (`use-cases/service/`, `dto/service/`). NUNCA deixar arquivos soltos na raiz da camada
-- **Dependência unidirecional** — Controller → UseCase → Repository Interface ← Prisma Implementation
+- **1 class per file** — no exceptions
+- **1 use case per file** — each use case is an isolated `@Injectable()` class
+- **Subfolders by entity** — always create subfolders by domain inside layers (`use-cases/service/`, `dto/service/`). NEVER leave files flat at the layer root
+- **Unidirectional dependency** — Controller → UseCase → Repository Interface ← Prisma Implementation
 
 ---
 
 ## 2. SOLID Principles
 
-TODOS os 5 princípios SOLID são obrigatórios neste projeto. Cada princípio é mapeado abaixo com exemplos concretos do codebase.
+ALL 5 SOLID principles are mandatory in this project. Each principle is mapped below with concrete codebase examples.
 
 ### 2.1 S — Single Responsibility Principle (SRP)
 
-> "Uma classe deve ter um, e somente um, motivo para mudar."
+> "A class should have one, and only one, reason to change."
 
-Cada use case tem exatamente UMA responsabilidade. NUNCA criar um "ServiceUseCase" que faz CRUD inteiro.
+Each use case has exactly ONE responsibility. NEVER create a "ServiceUseCase" that handles the entire CRUD.
 
 ```typescript
-// ❌ ERRADO: múltiplas responsabilidades em uma classe
+// WRONG: multiple responsibilities in one class
 @Injectable()
 export class ServiceUseCase {
   async create(dto) { ... }
@@ -139,7 +139,7 @@ export class ServiceUseCase {
   async delete(id) { ... }
 }
 
-// ✅ CORRETO: 1 use case = 1 responsabilidade = 1 arquivo
+// CORRECT: 1 use case = 1 responsibility = 1 file
 // create-service.use-case.ts
 @Injectable()
 export class CreateServiceUseCase {
@@ -155,58 +155,58 @@ export class ListServicesUseCase {
 }
 ```
 
-**Aplicação no projeto:**
+**Applied in the project:**
 
-- Use cases: 1 operação por classe (CreateServiceUseCase, ListServicesUseCase, etc.)
-- Controllers: separados por role quando necessário (ClientAppointmentsController, AdminAppointmentsController)
-- Guards: cada guard tem uma única responsabilidade (JwtAuthGuard valida JWT, RolesGuard verifica role, ClientGuard verifica tipo)
-- Services: cada service externo tem sua própria classe (ResendEmailService, VindiPaymentGatewayService, BcryptHashService)
+- Use cases: 1 operation per class (CreateServiceUseCase, ListServicesUseCase, etc.)
+- Controllers: separated by role when necessary (ClientAppointmentsController, AdminAppointmentsController)
+- Guards: each guard has a single responsibility (JwtAuthGuard validates JWT, RolesGuard checks role, ClientGuard checks type)
+- Services: each external service has its own class (ResendEmailService, VindiPaymentGatewayService, BcryptHashService)
 
 ### 2.2 O — Open/Closed Principle (OCP)
 
-> "Entidades de software devem ser abertas para extensão, mas fechadas para modificação."
+> "Software entities should be open for extension but closed for modification."
 
-Quando precisar de um novo comportamento, crie um NOVO use case ou uma NOVA implementação de interface — NUNCA modifique use cases existentes para adicionar lógica não relacionada.
+When you need new behavior, create a NEW use case or a NEW interface implementation — NEVER modify existing use cases to add unrelated logic.
 
 ```typescript
-// ✅ CORRETO: novo comportamento = novo use case
-// approve-client.use-case.ts (NOVO)
+// CORRECT: new behavior = new use case
+// approve-client.use-case.ts (NEW)
 @Injectable()
 export class ApproveClientUseCase { ... }
 
-// reject-client.use-case.ts (NOVO)
+// reject-client.use-case.ts (NEW)
 @Injectable()
 export class RejectClientUseCase { ... }
 
-// ❌ ERRADO: adicionando novo comportamento modificando use case existente
+// WRONG: adding new behavior by modifying existing use case
 @Injectable()
 export class ManageClientUseCase {
-  async approve(id) { ... }  // adicionado depois
-  async reject(id) { ... }   // adicionado depois
-  async suspend(id) { ... }  // adicionado depois
+  async approve(id) { ... }  // added later
+  async reject(id) { ... }   // added later
+  async suspend(id) { ... }  // added later
 }
 ```
 
-**Aplicação no projeto:**
+**Applied in the project:**
 
-- Repository interfaces permitem trocar Prisma por qualquer ORM sem alterar use cases
-- Email service: interface `IEmailService` permite trocar Resend por SendGrid sem alterar quem consome
-- Payment gateway: interface `IPaymentGatewayService` permite trocar Vindi sem alterar use cases
+- Repository interfaces allow swapping Prisma for any ORM without changing use cases
+- Email service: `IEmailService` interface allows swapping Resend for SendGrid without changing consumers
+- Payment gateway: `IPaymentGatewayService` interface allows swapping Vindi without changing use cases
 
 ### 2.3 L — Liskov Substitution Principle (LSP)
 
-> "Objetos de uma classe derivada devem poder substituir objetos da classe base sem alterar o comportamento do programa."
+> "Objects of a derived class must be able to replace objects of the base class without altering program behavior."
 
-Todas as implementações de repository DEVEM honrar o contrato definido na interface do domain. Se `IServiceRepository.findServiceById(id)` retorna `Service | null`, a implementação Prisma DEVE retornar exatamente isso.
+All repository implementations MUST honor the contract defined in the domain interface. If `IServiceRepository.findServiceById(id)` returns `Service | null`, the Prisma implementation MUST return exactly that.
 
 ```typescript
-// Domain interface (contrato)
+// Domain interface (contract)
 export interface IServiceRepository {
   findServiceById(id: number): Promise<Service | null>;
   deactivateServiceById(id: number): Promise<void>;
 }
 
-// ✅ CORRETO: implementação honra o contrato exatamente
+// CORRECT: implementation honors the contract exactly
 @Injectable()
 export class PrismaServiceRepository implements IServiceRepository {
   async findServiceById(id: number): Promise<Service | null> {
@@ -218,20 +218,20 @@ export class PrismaServiceRepository implements IServiceRepository {
   }
 }
 
-// ❌ ERRADO: implementação viola o contrato (throw em vez de null)
+// WRONG: implementation violates the contract (throw instead of null)
 @Injectable()
 export class BadRepository implements IServiceRepository {
   async findServiceById(id: number): Promise<Service | null> {
     const service = await this.prisma.service.findFirst({ where: { id } });
-    if (!service) throw new NotFoundException(); // VIOLA — contrato diz null, não throw
+    if (!service) throw new NotFoundException(); // VIOLATES — contract says null, not throw
     return service;
   }
 }
 ```
 
-**Aplicação no projeto:**
+**Applied in the project:**
 
-- `PrismaServiceRepository implements IServiceRepository` — deve ser substituível sem alterar o use case
+- `PrismaServiceRepository implements IServiceRepository` — must be substitutable without changing the use case
 - `PrismaClientRepository implements IClientRepository`
 - `ResendEmailService implements IEmailService`
 - `BcryptHashService implements IHashService`
@@ -239,33 +239,33 @@ export class BadRepository implements IServiceRepository {
 
 ### 2.4 I — Interface Segregation Principle (ISP)
 
-> "Nenhum cliente deve ser forçado a depender de métodos que não usa."
+> "No client should be forced to depend on methods it does not use."
 
-Interfaces devem ser coesas e específicas. Se um use case só precisa de leitura, ele NÃO deve depender de uma interface que também tem métodos de escrita, a menos que a interface esteja naturalmente coesa ao domínio.
+Interfaces must be cohesive and specific. If a use case only needs reads, it SHOULD NOT depend on an interface that also has write methods, unless the interface is naturally cohesive to the domain.
 
 ```typescript
-// ✅ CORRETO: interface coesa para o domínio de um módulo
+// CORRECT: cohesive interface for a module's domain
 export interface IClientRepository {
   findClientByEmail(email: string): Promise<Client | null>;
   findClientById(id: number): Promise<Client | null>;
   updateRefreshTokenWithFamily(clientId: number, hashedToken: string, family: string): Promise<void>;
 }
 
-// ✅ CORRETO: interfaces separadas quando contextos são distintos
-// auth/domain/interfaces/ — operações de auth
+// CORRECT: separate interfaces when contexts are distinct
+// auth/domain/interfaces/ — auth operations
 export interface IClientRepository {
   findClientByEmail(email: string): Promise<Client | null>;
   updateRefreshTokenWithFamily(...): Promise<void>;
 }
 
-// clients/domain/interfaces/ — operações de gestão admin
+// clients/domain/interfaces/ — admin management operations
 export interface IClientManagementRepository {
   listClients(filters): Promise<PaginatedResponse<Client>>;
   approveClient(id: number): Promise<Client>;
   rejectClient(id: number): Promise<void>;
 }
 
-// ❌ ERRADO: interface gigante com tudo junto
+// WRONG: giant interface with everything together
 export interface IGodRepository {
   // auth
   findClientByEmail(email: string): Promise<Client | null>;
@@ -276,49 +276,49 @@ export interface IGodRepository {
   // profile
   updateProfile(id: number, data): Promise<Client>;
   deleteAccount(id: number): Promise<void>;
-  // ... 30 métodos mais
+  // ... 30 more methods
 }
 ```
 
-**Aplicação no projeto:**
+**Applied in the project:**
 
-- `IClientRepository` (auth) vs `IClientManagementRepository` (clients) vs `IClientProfileRepository` (client-profile) — mesma entidade Client, interfaces separadas por contexto
-- `IHashService` — apenas `hash()` e `compare()`
-- `ITokenService` — apenas operações de token
-- `IEmailService` — apenas operações de email
+- `IClientRepository` (auth) vs `IClientManagementRepository` (clients) vs `IClientProfileRepository` (client-profile) — same Client entity, interfaces separated by context
+- `IHashService` — only `hash()` and `compare()`
+- `ITokenService` — only token operations
+- `IEmailService` — only email operations
 
 ### 2.5 D — Dependency Inversion Principle (DIP)
 
-> "Módulos de alto nível não devem depender de módulos de baixo nível. Ambos devem depender de abstrações."
+> "High-level modules should not depend on low-level modules. Both should depend on abstractions."
 
-Este é o princípio MAIS importante do projeto e se manifesta no **Symbol-based DI pattern**. Use cases (alto nível) dependem de interfaces (abstrações), NUNCA de implementações Prisma (baixo nível).
+This is the MOST important principle in the project and manifests through the **Symbol-based DI pattern**. Use cases (high-level) depend on interfaces (abstractions), NEVER on Prisma implementations (low-level).
 
 ```typescript
-// ✅ CORRETO: alto nível (use case) depende de abstração (interface)
+// CORRECT: high-level (use case) depends on abstraction (interface)
 @Injectable()
 export class CreateServiceUseCase {
   constructor(@Inject(SERVICE_REPOSITORY) private serviceRepository: IServiceRepository) {}
-  //                                              ↑ abstração, não implementação
+  //                                              ↑ abstraction, not implementation
 }
 
-// Module faz o binding (composition root)
+// Module does the binding (composition root)
 @Module({
   providers: [
     { provide: SERVICE_REPOSITORY, useClass: PrismaServiceRepository },
-    //         ↑ abstração                   ↑ implementação concreta
+    //         ↑ abstraction                   ↑ concrete implementation
     CreateServiceUseCase,
   ],
 })
 export class ServicesModule {}
 
-// ❌ ERRADO: alto nível depende de baixo nível diretamente
+// WRONG: high-level depends on low-level directly
 @Injectable()
 export class CreateServiceUseCase {
-  constructor(private repo: PrismaServiceRepository) {} // VIOLA DIP
+  constructor(private repo: PrismaServiceRepository) {} // VIOLATES DIP
 }
 ```
 
-**Aplicação no projeto — todos os Symbols:**
+**Applied in the project — all Symbols:**
 
 | Symbol                    | Interface                | Implementation               |
 | ------------------------- | ------------------------ | ---------------------------- |
@@ -330,13 +330,13 @@ export class CreateServiceUseCase {
 | `EMAIL_SERVICE`           | `IEmailService`          | `ResendEmailService`         |
 | `PAYMENT_GATEWAY_SERVICE` | `IPaymentGatewayService` | `VindiPaymentGatewayService` |
 
-### 2.6 Checklist SOLID — antes de cada PR
+### 2.6 SOLID Checklist — before every PR
 
-- [ ] **SRP** — cada classe tem UMA responsabilidade? Use cases com 1 método público?
-- [ ] **OCP** — novo comportamento cria arquivo novo, sem modificar existentes?
-- [ ] **LSP** — implementações respeitam o contrato da interface?
-- [ ] **ISP** — interfaces são coesas? Nenhum consumidor depende de métodos que não usa?
-- [ ] **DIP** — use cases dependem de interfaces via `@Inject(SYMBOL)`, nunca de classes concretas?
+- [ ] **SRP** — does each class have ONE responsibility? Use cases with 1 public method?
+- [ ] **OCP** — does new behavior create a new file, without modifying existing ones?
+- [ ] **LSP** — do implementations respect the interface contract?
+- [ ] **ISP** — are interfaces cohesive? No consumer depends on methods it doesn't use?
+- [ ] **DIP** — do use cases depend on interfaces via `@Inject(SYMBOL)`, never on concrete classes?
 
 ---
 
@@ -383,7 +383,7 @@ export class ServicesModule {}
 ### Use Case injection
 
 ```typescript
-// CORRETO: Symbol + type import separados
+// CORRECT: Symbol + type import separated
 import { SERVICE_REPOSITORY } from '../../../domain/interfaces/service.repository.interface.js';
 import type { IServiceRepository } from '../../../domain/interfaces/service.repository.interface.js';
 
@@ -395,20 +395,20 @@ export class CreateServiceUseCase {
 
 ### Checklist
 
-- [ ] Symbol exportado com nome `<ENTITY>_REPOSITORY` ou `<ENTITY>_SERVICE`
-- [ ] Interface exportada com nome `I<Entity>Repository` ou `I<Entity>Service`
-- [ ] Symbol e interface no MESMO arquivo
+- [ ] Symbol exported with name `<ENTITY>_REPOSITORY` or `<ENTITY>_SERVICE`
+- [ ] Interface exported with name `I<Entity>Repository` or `I<Entity>Service`
+- [ ] Symbol and interface in the SAME file
 - [ ] Module binds via `{ provide: SYMBOL, useClass: PrismaImplementation }`
-- [ ] Use cases injetam via `@Inject(SYMBOL)`
-- [ ] `exports: [SYMBOL]` no module quando compartilhado entre módulos
+- [ ] Use cases inject via `@Inject(SYMBOL)`
+- [ ] `exports: [SYMBOL]` in the module when shared across modules
 
 ---
 
-## 4. Naming Conventions (CRÍTICO)
+## 4. Naming Conventions (CRITICAL)
 
-### Nomes de métodos — NUNCA genéricos
+### Method names — NEVER generic
 
-| ERRADO             | CORRETO                          |
+| WRONG              | CORRECT                          |
 | ------------------ | -------------------------------- |
 | `execute(dto)`     | `createService(dto)`             |
 | `call(id)`         | `getServiceById(id)`             |
@@ -421,7 +421,7 @@ export class CreateServiceUseCase {
 | `update(id, data)` | `updateServiceById(id, data)`    |
 | `delete(id)`       | `deactivateServiceById(id)`      |
 
-### Nomes de arquivos
+### File names
 
 ```
 # Use cases
@@ -446,7 +446,7 @@ prisma-service.repository.ts
 create-service.use-case.spec.ts
 ```
 
-### Nomes de classes
+### Class names
 
 ```typescript
 // Use cases: <Action><Entity>UseCase
@@ -466,7 +466,7 @@ CreateServiceDto;
 UpdateServiceDto;
 ListServicesQueryDto;
 
-// Controllers: <Module>Controller ou <Role><Module>Controller
+// Controllers: <Module>Controller or <Role><Module>Controller
 ServicesController;
 ClientAppointmentsController;
 AdminAppointmentsController;
@@ -476,43 +476,43 @@ AdminAppointmentsController;
 
 ## 5. Imports
 
-### Module resolution — OBRIGATÓRIO `.js`
+### Module resolution — `.js` REQUIRED
 
 ```typescript
-// CORRETO: extensão .js em TODOS os imports relativos
+// CORRECT: .js extension on ALL relative imports
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import { SERVICE_REPOSITORY } from './domain/interfaces/service.repository.interface.js';
 import type { IServiceRepository } from './domain/interfaces/service.repository.interface.js';
 
-// ERRADO: sem extensão
+// WRONG: without extension
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 ```
 
-### Type imports — separados
+### Type imports — separated
 
 ```typescript
-// CORRETO: import type separado do import de valor
+// CORRECT: type import separated from value import
 import { SERVICE_REPOSITORY } from '../../../domain/interfaces/service.repository.interface.js';
 import type { IServiceRepository } from '../../../domain/interfaces/service.repository.interface.js';
 
-// CORRETO: type import para tipos do Prisma
+// CORRECT: type import for Prisma types
 import type { Service } from '@prisma/client';
 
-// ERRADO: misturar valor e tipo no mesmo import
+// WRONG: mixing value and type in the same import
 import { SERVICE_REPOSITORY, IServiceRepository } from '...';
 ```
 
-### Packages — sem extensão
+### Packages — no extension
 
 ```typescript
-// CORRETO: packages sem extensão
+// CORRECT: packages without extension
 import { Injectable, Inject } from '@nestjs/common';
 import type { Service } from '@prisma/client';
 ```
 
 ---
 
-## 6. Controllers e Rotas
+## 6. Controllers and Routes
 
 ### Admin endpoints
 
@@ -553,31 +553,31 @@ export class ClientAppointmentsController {
 }
 ```
 
-### Route params — SEMPRE `ParseIntPipe`
+### Route params — ALWAYS `ParseIntPipe`
 
 ```typescript
-// CORRETO: id inteiro com ParseIntPipe
+// CORRECT: integer id with ParseIntPipe
 @Get(':id')
 getServiceById(@Param('id', ParseIntPipe) id: number) { ... }
 
-// ERRADO: id como string ou uuid
+// WRONG: id as string or uuid
 @Get(':uuid')
 getServiceByUuid(@Param('uuid') uuid: string) { ... }
 ```
 
-### Swagger — OBRIGATÓRIO em todos os endpoints
+### Swagger — REQUIRED on all endpoints
 
-Cada endpoint DEVE ter:
+Every endpoint MUST have:
 
 - `@ApiOperation({ summary: '...' })`
-- `@Api*Response` para cada status possível (200, 201, 400, 401, 403, 404)
-- `@ApiBearerAuth()` em endpoints autenticados
-- `@ApiTags('...')` no controller
+- `@Api*Response` for each possible status (200, 201, 400, 401, 403, 404)
+- `@ApiBearerAuth()` on authenticated endpoints
+- `@ApiTags('...')` on the controller
 
 ### Soft deletes
 
 ```typescript
-// CORRETO: desativar via isActive
+// CORRECT: deactivate via isActive
 @Delete(':id')
 @HttpCode(HttpStatus.NO_CONTENT)
 @ApiNoContentResponse({ description: 'Service deactivated successfully' })
@@ -585,7 +585,7 @@ deactivateService(@Param('id', ParseIntPipe) id: number) {
   return this.deleteServiceUseCase.deactivateServiceById(id);
 }
 
-// ERRADO: deletar fisicamente
+// WRONG: physically delete
 @Delete(':id')
 deleteService(@Param('id', ParseIntPipe) id: number) {
   return this.prisma.service.delete({ where: { id } });
@@ -594,9 +594,9 @@ deleteService(@Param('id', ParseIntPipe) id: number) {
 
 ---
 
-## 7. DTOs e Validação
+## 7. DTOs and Validation
 
-### DTOs com class-validator
+### DTOs with class-validator
 
 ```typescript
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -620,29 +620,29 @@ export class CreateServiceDto {
 }
 ```
 
-### Query DTOs — estender PaginationQueryDto
+### Query DTOs — extend PaginationQueryDto
 
 ```typescript
 import { PaginationQueryDto } from '../../../shared/dto/pagination-query.dto.js';
 
 export class ListServicesQueryDto extends PaginationQueryDto {
-  // filtros específicos do módulo
+  // module-specific filters
 }
 ```
 
 ### Checklist
 
-- [ ] `@ApiProperty` ou `@ApiPropertyOptional` em cada campo
-- [ ] `example` em cada `@ApiProperty`
-- [ ] Validators do `class-validator` em cada campo
-- [ ] Campos opcionais com `@IsOptional()` + `?` no tipo
-- [ ] Query DTOs estendem `PaginationQueryDto` para paginação
+- [ ] `@ApiProperty` or `@ApiPropertyOptional` on each field
+- [ ] `example` on each `@ApiProperty`
+- [ ] `class-validator` validators on each field
+- [ ] Optional fields with `@IsOptional()` + `?` in the type
+- [ ] Query DTOs extend `PaginationQueryDto` for pagination
 
 ---
 
 ## 8. Repository — Prisma Implementation
 
-### Padrão
+### Pattern
 
 ```typescript
 import { Injectable } from '@nestjs/common';
@@ -668,26 +668,26 @@ export class PrismaServiceRepository implements IServiceRepository {
 }
 ```
 
-### Regras
+### Rules
 
-- **Entity types** — usar tipos gerados pelo Prisma (`import type { Service } from '@prisma/client'`), NUNCA criar interfaces manuais para entidades
-- **Paginação** — retornar `PaginatedResponse<T>` com `{ data, total, page, limit }`
-- **isActive** — sempre filtrar por `isActive: true` em listagens (soft delete)
-- **ID** — usar `id` (autoincrement integer), NUNCA `uuid` em queries
+- **Entity types** — use Prisma-generated types (`import type { Service } from '@prisma/client'`), NEVER create manual interfaces for entities
+- **Pagination** — return `PaginatedResponse<T>` with `{ data, total, page, limit }`
+- **isActive** — always filter by `isActive: true` in listings (soft delete)
+- **ID** — use `id` (autoincrement integer), NEVER `uuid` in queries
 
 ---
 
-## 9. Auth — Guards e Decorators
+## 9. Auth — Guards and Decorators
 
-### Hierarquia de guards
+### Guard hierarchy
 
-| Guard                        | Uso                                                  |
+| Guard                        | Usage                                                |
 | ---------------------------- | ---------------------------------------------------- |
-| `JwtAuthGuard`               | Valida JWT, extrai user do token                     |
-| `RolesGuard` + `@Roles(...)` | Admin endpoints — verifica role do admin             |
-| `ClientGuard`                | Client endpoints — verifica `user.type === 'client'` |
+| `JwtAuthGuard`               | Validates JWT, extracts user from token              |
+| `RolesGuard` + `@Roles(...)` | Admin endpoints — verifies admin role                |
+| `ClientGuard`                | Client endpoints — verifies `user.type === 'client'` |
 
-### Combinações
+### Combinations
 
 ```typescript
 // Admin endpoint
@@ -697,8 +697,8 @@ export class PrismaServiceRepository implements IServiceRepository {
 // Client endpoint
 @UseGuards(JwtAuthGuard, ClientGuard)
 
-// Público (sem guards)
-// nenhum @UseGuards
+// Public (no guards)
+// no @UseGuards
 ```
 
 ### CurrentUser decorator
@@ -718,7 +718,7 @@ interface AuthUser {
   id: number;
   email: string;
   type: 'client' | 'admin';
-  role?: string; // AdminRole quando type === 'admin'
+  role?: string; // AdminRole when type === 'admin'
 }
 ```
 
@@ -726,7 +726,7 @@ interface AuthUser {
 
 ## 10. Testing
 
-### Framework: Vitest (NÃO Jest)
+### Framework: Vitest (NOT Jest)
 
 ```typescript
 import { Test, TestingModule } from '@nestjs/testing';
@@ -765,14 +765,14 @@ describe('CreateServiceUseCase', () => {
 });
 ```
 
-### Regras
+### Rules
 
-- **Globals** — `describe`, `it`, `expect` disponíveis sem import (configurado em `vitest`)
-- **Mocking** — `vi.fn()`, `vi.spyOn()`, `type Mock` do `vitest`
-- **Test module** — `Test.createTestingModule` para wiring com `{ provide: SYMBOL, useValue: { method: vi.fn() } }`
-- **Spec files** — colocados junto ao arquivo fonte como `*.spec.ts`
-- **Naming** — `describe('NomeDoUseCase')`, `it('should ...')`
-- **NUNCA** usar Jest matchers/functions (`jest.fn()`, `jest.mock()`)
+- **Globals** — `describe`, `it`, `expect` available without import (configured in `vitest`)
+- **Mocking** — `vi.fn()`, `vi.spyOn()`, `type Mock` from `vitest`
+- **Test module** — `Test.createTestingModule` for wiring with `{ provide: SYMBOL, useValue: { method: vi.fn() } }`
+- **Spec files** — colocated with source files as `*.spec.ts`
+- **Naming** — `describe('UseCaseName')`, `it('should ...')`
+- **NEVER** use Jest matchers/functions (`jest.fn()`, `jest.mock()`)
 
 ---
 
@@ -782,33 +782,33 @@ describe('CreateServiceUseCase', () => {
 
 ```prisma
 model Service {
-  id        Int      @id @default(autoincrement())  // Sempre autoincrement
-  uuid      String   @unique @default(uuid())       // UUID para referência externa
-  // ... campos
+  id        Int      @id @default(autoincrement())  // Always autoincrement
+  uuid      String   @unique @default(uuid())       // UUID for external reference
+  // ... fields
   isActive  Boolean  @default(true)                 // Soft delete
-  createdAt DateTime @default(now())                // Timestamp criação
-  updatedAt DateTime @updatedAt                     // Timestamp atualização
+  createdAt DateTime @default(now())                // Creation timestamp
+  updatedAt DateTime @updatedAt                     // Update timestamp
 
-  @@map("services")                                 // Snake case para tabela
+  @@map("services")                                 // Snake case for table name
 }
 ```
 
-### Regras
+### Rules
 
-- **id + uuid** — todos os models têm ambos. Endpoints usam `id` (integer)
-- **Soft delete** — `isActive: Boolean @default(true)` para entidades que podem ser desativadas
-- **Timestamps** — `createdAt` + `updatedAt` em todos os models
-- **@@map** — table name em snake_case
-- **Enums** — definidos no schema Prisma, importados como types
-- **Decimal** — `@db.Decimal(10, 2)` para valores monetários
-- **Indexes** — `@@index` em foreign keys e campos usados em queries frequentes
+- **id + uuid** — all models have both. Endpoints use `id` (integer)
+- **Soft delete** — `isActive: Boolean @default(true)` for entities that can be deactivated
+- **Timestamps** — `createdAt` + `updatedAt` on all models
+- **@@map** — table name in snake_case
+- **Enums** — defined in the Prisma schema, imported as types
+- **Decimal** — `@db.Decimal(10, 2)` for monetary values
+- **Indexes** — `@@index` on foreign keys and fields used in frequent queries
 
 ### Migrations
 
 ```bash
-npm run prisma:migrate    # Dev: cria migration + aplica
-npm run prisma:generate   # Regenera o client após mudanças no schema
-npm run prisma:studio     # UI para explorar dados
+npm run prisma:migrate    # Dev: create migration + apply
+npm run prisma:generate   # Regenerate client after schema changes
+npm run prisma:studio     # UI to explore data
 ```
 
 ---
@@ -826,7 +826,7 @@ npm run prisma:studio     # UI para explorar dados
 export class PrismaModule {}
 ```
 
-Disponível em todos os módulos sem importar.
+Available in all modules without importing.
 
 ### EmailModule (`@Global`)
 
@@ -839,42 +839,42 @@ Disponível em todos os módulos sem importar.
 export class EmailModule {}
 ```
 
-Injete com `@Inject(EMAIL_SERVICE) private emailService: IEmailService`.
+Inject with `@Inject(EMAIL_SERVICE) private emailService: IEmailService`.
 
 ### Shared types
 
-| Type                   | Path                                          | Uso                   |
-| ---------------------- | --------------------------------------------- | --------------------- |
-| `AuthUser`             | `src/shared/types/auth-user.type.ts`          | User extraído do JWT  |
-| `PaginatedResponse<T>` | `src/shared/types/paginated-response.type.ts` | Envelope de paginação |
-| `PaginationQueryDto`   | `src/shared/dto/pagination-query.dto.ts`      | Base para query DTOs  |
+| Type                   | Path                                          | Usage                   |
+| ---------------------- | --------------------------------------------- | ----------------------- |
+| `AuthUser`             | `src/shared/types/auth-user.type.ts`          | User extracted from JWT |
+| `PaginatedResponse<T>` | `src/shared/types/paginated-response.type.ts` | Pagination envelope     |
+| `PaginationQueryDto`   | `src/shared/dto/pagination-query.dto.ts`      | Base for query DTOs     |
 
 ---
 
 ## 13. Environment Variables
 
-### Obrigatórias
+### Required
 
-| Variável               | Descrição                    |
-| ---------------------- | ---------------------------- |
-| `DATABASE_URL`         | Connection string PostgreSQL |
-| `JWT_SECRET`           | Secret para access tokens    |
-| `JWT_REFRESH_SECRET`   | Secret para refresh tokens   |
-| `RESEND_API_KEY`       | API key do Resend (email)    |
-| `RESEND_FROM_EMAIL`    | Email remetente              |
-| `VINDI_API_KEY`        | API key do gateway Vindi     |
-| `VINDI_WEBHOOK_SECRET` | Secret para validar webhooks |
-| `CORS_ORIGIN`          | Origin permitida para CORS   |
+| Variable               | Description                   |
+| ---------------------- | ----------------------------- |
+| `DATABASE_URL`         | PostgreSQL connection string  |
+| `JWT_SECRET`           | Secret for access tokens      |
+| `JWT_REFRESH_SECRET`   | Secret for refresh tokens     |
+| `RESEND_API_KEY`       | Resend API key (email)        |
+| `RESEND_FROM_EMAIL`    | Sender email address          |
+| `VINDI_API_KEY`        | Vindi gateway API key         |
+| `VINDI_WEBHOOK_SECRET` | Secret for webhook validation |
+| `CORS_ORIGIN`          | Allowed CORS origin           |
 
-### Opcionais
+### Optional
 
-| Variável             | Default | Descrição               |
-| -------------------- | ------- | ----------------------- |
-| `PORT`               | `3000`  | Porta do servidor       |
-| `DATABASE_POOL_SIZE` | `10`    | Pool de conexões Prisma |
-| `ENABLE_SWAGGER`     | `false` | Habilita Swagger UI     |
-| `SWAGGER_USER`       | —       | Basic auth para Swagger |
-| `SWAGGER_PASSWORD`   | —       | Basic auth para Swagger |
+| Variable             | Default | Description            |
+| -------------------- | ------- | ---------------------- |
+| `PORT`               | `3000`  | Server port            |
+| `DATABASE_POOL_SIZE` | `10`    | Prisma connection pool |
+| `ENABLE_SWAGGER`     | `false` | Enable Swagger UI      |
+| `SWAGGER_USER`       | —       | Basic auth for Swagger |
+| `SWAGGER_PASSWORD`   | —       | Basic auth for Swagger |
 
 ---
 
@@ -883,26 +883,26 @@ Injete com `@Inject(EMAIL_SERVICE) private emailService: IEmailService`.
 ### NestJS Exceptions
 
 ```typescript
-// CORRETO: usar exceptions do NestJS
+// CORRECT: use NestJS exceptions
 throw new NotFoundException('Service not found');
 throw new BadRequestException('Invalid date');
 throw new UnauthorizedException('Invalid credentials');
 throw new ForbiddenException('Only clients can access this resource');
 throw new ConflictException('Email already registered');
 
-// ERRADO: throw genérico
+// WRONG: generic throw
 throw new Error('Service not found');
 ```
 
 ### Logging
 
 ```typescript
-// CORRETO: NestJS Logger
+// CORRECT: NestJS Logger
 private readonly logger = new Logger(VindiWebhooksController.name);
 this.logger.log('Processing event');
 this.logger.error('Failed to process', error);
 
-// ERRADO: console.log
+// WRONG: console.log
 console.log('Processing event');
 ```
 
@@ -910,83 +910,83 @@ console.log('Processing event');
 
 ## 15. Modules Catalog
 
-| Module                 | Path                   | Descrição                                        |
-| ---------------------- | ---------------------- | ------------------------------------------------ |
-| `AuthModule`           | `src/auth/`            | Login, registro, JWT, refresh, password reset    |
-| `ClientProfileModule`  | `src/client-profile/`  | Perfil do cliente, email change, password change |
-| `ClientsModule`        | `src/clients/`         | Admin: aprovar/rejeitar/listar clientes          |
-| `AdminUsersModule`     | `src/admin-users/`     | CRUD de administradores                          |
-| `ServicesModule`       | `src/services/`        | CRUD de tipos de serviço                         |
-| `PackagesModule`       | `src/packages/`        | CRUD de pacotes de serviço                       |
-| `AppointmentsModule`   | `src/appointments/`    | Agendamentos (client + admin controllers)        |
-| `PaymentsModule`       | `src/payments/`        | Pagamentos (client + admin controllers)          |
-| `PaymentGatewayModule` | `src/payment-gateway/` | Integração Vindi (webhooks)                      |
-| `CardsModule`          | `src/cards/`           | Cartões salvos do cliente                        |
-| `DashboardModule`      | `src/dashboard/`       | Dashboard (client + admin)                       |
-| `EmployeesModule`      | `src/employees/`       | CRUD de funcionários                             |
-| `HolidaysModule`       | `src/holidays/`        | Feriados (sync com Brasil API)                   |
-| `ReceiptsModule`       | `src/receipts/`        | Geração de recibos PDF                           |
-| `ReportsModule`        | `src/reports/`         | Relatórios admin (vendas, transações, etc.)      |
-| `UnitsModule`          | `src/units/`           | Unidades de atendimento + cobertura geo          |
-| `HealthModule`         | `src/health/`          | Health check                                     |
-| `EmailModule`          | `src/email/`           | Serviço de email (Resend) — `@Global`            |
+| Module                 | Path                   | Description                                   |
+| ---------------------- | ---------------------- | --------------------------------------------- |
+| `AuthModule`           | `src/auth/`            | Login, register, JWT, refresh, password reset |
+| `ClientProfileModule`  | `src/client-profile/`  | Client profile, email change, password change |
+| `ClientsModule`        | `src/clients/`         | Admin: approve/reject/list clients            |
+| `AdminUsersModule`     | `src/admin-users/`     | Admin user CRUD                               |
+| `ServicesModule`       | `src/services/`        | Service type CRUD                             |
+| `PackagesModule`       | `src/packages/`        | Service package CRUD                          |
+| `AppointmentsModule`   | `src/appointments/`    | Appointments (client + admin controllers)     |
+| `PaymentsModule`       | `src/payments/`        | Payments (client + admin controllers)         |
+| `PaymentGatewayModule` | `src/payment-gateway/` | Vindi integration (webhooks)                  |
+| `CardsModule`          | `src/cards/`           | Client saved cards                            |
+| `DashboardModule`      | `src/dashboard/`       | Dashboard (client + admin)                    |
+| `EmployeesModule`      | `src/employees/`       | Employee CRUD                                 |
+| `HolidaysModule`       | `src/holidays/`        | Holidays (sync with Brasil API)               |
+| `ReceiptsModule`       | `src/receipts/`        | PDF receipt generation                        |
+| `ReportsModule`        | `src/reports/`         | Admin reports (sales, transactions, etc.)     |
+| `UnitsModule`          | `src/units/`           | Service units + geo coverage                  |
+| `HealthModule`         | `src/health/`          | Health check                                  |
+| `EmailModule`          | `src/email/`           | Email service (Resend) — `@Global`            |
 
 ---
 
-## 16. Workflow — Novo Módulo
+## 16. Workflow — New Module
 
-Ao criar um novo módulo, seguir esta ordem:
+When creating a new module, follow this order:
 
-1. **Criar estrutura de pastas** conforme seção 1
-2. **Definir interface do repository** em `domain/interfaces/` com Symbol + interface
-3. **Criar DTOs** em `dto/<entity>/` com class-validator + Swagger decorators
-4. **Implementar Prisma repository** em `infrastructure/repositories/`
-5. **Criar use cases** em `application/use-cases/<entity>/` — 1 por operação
-6. **Criar controller** com Swagger decorators + guards corretos
-7. **Criar module** com DI binding
-8. **Registrar no AppModule** em `src/app.module.ts`
-9. **Escrever testes** para cada use case
-10. **Verificar** — `npm run typecheck && npm run lint && npm run test`
+1. **Create folder structure** as per section 1
+2. **Define repository interface** in `domain/interfaces/` with Symbol + interface
+3. **Create DTOs** in `dto/<entity>/` with class-validator + Swagger decorators
+4. **Implement Prisma repository** in `infrastructure/repositories/`
+5. **Create use cases** in `application/use-cases/<entity>/` — 1 per operation
+6. **Create controller** with Swagger decorators + correct guards
+7. **Create module** with DI binding
+8. **Register in AppModule** at `src/app.module.ts`
+9. **Write tests** for each use case
+10. **Verify** — `npm run typecheck && npm run lint && npm run test`
 
 ---
 
 ## 17. Commits
 
-### Formato
+### Format
 
 ```
-<type>: <descrição curta em inglês>
+<type>: <short description in English>
 ```
 
-### Tipos
+### Types
 
-| Tipo       | Uso                                      |
-| ---------- | ---------------------------------------- |
-| `feat`     | Nova funcionalidade                      |
-| `fix`      | Correção de bug                          |
-| `refactor` | Refatoração sem mudança de comportamento |
-| `test`     | Testes                                   |
-| `chore`    | Configuração, dependências               |
-| `docs`     | Documentação                             |
-| `perf`     | Performance                              |
+| Type       | Usage                               |
+| ---------- | ----------------------------------- |
+| `feat`     | New feature                         |
+| `fix`      | Bug fix                             |
+| `refactor` | Refactoring without behavior change |
+| `test`     | Tests                               |
+| `chore`    | Configuration, dependencies         |
+| `docs`     | Documentation                       |
+| `perf`     | Performance                         |
 
-### Regras
+### Rules
 
-- **Uma linha** — mensagem curta e descritiva
-- **Módulos pequenos** — 1 commit por arquivo ou grupo logicamente relacionado
-- **NUNCA** adicionar "Co-Authored-By", "Generated with", ou atribuições similares
-- **NUNCA** usar `git add -A` ou `git add .`
-- **Conventional commits** em inglês, lowercase
+- **One line** — short and descriptive message
+- **Small modules** — 1 commit per file or logically related group
+- **NEVER** add "Co-Authored-By", "Generated with", or similar attributions
+- **NEVER** use `git add -A` or `git add .`
+- **Conventional commits** in English, lowercase
 
 ```bash
-# CORRETO
+# CORRECT
 git add src/services/application/use-cases/service/create-service.use-case.ts
 git commit -m "feat: add create service use case"
 
 git add src/services/dto/service/create-service.dto.ts
 git commit -m "feat: add create service dto with validation"
 
-# ERRADO
+# WRONG
 git add -A
 git commit -m "add service module
 
@@ -995,28 +995,28 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 ---
 
-## 18. Verificação
+## 18. Verification
 
-SEMPRE rodar antes de considerar trabalho finalizado:
+ALWAYS run before considering work done:
 
 ```bash
-npm run typecheck    # Verifica tipos TypeScript
-npm run lint         # Verifica ESLint + Prettier
-npm run test         # Roda todos os testes
+npm run typecheck    # TypeScript type checking
+npm run lint         # ESLint + Prettier
+npm run test         # Run all tests
 ```
 
-Se todos passarem sem erros, o trabalho está pronto.
+If all pass without errors, the work is ready.
 
 ---
 
-## 19. Idioma
+## 19. Language
 
-| Contexto                                    | Idioma            |
-| ------------------------------------------- | ----------------- |
-| Nomes de variáveis, funções, classes, tipos | Inglês            |
-| Commits                                     | Inglês            |
-| Swagger summaries/descriptions              | Inglês            |
-| Mensagens de erro (exceptions)              | Inglês            |
-| Comentários no código                       | Inglês            |
-| Documentação técnica                        | Inglês            |
-| Strings de email visíveis ao usuário        | Português (pt-BR) |
+| Context                               | Language           |
+| ------------------------------------- | ------------------ |
+| Variable, function, class, type names | English            |
+| Commits                               | English            |
+| Swagger summaries/descriptions        | English            |
+| Error messages (exceptions)           | English            |
+| Code comments                         | English            |
+| Technical documentation               | English            |
+| User-facing email strings             | Portuguese (pt-BR) |
