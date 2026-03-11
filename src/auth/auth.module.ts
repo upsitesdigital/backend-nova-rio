@@ -5,6 +5,7 @@ import { AdminLoginUseCase } from './application/use-cases/admin/admin-login.use
 import { ClientLoginUseCase } from './application/use-cases/client/client-login.use-case.js';
 import { ClientRegisterUseCase } from './application/use-cases/client/client-register.use-case.js';
 import { ForgotPasswordUseCase } from './application/use-cases/client/forgot-password.use-case.js';
+import { ResetPasswordUseCase } from './application/use-cases/client/reset-password.use-case.js';
 import { GetProfileUseCase } from './application/use-cases/auth/get-profile.use-case.js';
 import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.use-case.js';
 import { AuthController } from './auth.controller.js';
@@ -33,6 +34,7 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
     AdminLoginUseCase,
     RefreshTokenUseCase,
     ForgotPasswordUseCase,
+    ResetPasswordUseCase,
     GetProfileUseCase,
     VerificationCodeCleanupCron,
   ],
