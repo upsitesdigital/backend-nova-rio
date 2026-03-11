@@ -99,10 +99,10 @@ jobs:
             npx prisma generate
 
             echo "🐳 Subindo containers..."
-            docker compose -f docker-compose.production.yml up --build -d
+            docker compose -p nova-rio-prod --env-file .env.production -f docker-compose.production.yml up --build -d
 
             echo "📦 Rodando migrations..."
             sleep 5
-            docker compose -f docker-compose.production.yml exec -T backend npx prisma migrate deploy
+            docker compose -p nova-rio-prod --env-file .env.production -f docker-compose.production.yml exec -T backend npx prisma migrate deploy
 
             echo "✅ Deploy concluído!"
