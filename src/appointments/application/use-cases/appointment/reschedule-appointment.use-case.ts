@@ -58,20 +58,7 @@ export class RescheduleAppointmentUseCase {
 
     const rescheduled = await this.appointmentRepository.rescheduleAppointment(
       id,
-      {
-        date: newDate,
-        startTime: dto.startTime,
-        duration: existing.duration,
-        recurrenceType: existing.recurrenceType,
-        locationZip: existing.locationZip ?? undefined,
-        locationAddress: existing.locationAddress ?? undefined,
-        notes: existing.notes ?? undefined,
-        clientId: existing.client.id,
-        employeeId: existing.employee?.id,
-        serviceId: existing.service.id,
-        packageId: existing.package?.id,
-        unitId: existing.unit?.id,
-      },
+      { date: newDate, startTime: dto.startTime },
       conflictCheck,
       clientConflictCheck,
     );

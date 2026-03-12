@@ -104,8 +104,8 @@ export interface IAppointmentRepository {
   cancelAppointmentById(id: number): Promise<void>;
   completeAppointmentById(id: number): Promise<AppointmentResponse>;
   rescheduleAppointment(
-    originalId: number,
-    data: CreateAppointmentData,
+    id: number,
+    data: UpdateAppointmentData,
     conflictCheck?: ConflictCheckParams,
     clientConflictCheck?: ClientConflictCheckParams,
   ): Promise<AppointmentResponse>;

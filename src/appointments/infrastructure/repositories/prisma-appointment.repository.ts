@@ -168,17 +168,14 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
   }
 
   async rescheduleAppointment(
-    originalId: number,
-    data: CreateAppointmentData,
+    id: number,
+    data: UpdateAppointmentData,
     conflictCheck?: ConflictCheckParams,
     clientConflictCheck?: ClientConflictCheckParams,
   ): Promise<AppointmentResponse> {
-    return this.prisma.$transaction(async (tx) => {
-      await tx.appointment.update({
-        where: { id: originalId },
-        data: { status: 'CANCELLED' },
-      });
+    const updateData = this.buildUpdateInput(data);
 
+    return this.prisma.$transaction(async (tx) => {
       if (conflictCheck) {
         await this.lockAndCheckConflict(tx, conflictCheck);
       }
@@ -186,11 +183,9 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
         await this.lockAndCheckClientConflict(tx, clientConflictCheck);
       }
 
-      return tx.appointment.create({
-        data: {
-          ...this.buildCreateInput(data),
-          rescheduledFrom: { connect: { id: originalId } },
-        },
+      return tx.appointment.update({
+        where: { id },
+        data: updateData,
         include: APPOINTMENT_INCLUDE,
       });
     });

@@ -169,23 +169,24 @@ describe('PrismaAppointmentRepository', () => {
     );
   });
 
-  it('rescheduleAppointment should cancel original and create new', async () => {
+  it('rescheduleAppointment should update existing appointment in place', async () => {
     prisma.$transaction.mockImplementation(async (fn: (tx: typeof prisma) => Promise<unknown>) => {
       return fn(prisma);
     });
-    prisma.appointment.update.mockResolvedValue({});
-    prisma.appointment.create.mockResolvedValue(mockAppointment);
+    prisma.appointment.update.mockResolvedValue(mockAppointment);
 
     const result = await repository.rescheduleAppointment(1, {
       date: new Date('2026-03-20'),
       startTime: '10:00',
-      duration: 120,
-      clientId: 1,
-      serviceId: 1,
     });
 
     expect(result).toEqual(mockAppointment);
-    expect(prisma.appointment.update).toHaveBeenCalled();
-    expect(prisma.appointment.create).toHaveBeenCalled();
+    expect(prisma.appointment.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 1 },
+        data: { date: expect.any(Date) as Date, startTime: '10:00' },
+      }),
+    );
+    expect(prisma.appointment.create).not.toHaveBeenCalled();
   });
 });
