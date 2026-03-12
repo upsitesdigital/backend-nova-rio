@@ -32,7 +32,7 @@ export class PrismaClientDashboardRepository implements IClientDashboardReposito
         status: 'SCHEDULED',
         date: { gte: today },
       },
-      select: { id: true, date: true },
+      select: { id: true, date: true, startTime: true },
       orderBy: { date: 'asc' },
     });
 
@@ -51,6 +51,7 @@ export class PrismaClientDashboardRepository implements IClientDashboardReposito
       select: {
         id: true,
         date: true,
+        startTime: true,
         status: true,
         recurrenceType: true,
         locationZip: true,
@@ -78,6 +79,7 @@ export class PrismaClientDashboardRepository implements IClientDashboardReposito
       const entry: ServiceHistoryEntry = {
         id: apt.id,
         date: format(apt.date, 'dd/MM'),
+        startTime: apt.startTime,
         label: apt.service.name,
         icon: apt.service.icon,
         status: apt.status,
@@ -114,6 +116,7 @@ export class PrismaClientDashboardRepository implements IClientDashboardReposito
         ? {
             id: nextAppointment.id,
             date: format(nextAppointment.date, 'dd/MM'),
+            dateTime: `${format(nextAppointment.date, 'yyyy-MM-dd')}T${nextAppointment.startTime}:00`,
             cancellationNote: 'Cancelamento com 1h de antecedência',
           }
         : null,
