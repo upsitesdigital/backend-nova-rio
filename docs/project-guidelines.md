@@ -1007,6 +1007,50 @@ npm run test         # Run all tests
 
 If all pass without errors, the work is ready.
 
+### ESLint Disable Comments — FORBIDDEN
+
+**NEVER** use ESLint disable comments to suppress warnings or errors. Fix the root cause instead.
+
+```typescript
+// FORBIDDEN: any form of eslint-disable
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
+// CORRECT: fix the actual issue
+// - Remove unused variables
+// - Use proper types instead of `any`
+// - Properly await or handle promises
+```
+
+If a lint rule flags your code, it means the code needs to be fixed — not the rule silenced.
+
+### Type Assertions — `as any` FORBIDDEN
+
+**NEVER** use `as any`, `as unknown as T`, or similar type escape hatches. Always use proper types.
+
+```typescript
+// FORBIDDEN: any form of type escape
+const result = someValue as any;
+const data = response as unknown as MyType;
+const user: any = getUser();
+function process(data: any) { ... }
+
+// CORRECT: use proper types
+const result: ServiceResponse = someValue;
+const data: MyType = response;
+const user: AuthUser = getUser();
+function process(data: CreateServiceDto) { ... }
+
+// CORRECT: use Prisma-generated types
+import type { Service, Client } from '@prisma/client';
+
+// CORRECT: use generics when the type varies
+function findById<T>(id: number): Promise<T | null> { ... }
+```
+
+If TypeScript complains about a type, it means the type system is telling you something is wrong — fix the types, don't silence the compiler.
+
 ---
 
 ## 19. Language
