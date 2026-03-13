@@ -120,10 +120,61 @@ async function seedServices() {
   }
 }
 
+async function seedTestClient() {
+  if (process.env.NODE_ENV === 'production') return;
+
+  const email = 'cliente@teste.com';
+
+  const existing = await prisma.client.findUnique({ where: { email } });
+  if (existing) {
+    console.log(`Test client "${email}" already exists, skipping.`);
+    return;
+  }
+
+  const hashedPassword = await bcrypt.hash('Senha@123', 10);
+
+  const client = await prisma.client.create({
+    data: {
+      name: 'Caio Teste',
+      email,
+      password: hashedPassword,
+      status: 'ACTIVE',
+      cpfCnpj: '000.000.000-00',
+      phone: '(21) 99999-9999',
+    },
+  });
+
+  await prisma.card.createMany({
+    data: [
+      {
+        clientId: client.id,
+        lastFourDigits: '4242',
+        brand: 'visa',
+        holderName: 'CAIO TESTE',
+        expiryMonth: 12,
+        expiryYear: 2030,
+        isDefault: true,
+      },
+      {
+        clientId: client.id,
+        lastFourDigits: '5353',
+        brand: 'mastercard',
+        holderName: 'CAIO TESTE',
+        expiryMonth: 6,
+        expiryYear: 2028,
+        isDefault: false,
+      },
+    ],
+  });
+
+  console.log(`Test client "${email}" created with 2 cards.`);
+}
+
 async function main() {
   await seedAdminUser();
   await seedDefaultUnit();
   await seedServices();
+  await seedTestClient();
 }
 
 main()
