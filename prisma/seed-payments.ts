@@ -6,20 +6,18 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function seedPayments() {
-  const clientEmail = 'lorenzo.dz@hotmail.com';
+  const clientEmail = 'test-client@example.com';
 
   const client = await prisma.client.findUnique({ where: { email: clientEmail } });
   if (!client) {
-    console.error(`Client "${clientEmail}" not found. Run main seed first.`);
-    process.exit(1);
+    throw new Error(`Client "${clientEmail}" not found. Run main seed first.`);
   }
 
   const service = await prisma.service.findFirst({
-    where: { name: 'Faxina Pós-Obra', isActive: true },
+    where: { name: 'Faxina P\u00f3s-Obra', isActive: true },
   });
   if (!service) {
-    console.error('Service "Faxina Pós-Obra" not found. Run main seed first.');
-    process.exit(1);
+    throw new Error('Service "Faxina P\u00f3s-Obra" not found. Run main seed first.');
   }
 
   const existingPayments = await prisma.payment.count({ where: { clientId: client.id } });
@@ -36,16 +34,15 @@ async function seedPayments() {
     card = await prisma.card.create({
       data: {
         clientId: client.id,
-        cardNumber: '4111111111110123',
         lastFourDigits: '0123',
         brand: 'visa',
-        holderName: 'LORENZO DZ',
+        holderName: 'TEST CLIENT',
         expiryMonth: 12,
         expiryYear: 2030,
         isDefault: true,
       },
     });
-    console.log('Card •••• 0123 created for client.');
+    console.log('Card **** 0123 created for client.');
   }
 
   const paymentRows: {
@@ -94,7 +91,7 @@ async function seedPayments() {
       },
     });
 
-    console.log(`Payment ${i + 1}/6 created: ${row.method} — ${row.status}`);
+    console.log(`Payment ${i + 1}/6 created: ${row.method} -- ${row.status}`);
   }
 
   console.log(`All 6 payments seeded for "${clientEmail}".`);
@@ -103,6 +100,6 @@ async function seedPayments() {
 seedPayments()
   .catch((e) => {
     console.error('Seed payments failed:', e);
-    process.exit(1);
+    throw e;
   })
   .finally(() => prisma.$disconnect());

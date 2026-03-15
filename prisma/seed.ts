@@ -148,7 +148,6 @@ async function seedTestClient() {
     data: [
       {
         clientId: client.id,
-        cardNumber: '4242424242424242',
         lastFourDigits: '4242',
         brand: 'visa',
         holderName: 'CAIO TESTE',
@@ -158,7 +157,6 @@ async function seedTestClient() {
       },
       {
         clientId: client.id,
-        cardNumber: '5353535353535353',
         lastFourDigits: '5353',
         brand: 'mastercard',
         holderName: 'CAIO TESTE',
@@ -172,10 +170,10 @@ async function seedTestClient() {
   console.log(`Test client "${email}" created with 2 cards.`);
 }
 
-async function seedLorenzoTestClient() {
+async function seedSecondTestClient() {
   if (process.env.NODE_ENV === 'production') return;
 
-  const email = 'lorenzo.dz@hotmail.com';
+  const email = 'test-client@example.com';
 
   const existing = await prisma.client.findUnique({ where: { email } });
   if (existing) {
@@ -183,11 +181,11 @@ async function seedLorenzoTestClient() {
     return;
   }
 
-  const hashedPassword = await bcrypt.hash('Barba2024@', 10);
+  const hashedPassword = await bcrypt.hash('TestPassword123!', 10);
 
   await prisma.client.create({
     data: {
-      name: 'Lorenzo DZ',
+      name: 'Test Client',
       email,
       password: hashedPassword,
       status: 'ACTIVE',
@@ -203,12 +201,12 @@ async function main() {
   await seedDefaultUnit();
   await seedServices();
   await seedTestClient();
-  await seedLorenzoTestClient();
+  await seedSecondTestClient();
 }
 
 main()
   .catch((e) => {
     console.error('Seed failed:', e);
-    process.exit(1);
+    throw e;
   })
   .finally(() => prisma.$disconnect());
