@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { AdminLoginUseCase } from './application/use-cases/admin/admin-login.use-case.js';
-import { ClientLoginUseCase } from './application/use-cases/client/client-login.use-case.js';
+import { LoginUseCase } from './application/use-cases/auth/login.use-case.js';
 import { ClientRegisterUseCase } from './application/use-cases/client/client-register.use-case.js';
 import { ForgotPasswordUseCase } from './application/use-cases/client/forgot-password.use-case.js';
 import { ResetPasswordUseCase } from './application/use-cases/client/reset-password.use-case.js';
@@ -44,8 +43,7 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
     { provide: ADMIN_AUTH_REPOSITORY, useExisting: ADMIN_REPOSITORY },
     { provide: ADMIN_PROFILE_REPOSITORY, useExisting: ADMIN_REPOSITORY },
     ClientRegisterUseCase,
-    ClientLoginUseCase,
-    AdminLoginUseCase,
+    LoginUseCase,
     RefreshTokenUseCase,
     ForgotPasswordUseCase,
     ResetPasswordUseCase,
