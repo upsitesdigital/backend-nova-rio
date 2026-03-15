@@ -3,6 +3,7 @@ import { PAYMENT_REPOSITORY } from '../../../../payments/domain/interfaces/payme
 import type { IPaymentRepository } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
 import { RECEIPT_GENERATOR } from '../../../domain/interfaces/receipt-generator.interface.js';
 import type { IReceiptGenerator } from '../../../domain/interfaces/receipt-generator.interface.js';
+import type { IReceiptGenerationService } from '../../../domain/interfaces/receipt-generation.service.interface.js';
 import { RECEIPT_REPOSITORY } from '../../../domain/interfaces/receipt.repository.interface.js';
 import type {
   IReceiptRepository,
@@ -10,7 +11,7 @@ import type {
 } from '../../../domain/interfaces/receipt.repository.interface.js';
 
 @Injectable()
-export class GenerateReceiptUseCase {
+export class GenerateReceiptUseCase implements IReceiptGenerationService {
   private readonly logger = new Logger(GenerateReceiptUseCase.name);
 
   constructor(
