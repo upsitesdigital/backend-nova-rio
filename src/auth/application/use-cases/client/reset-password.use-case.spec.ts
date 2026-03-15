@@ -74,7 +74,7 @@ describe('ResetPasswordUseCase', () => {
     clientRepository.findByEmail.mockResolvedValue(null);
 
     await expect(useCase.resetPassword(validDto)).rejects.toThrow(BadRequestException);
-    await expect(useCase.resetPassword(validDto)).rejects.toThrow('Invalid code or email');
+    await expect(useCase.resetPassword(validDto)).rejects.toThrow('Invalid or expired code');
   });
 
   it('should throw BadRequestException when no active codes exist', async () => {

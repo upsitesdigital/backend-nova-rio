@@ -139,7 +139,7 @@ async function seedTestClient() {
       email,
       password: hashedPassword,
       status: 'ACTIVE',
-      cpfCnpj: '000.000.000-00',
+      cpfCnpj: null,
       phone: '(21) 99999-9999',
     },
   });
@@ -207,6 +207,6 @@ async function main() {
 main()
   .catch((e) => {
     console.error('Seed failed:', e);
-    throw e;
+    process.exitCode = 1;
   })
   .finally(() => prisma.$disconnect());

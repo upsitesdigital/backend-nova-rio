@@ -2,8 +2,8 @@ import { BadRequestException, Inject, Injectable, Logger, NotFoundException } fr
 import { ConfigService } from '@nestjs/config';
 import { APPOINTMENT_REPOSITORY } from '../../../../appointments/domain/interfaces/appointment.repository.interface.js';
 import type { IAppointmentRepository } from '../../../../appointments/domain/interfaces/appointment.repository.interface.js';
-import { CLIENT_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
-import type { IClientRepository } from '../../../../auth/domain/interfaces/client.repository.interface.js';
+import { CLIENT_PROFILE_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
+import type { IClientProfileRepository } from '../../../../auth/domain/interfaces/client.repository.interface.js';
 import { CARD_REPOSITORY } from '../../../../cards/domain/interfaces/card.repository.interface.js';
 import type { ICardRepository } from '../../../../cards/domain/interfaces/card.repository.interface.js';
 import { PAYMENT_GATEWAY_SERVICE } from '../../../../payment-gateway/domain/interfaces/payment-gateway.service.interface.js';
@@ -30,7 +30,7 @@ export class CreateClientPaymentUseCase {
     @Inject(CARD_REPOSITORY) private cardRepository: ICardRepository,
     @Inject(PAYMENT_GATEWAY_SERVICE) private paymentGatewayService: IPaymentGatewayService,
     @Inject(PAYMENT_PRICING_SERVICE) private pricingService: IPaymentPricingService,
-    @Inject(CLIENT_REPOSITORY) private clientRepository: IClientRepository,
+    @Inject(CLIENT_PROFILE_REPOSITORY) private clientRepository: IClientProfileRepository,
     configService: ConfigService,
   ) {
     this.vindiProductId = Number(configService.getOrThrow<string>('VINDI_PRODUCT_ID'));

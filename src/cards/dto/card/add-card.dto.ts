@@ -5,7 +5,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  Length,
+  Matches,
   Max,
   MaxLength,
   Min,
@@ -16,7 +16,7 @@ export class AddCardDto {
   @ApiProperty({ example: '1111', description: 'Last four digits of the card' })
   @IsString()
   @IsNotEmpty()
-  @Length(4, 4, { message: 'lastFourDigits must be exactly 4 characters' })
+  @Matches(/^\d{4}$/, { message: 'lastFourDigits must be exactly 4 digits' })
   lastFourDigits: string;
 
   @ApiProperty({

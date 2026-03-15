@@ -171,6 +171,8 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
     });
   }
 
+  // TODO: rescheduledFromId/rescheduledTo relations are unused since reschedule
+  // now updates in-place. Remove the relation fields from schema if audit history is not needed.
   async rescheduleAppointment(
     id: number,
     data: UpdateAppointmentData,

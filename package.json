@@ -47,7 +47,6 @@
     "class-validator": "^0.15.1",
     "class-validator-cpf": "^1.1.1",
     "compression": "^1.8.1",
-    "credit-card-type": "^10.1.2",
     "date-fns": "^4.1.0",
     "dotenv": "^17.3.1",
     "helmet": "^8.1.0",
@@ -95,8 +94,5 @@
     "typescript-eslint": "^8.56.1",
     "unplugin-swc": "^1.5.9",
     "vitest": "^4.0.18"
-  },
-  "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"commonjs\"} prisma/seed.ts"
   }
 }

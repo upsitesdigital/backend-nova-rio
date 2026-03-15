@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
 import { APPOINTMENT_REPOSITORY } from '../../../../appointments/domain/interfaces/appointment.repository.interface.js';
-import { CLIENT_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
+import { CLIENT_PROFILE_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
 import { CARD_REPOSITORY } from '../../../../cards/domain/interfaces/card.repository.interface.js';
 import { PAYMENT_GATEWAY_SERVICE } from '../../../../payment-gateway/domain/interfaces/payment-gateway.service.interface.js';
 import { PAYMENT_PRICING_SERVICE } from '../../../domain/services/payment-pricing.service.interface.js';
@@ -105,7 +105,7 @@ describe('CreateClientPaymentUseCase', () => {
         { provide: CARD_REPOSITORY, useValue: cardRepository },
         { provide: PAYMENT_GATEWAY_SERVICE, useValue: paymentGatewayService },
         { provide: PAYMENT_PRICING_SERVICE, useValue: pricingService },
-        { provide: CLIENT_REPOSITORY, useValue: clientRepository },
+        { provide: CLIENT_PROFILE_REPOSITORY, useValue: clientRepository },
         {
           provide: ConfigService,
           useValue: {

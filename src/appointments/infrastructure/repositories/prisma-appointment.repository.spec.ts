@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
+import { AppointmentConflictValidator } from '../../application/validators/appointment-conflict.validator.js';
 import { PrismaAppointmentRepository } from './prisma-appointment.repository.js';
 
 describe('PrismaAppointmentRepository', () => {
@@ -54,7 +55,11 @@ describe('PrismaAppointmentRepository', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [PrismaAppointmentRepository, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        PrismaAppointmentRepository,
+        { provide: PrismaService, useValue: prisma },
+        { provide: AppointmentConflictValidator, useValue: { assertNoTimeConflict: vi.fn() } },
+      ],
     }).compile();
 
     repository = module.get<PrismaAppointmentRepository>(PrismaAppointmentRepository);

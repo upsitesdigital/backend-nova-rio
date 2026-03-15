@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import type { RecurrenceType } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import type {
   IPaymentPricingService,
@@ -11,7 +12,7 @@ export class PrismaPaymentPricingService implements IPaymentPricingService {
 
   async calculatePricing(
     serviceId: number,
-    recurrenceType: string,
+    recurrenceType: RecurrenceType,
     packageId: number | null,
   ): Promise<PricingResult> {
     if (recurrenceType === 'PACKAGE' && packageId) {
@@ -36,7 +37,7 @@ export class PrismaPaymentPricingService implements IPaymentPricingService {
 
   private async calculateServicePricing(
     serviceId: number,
-    recurrenceType: string,
+    recurrenceType: RecurrenceType,
   ): Promise<PricingResult> {
     const service = await this.prisma.service.findUnique({
       where: { id: serviceId },
@@ -54,7 +55,7 @@ export class PrismaPaymentPricingService implements IPaymentPricingService {
     return { subtotal: basePrice, discount };
   }
 
-  private resolveDiscountRate(recurrenceType: string): number {
+  private resolveDiscountRate(recurrenceType: RecurrenceType): number {
     if (recurrenceType === 'WEEKLY' || recurrenceType === 'BIWEEKLY') {
       return 0.1;
     }

@@ -18,6 +18,7 @@ interface AttemptRecord {
 @Injectable()
 export class ResetPasswordUseCase {
   private readonly logger = new Logger(ResetPasswordUseCase.name);
+  // TODO: Move to Redis/DB for persistence across restarts and horizontal scaling
   private readonly failedAttempts = new Map<string, AttemptRecord>();
 
   constructor(
@@ -33,7 +34,7 @@ export class ResetPasswordUseCase {
 
     if (!client) {
       this.recordFailedAttempt(dto.email);
-      throw new BadRequestException('Invalid code or email');
+      throw new BadRequestException('Invalid or expired code');
     }
 
     const activeCodes = await this.clientRepository.findActiveVerificationCodes(
