@@ -282,10 +282,15 @@ export interface IGodRepository {
 
 **Applied in the project:**
 
-- `IClientRepository` (auth) vs `IClientManagementRepository` (clients) vs `IClientProfileRepository` (client-profile) — same Client entity, interfaces separated by context
+- Auth module splits `IClientRepository` into role-specific interfaces:
+  - `IClientAuthRepository` — login flow, password, failed attempts, token management
+  - `IClientVerificationRepository` — verification codes, password reset, email/password change
+  - `IClientProfileRepository` — profile CRUD, payment client data, account deactivation
+- `IClientManagementRepository` (clients module) — admin approve/reject/list clients
 - `IHashService` — only `hash()` and `compare()`
 - `ITokenService` — only token operations
 - `IEmailService` — only email operations
+- Cross-module interfaces: `IReceiptGenerationService` (receipts) consumed by payments and payment-gateway modules via `RECEIPT_GENERATION_SERVICE` Symbol
 
 ### 2.5 D — Dependency Inversion Principle (DIP)
 
@@ -320,15 +325,21 @@ export class CreateServiceUseCase {
 
 **Applied in the project — all Symbols:**
 
-| Symbol                    | Interface                | Implementation               |
-| ------------------------- | ------------------------ | ---------------------------- |
-| `SERVICE_REPOSITORY`      | `IServiceRepository`     | `PrismaServiceRepository`    |
-| `CLIENT_REPOSITORY`       | `IClientRepository`      | `PrismaClientRepository`     |
-| `ADMIN_REPOSITORY`        | `IAdminRepository`       | `PrismaAdminRepository`      |
-| `HASH_SERVICE`            | `IHashService`           | `BcryptHashService`          |
-| `TOKEN_SERVICE`           | `ITokenService`          | `JwtTokenService`            |
-| `EMAIL_SERVICE`           | `IEmailService`          | `ResendEmailService`         |
-| `PAYMENT_GATEWAY_SERVICE` | `IPaymentGatewayService` | `VindiPaymentGatewayService` |
+| Symbol                           | Interface                       | Implementation                               |
+| -------------------------------- | ------------------------------- | -------------------------------------------- |
+| `SERVICE_REPOSITORY`             | `IServiceRepository`            | `PrismaServiceRepository`                    |
+| `CLIENT_AUTH_REPOSITORY`         | `IClientAuthRepository`         | `PrismaClientRepository`                     |
+| `CLIENT_VERIFICATION_REPOSITORY` | `IClientVerificationRepository` | `PrismaClientRepository`                     |
+| `CLIENT_PROFILE_REPOSITORY`      | `IClientProfileRepository`      | `PrismaClientRepository`                     |
+| `CLIENT_REPOSITORY`              | `IClientRepository` (combined)  | `PrismaClientRepository`                     |
+| `ADMIN_AUTH_REPOSITORY`          | `IAdminAuthRepository`          | `PrismaAdminRepository`                      |
+| `ADMIN_PROFILE_REPOSITORY`       | `IAdminProfileRepository`       | `PrismaAdminRepository`                      |
+| `HASH_SERVICE`                   | `IHashService`                  | `BcryptHashService`                          |
+| `TOKEN_SERVICE`                  | `ITokenService`                 | `JwtTokenService`                            |
+| `EMAIL_SERVICE`                  | `IEmailService`                 | `ResendEmailService`                         |
+| `PAYMENT_GATEWAY_SERVICE`        | `IPaymentGatewayService`        | `VindiPaymentGatewayService`                 |
+| `PAYMENT_PRICING_SERVICE`        | `IPaymentPricingService`        | `PrismaPaymentPricingService`                |
+| `RECEIPT_GENERATION_SERVICE`     | `IReceiptGenerationService`     | `GenerateReceiptUseCase` (via `useExisting`) |
 
 ### 2.6 SOLID Checklist — before every PR
 
@@ -393,12 +404,46 @@ export class CreateServiceUseCase {
 }
 ```
 
+### Cross-module dependency via interface (NEVER inject concrete use cases)
+
+When module A needs functionality from module B, NEVER inject a use case class directly. Instead:
+
+1. Define a service interface + Symbol in module B's `domain/interfaces/`
+2. Have the use case implement the interface
+3. Bind via `{ provide: SYMBOL, useExisting: ConcreteUseCase }` in module B
+4. Export the Symbol from module B
+5. Module A injects the Symbol
+
+```typescript
+// receipts/domain/interfaces/receipt-generation.service.interface.ts
+export const RECEIPT_GENERATION_SERVICE = Symbol('RECEIPT_GENERATION_SERVICE');
+export interface IReceiptGenerationService {
+  generateReceiptForPayment(paymentId: number): Promise<void>;
+}
+
+// receipts/receipts.module.ts
+@Module({
+  providers: [
+    GenerateReceiptUseCase,
+    { provide: RECEIPT_GENERATION_SERVICE, useExisting: GenerateReceiptUseCase },
+  ],
+  exports: [RECEIPT_GENERATION_SERVICE],
+})
+
+// payments/application/use-cases/approve-payment.use-case.ts — consumer
+@Inject(RECEIPT_GENERATION_SERVICE) private receiptService: IReceiptGenerationService,
+
+// WRONG: injecting concrete class across modules
+private generateReceiptUseCase: GenerateReceiptUseCase, // VIOLATES DIP
+```
+
 ### Checklist
 
 - [ ] Symbol exported with name `<ENTITY>_REPOSITORY` or `<ENTITY>_SERVICE`
 - [ ] Interface exported with name `I<Entity>Repository` or `I<Entity>Service`
 - [ ] Symbol and interface in the SAME file
 - [ ] Module binds via `{ provide: SYMBOL, useClass: PrismaImplementation }`
+- [ ] Cross-module: `{ provide: SYMBOL, useExisting: ConcreteClass }`
 - [ ] Use cases inject via `@Inject(SYMBOL)`
 - [ ] `exports: [SYMBOL]` in the module when shared across modules
 
@@ -630,11 +675,27 @@ export class ListServicesQueryDto extends PaginationQueryDto {
 }
 ```
 
+### Pattern validation — use `@Matches` for restricted formats
+
+```typescript
+// CORRECT: digit-only fields validated with regex
+@Matches(/^\d{6}$/, { message: 'Code must be exactly 6 digits' })
+code: string;
+
+@Matches(/^\d{4}$/, { message: 'lastFourDigits must be exactly 4 digits' })
+lastFourDigits: string;
+
+// WRONG: @Length alone allows non-digit characters
+@Length(6, 6) // allows "abcdef"
+code: string;
+```
+
 ### Checklist
 
 - [ ] `@ApiProperty` or `@ApiPropertyOptional` on each field
 - [ ] `example` on each `@ApiProperty`
 - [ ] `class-validator` validators on each field
+- [ ] `@Matches(/regex/)` for pattern-restricted fields (digit-only codes, last four digits)
 - [ ] Optional fields with `@IsOptional()` + `?` in the type
 - [ ] Query DTOs extend `PaginationQueryDto` for pagination
 
@@ -681,11 +742,11 @@ export class PrismaServiceRepository implements IServiceRepository {
 
 ### Guard hierarchy
 
-| Guard                        | Usage                                                |
-| ---------------------------- | ---------------------------------------------------- |
-| `JwtAuthGuard`               | Validates JWT, extracts user from token              |
-| `RolesGuard` + `@Roles(...)` | Admin endpoints — verifies admin role                |
-| `ClientGuard`                | Client endpoints — verifies `user.type === 'client'` |
+| Guard                        | Usage                                                                                                                 |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `JwtAuthGuard`               | Validates JWT, extracts user from token                                                                               |
+| `RolesGuard` + `@Roles(...)` | Admin endpoints — verifies admin role                                                                                 |
+| `ClientGuard`                | Client endpoints — verifies type + active status via `findStatusById` (selects only `status` for minimal DB overhead) |
 
 ### Combinations
 
@@ -811,6 +872,13 @@ npm run prisma:generate   # Regenerate client after schema changes
 npm run prisma:studio     # UI to explore data
 ```
 
+**Migration hygiene:**
+
+- Never leave redundant add-then-drop migrations — squash no-ops before merging
+- Seed command defined in `prisma.config.ts` only (single source of truth, uses `ts-node`)
+- Seed scripts: use `process.exitCode = 1` in `.catch()`, avoid hardcoded unique values for test data
+- Use Prisma enums (`AppointmentStatus`, `RecurrenceType`, `PaymentStatus`) in domain types — never `string` for enum fields
+
 ---
 
 ## 12. Global Infrastructure
@@ -892,6 +960,29 @@ throw new ConflictException('Email already registered');
 
 // WRONG: generic throw
 throw new Error('Service not found');
+```
+
+### Security-sensitive errors — generic messages to prevent enumeration
+
+```typescript
+// CORRECT: same message for all auth failure paths
+throw new BadRequestException('Invalid or expired code'); // whether email not found, no active codes, or wrong code
+
+// WRONG: different messages that leak info
+throw new BadRequestException('Invalid code or email'); // reveals email doesn't exist
+throw new BadRequestException('Invalid or expired code'); // reveals email exists but code is wrong
+```
+
+### Brute-force protection — DB-persisted
+
+```typescript
+// CORRECT: persist attempt tracking in database
+// Client model has: failedResetAttempts (Int), resetLockedUntil (DateTime?)
+await this.clientRepository.incrementResetAttempts(clientId, lockUntil);
+await this.clientRepository.clearResetAttempts(clientId);
+
+// WRONG: in-memory tracking (resets on restart, doesn't work across instances)
+private readonly failedAttempts = new Map<string, number>();
 ```
 
 ### Logging
