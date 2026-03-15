@@ -29,7 +29,7 @@ export class GetClientDashboardSummaryUseCase {
           id: rawData.nextAppointment.id,
           date: format(rawData.nextAppointment.date, 'dd/MM'),
           dateTime: `${format(rawData.nextAppointment.date, 'yyyy-MM-dd')}T${rawData.nextAppointment.startTime}:00`,
-          cancellationNote: 'Cancelamento com 1h de antecedencia',
+          cancellationNote: 'Cancelamento com 1h de antecedência',
         }
       : null;
 
@@ -39,7 +39,7 @@ export class GetClientDashboardSummaryUseCase {
       clientName: firstName,
       nextAppointment: formattedNextAppointment,
       appointmentsCount: rawData.appointmentsCount,
-      appointmentsCountLabel: 'Nos ultimos 2 meses',
+      appointmentsCountLabel: 'Nos últimos 2 meses',
       serviceHistory,
     };
   }
