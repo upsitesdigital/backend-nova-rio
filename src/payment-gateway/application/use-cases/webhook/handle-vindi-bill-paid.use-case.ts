@@ -39,9 +39,11 @@ export class HandleVindiBillPaidUseCase {
         approved.appointment.service.name,
         approved.appointment.date.toISOString().slice(0, 10),
       )
-      .catch(() => {});
+      .catch((err) => this.logger.error('Failed to send payment approved email', err));
 
-    this.receiptGenerationService.generateReceiptForPayment(payment.id).catch(() => {});
+    this.receiptGenerationService
+      .generateReceiptForPayment(payment.id)
+      .catch((err) => this.logger.error('Failed to generate receipt', err));
 
     this.logger.log(`Payment ${payment.id} approved via webhook (bill ${billId})`);
   }
