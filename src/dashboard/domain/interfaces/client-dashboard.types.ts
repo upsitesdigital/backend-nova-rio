@@ -53,7 +53,7 @@ export interface ServiceHistoryEntryPayment {
   paymentId: number;
   cardLastFour: string | null;
   amount: string;
-  status: string;
+  status: PaymentStatus;
 }
 
 export interface ServiceHistoryEntry {
@@ -62,9 +62,9 @@ export interface ServiceHistoryEntry {
   startTime: string;
   label: string;
   icon: string | null;
-  status: string;
+  status: AppointmentStatus;
   canEdit: boolean;
-  recurrenceType: string;
+  recurrenceType: RecurrenceType;
   locationName: string | null;
   locationZip: string | null;
   locationAddress: string | null;
