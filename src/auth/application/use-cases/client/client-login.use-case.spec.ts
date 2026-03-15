@@ -90,7 +90,7 @@ describe('ClientLoginUseCase', () => {
     expect(clientRepository.incrementFailedLoginAttempts).toHaveBeenCalledWith(1);
   });
 
-  it('should throw UnauthorizedException if client status is PENDING (before password check)', async () => {
+  it('should throw ForbiddenException if client status is PENDING (before password check)', async () => {
     clientRepository.findByEmail.mockResolvedValue({
       id: 1,
       email: 'test@example.com',
@@ -102,7 +102,7 @@ describe('ClientLoginUseCase', () => {
 
     await expect(
       useCase.loginClient({ email: 'test@example.com', password: 'password' }),
-    ).rejects.toThrow(UnauthorizedException);
+    ).rejects.toThrow(ForbiddenException);
     expect(hashService.compare).not.toHaveBeenCalled();
   });
 

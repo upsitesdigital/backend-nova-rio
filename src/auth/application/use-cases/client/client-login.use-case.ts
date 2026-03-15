@@ -32,7 +32,7 @@ export class ClientLoginUseCase {
 
     if (client.status === 'PENDING') {
       throw new ForbiddenException(
-        'Seu cadastro está em análise. Aguarde a aprovação para fazer login.',
+        'Your account is pending approval. Please wait for activation before logging in.',
       );
     }
 
