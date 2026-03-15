@@ -192,10 +192,10 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
   }
 
   private async lockAndCheckConflict(
-    tx: Parameters<Parameters<PrismaService['$transaction']>[0]>[0],
+    tx: Prisma.TransactionClient,
     params: ConflictCheckParams,
   ): Promise<void> {
-    const locked = await (tx as unknown as PrismaService).$queryRaw<LockedAppointmentRow[]>`
+    const locked = await tx.$queryRaw<LockedAppointmentRow[]>`
       SELECT id, "startTime", duration FROM appointments
       WHERE "employeeId" = ${params.employeeId}
         AND date = ${params.date}
@@ -207,10 +207,10 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
   }
 
   private async lockAndCheckClientConflict(
-    tx: Parameters<Parameters<PrismaService['$transaction']>[0]>[0],
+    tx: Prisma.TransactionClient,
     params: ClientConflictCheckParams,
   ): Promise<void> {
-    const locked = await (tx as unknown as PrismaService).$queryRaw<LockedAppointmentRow[]>`
+    const locked = await tx.$queryRaw<LockedAppointmentRow[]>`
       SELECT id, "startTime", duration FROM appointments
       WHERE "clientId" = ${params.clientId}
         AND date = ${params.date}

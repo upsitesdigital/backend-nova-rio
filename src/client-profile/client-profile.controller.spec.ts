@@ -1,5 +1,6 @@
 import { type Mock, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
+import { CLIENT_REPOSITORY } from '../auth/domain/interfaces/client.repository.interface.js';
 import { ClientProfileController } from './client-profile.controller.js';
 import { GetClientProfileUseCase } from './application/use-cases/profile/get-client-profile.use-case.js';
 import { UpdateClientProfileUseCase } from './application/use-cases/profile/update-client-profile.use-case.js';
@@ -41,6 +42,7 @@ describe('ClientProfileController', () => {
         { provide: RequestPasswordChangeUseCase, useValue: requestPasswordChangeUseCase },
         { provide: VerifyPasswordChangeUseCase, useValue: verifyPasswordChangeUseCase },
         { provide: DeleteClientAccountUseCase, useValue: deleteClientAccountUseCase },
+        { provide: CLIENT_REPOSITORY, useValue: { findById: vi.fn() } },
       ],
     }).compile();
 

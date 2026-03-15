@@ -1,4 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module.js';
 import { PaymentsModule } from '../payments/payments.module.js';
 import { GenerateReceiptUseCase } from './application/use-cases/receipt/generate-receipt.use-case.js';
 import { GetClientReceiptUseCase } from './application/use-cases/receipt/get-client-receipt.use-case.js';
@@ -10,7 +11,7 @@ import { PdfkitReceiptGeneratorService } from './infrastructure/services/pdfkit-
 import { ReceiptsController } from './receipts.controller.js';
 
 @Module({
-  imports: [forwardRef(() => PaymentsModule)],
+  imports: [AuthModule, forwardRef(() => PaymentsModule)],
   controllers: [ReceiptsController],
   providers: [
     { provide: RECEIPT_REPOSITORY, useClass: PrismaReceiptRepository },

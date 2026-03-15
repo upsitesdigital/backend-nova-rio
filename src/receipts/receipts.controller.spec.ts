@@ -1,6 +1,7 @@
 import { StreamableFile } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { vi } from 'vitest';
+import { CLIENT_REPOSITORY } from '../auth/domain/interfaces/client.repository.interface.js';
 import { GetClientReceiptUseCase } from './application/use-cases/receipt/get-client-receipt.use-case.js';
 import { GetReceiptUseCase } from './application/use-cases/receipt/get-receipt.use-case.js';
 import { ReceiptsController } from './receipts.controller.js';
@@ -31,6 +32,7 @@ describe('ReceiptsController', () => {
       providers: [
         { provide: GetReceiptUseCase, useValue: getReceiptUseCase },
         { provide: GetClientReceiptUseCase, useValue: getClientReceiptUseCase },
+        { provide: CLIENT_REPOSITORY, useValue: { findById: vi.fn() } },
       ],
     }).compile();
 

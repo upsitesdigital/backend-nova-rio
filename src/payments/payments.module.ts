@@ -1,5 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { AppointmentsModule } from '../appointments/appointments.module.js';
+import { AuthModule } from '../auth/auth.module.js';
 import { CardsModule } from '../cards/cards.module.js';
 import { ReceiptsModule } from '../receipts/receipts.module.js';
 import { ApprovePaymentUseCase } from './application/use-cases/payment/approve-payment.use-case.js';
@@ -15,7 +16,7 @@ import { AdminPaymentsController } from './admin-payments.controller.js';
 import { ClientPaymentsController } from './client-payments.controller.js';
 
 @Module({
-  imports: [AppointmentsModule, CardsModule, forwardRef(() => ReceiptsModule)],
+  imports: [AppointmentsModule, AuthModule, CardsModule, forwardRef(() => ReceiptsModule)],
   controllers: [AdminPaymentsController, ClientPaymentsController],
   providers: [
     { provide: PAYMENT_REPOSITORY, useClass: PrismaPaymentRepository },
