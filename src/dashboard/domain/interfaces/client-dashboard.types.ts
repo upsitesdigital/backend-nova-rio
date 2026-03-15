@@ -1,3 +1,34 @@
+// Raw types returned by the repository (no formatting)
+export interface RawDashboardAppointment {
+  id: number;
+  date: Date;
+  startTime: string;
+  status: string;
+  recurrenceType: string;
+  locationZip: string | null;
+  locationAddress: string | null;
+  service: { name: string; icon: string | null };
+  unit: { name: string } | null;
+  payment: {
+    id: number;
+    amount: number;
+    status: string;
+    card: { lastFourDigits: string } | null;
+  } | null;
+}
+
+export interface RawClientDashboardData {
+  clientName: string;
+  nextAppointment: {
+    id: number;
+    date: Date;
+    startTime: string;
+  } | null;
+  appointmentsCount: number;
+  recentAppointments: RawDashboardAppointment[];
+}
+
+// Formatted types returned by the use case
 export interface ClientDashboardSummary {
   clientName: string;
   nextAppointment: {
@@ -17,6 +48,7 @@ export interface ServiceHistoryMonth {
 }
 
 export interface ServiceHistoryEntryPayment {
+  paymentId: number;
   cardLastFour: string | null;
   amount: string;
   status: string;

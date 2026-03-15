@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module.js';
 import { AdminDashboardController } from './admin-dashboard.controller.js';
 import { GetActiveClientsCountUseCase } from './application/use-cases/dashboard/get-active-clients-count.use-case.js';
 import { GetPendingAppointmentsCountUseCase } from './application/use-cases/dashboard/get-pending-appointments-count.use-case.js';
@@ -12,6 +13,7 @@ import { PrismaClientDashboardRepository } from './infrastructure/repositories/p
 import { PrismaDashboardRepository } from './infrastructure/repositories/prisma-dashboard.repository.js';
 
 @Module({
+  imports: [AuthModule],
   controllers: [AdminDashboardController, ClientDashboardController],
   providers: [
     { provide: DASHBOARD_REPOSITORY, useClass: PrismaDashboardRepository },

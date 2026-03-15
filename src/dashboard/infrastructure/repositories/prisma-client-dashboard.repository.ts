@@ -1,19 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import type { IClientDashboardRepository } from '../../domain/interfaces/client-dashboard.repository.interface.js';
 import type {
-  ClientDashboardSummary,
-  ServiceHistoryEntry,
-  ServiceHistoryMonth,
+  RawClientDashboardData,
+  RawDashboardAppointment,
 } from '../../domain/interfaces/client-dashboard.types.js';
+
+const DASHBOARD_HISTORY_LIMIT = 20;
 
 @Injectable()
 export class PrismaClientDashboardRepository implements IClientDashboardRepository {
   constructor(private prisma: PrismaService) {}
 
-  async getClientDashboardSummary(clientId: number): Promise<ClientDashboardSummary> {
+  async getClientDashboardData(clientId: number): Promise<RawClientDashboardData> {
     const client = await this.prisma.client.findUnique({
       where: { id: clientId },
       select: { name: true },
@@ -33,7 +32,7 @@ export class PrismaClientDashboardRepository implements IClientDashboardReposito
         date: { gte: today },
       },
       select: { id: true, date: true, startTime: true },
-      orderBy: { date: 'asc' },
+      orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
     });
 
     const twoMonthsAgo = new Date(today);
@@ -43,6 +42,7 @@ export class PrismaClientDashboardRepository implements IClientDashboardReposito
       where: {
         clientId,
         createdAt: { gte: twoMonthsAgo },
+        status: { in: ['SCHEDULED', 'COMPLETED'] },
       },
     });
 
@@ -60,69 +60,42 @@ export class PrismaClientDashboardRepository implements IClientDashboardReposito
         unit: { select: { name: true } },
         payment: {
           select: {
+            id: true,
             amount: true,
             status: true,
             card: { select: { lastFourDigits: true } },
           },
         },
       },
-      orderBy: { date: 'desc' },
-      take: 20,
+      orderBy: [{ date: 'desc' }, { startTime: 'desc' }],
+      take: DASHBOARD_HISTORY_LIMIT,
     });
 
-    const monthsMap = new Map<string, ServiceHistoryEntry[]>();
-
-    for (const apt of recentAppointments) {
-      const monthKey = format(apt.date, 'MMMM yyyy', { locale: ptBR });
-      const capitalizedKey = monthKey.charAt(0).toUpperCase() + monthKey.slice(1);
-
-      const entry: ServiceHistoryEntry = {
-        id: apt.id,
-        date: format(apt.date, 'dd/MM'),
-        startTime: apt.startTime,
-        label: apt.service.name,
-        icon: apt.service.icon,
-        status: apt.status,
-        canEdit: apt.status === 'SCHEDULED',
-        recurrenceType: apt.recurrenceType,
-        locationName: apt.unit?.name ?? null,
-        locationZip: apt.locationZip ?? null,
-        locationAddress: apt.locationAddress ?? null,
-        payment: apt.payment
-          ? {
-              cardLastFour: apt.payment.card?.lastFourDigits ?? null,
-              amount: `R$ ${Number(apt.payment.amount).toFixed(2).replace('.', ',')}`,
-              status: apt.payment.status,
-            }
-          : null,
-      };
-
-      const existing = monthsMap.get(capitalizedKey);
-      if (existing) {
-        existing.push(entry);
-      } else {
-        monthsMap.set(capitalizedKey, [entry]);
-      }
-    }
-
-    const serviceHistory: ServiceHistoryMonth[] = [];
-    for (const [monthLabel, entries] of monthsMap) {
-      serviceHistory.push({ monthLabel, entries });
-    }
-
-    return {
-      clientName: client.name.split(' ')[0],
-      nextAppointment: nextAppointment
+    const rawAppointments: RawDashboardAppointment[] = recentAppointments.map((apt) => ({
+      id: apt.id,
+      date: apt.date,
+      startTime: apt.startTime,
+      status: apt.status,
+      recurrenceType: apt.recurrenceType,
+      locationZip: apt.locationZip,
+      locationAddress: apt.locationAddress,
+      service: apt.service,
+      unit: apt.unit,
+      payment: apt.payment
         ? {
-            id: nextAppointment.id,
-            date: format(nextAppointment.date, 'dd/MM'),
-            dateTime: `${format(nextAppointment.date, 'yyyy-MM-dd')}T${nextAppointment.startTime}:00`,
-            cancellationNote: 'Cancelamento com 1h de antecedência',
+            id: apt.payment.id,
+            amount: Number(apt.payment.amount),
+            status: apt.payment.status,
+            card: apt.payment.card,
           }
         : null,
+    }));
+
+    return {
+      clientName: client.name,
+      nextAppointment,
       appointmentsCount,
-      appointmentsCountLabel: 'Nos últimos 2 meses',
-      serviceHistory,
+      recentAppointments: rawAppointments,
     };
   }
 }
