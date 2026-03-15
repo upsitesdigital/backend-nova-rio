@@ -5,7 +5,7 @@ import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.
 import type { IHashService } from '../../../domain/interfaces/hash.service.interface.js';
 import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
-import { ResetPasswordDto } from '../../../dto/reset-password.dto.js';
+import type { ResetPasswordDto } from '../../../dto/reset-password.dto.js';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_WINDOW_MS = 15 * 60 * 1000;

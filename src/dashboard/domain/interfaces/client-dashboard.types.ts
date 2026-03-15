@@ -1,10 +1,12 @@
+import type { AppointmentStatus, PaymentStatus, RecurrenceType } from '@prisma/client';
+
 // Raw types returned by the repository (no formatting)
 export interface RawDashboardAppointment {
   id: number;
   date: Date;
   startTime: string;
-  status: string;
-  recurrenceType: string;
+  status: AppointmentStatus;
+  recurrenceType: RecurrenceType;
   locationZip: string | null;
   locationAddress: string | null;
   service: { name: string; icon: string | null };
@@ -12,7 +14,7 @@ export interface RawDashboardAppointment {
   payment: {
     id: number;
     amount: number;
-    status: string;
+    status: PaymentStatus;
     card: { lastFourDigits: string } | null;
   } | null;
 }
