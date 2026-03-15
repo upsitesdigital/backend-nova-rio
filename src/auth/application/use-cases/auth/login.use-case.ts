@@ -36,6 +36,7 @@ interface AuthRepository {
 }
 
 const INVALID_CREDENTIALS = 'Invalid credentials';
+const DUMMY_HASH = '$2b$10$D74tBEymfGwQWP.6q2k1De3e63SxMMh0XiOpUp1.n0/obZbkHMMqK';
 
 @Injectable()
 export class LoginUseCase {
@@ -72,7 +73,7 @@ export class LoginUseCase {
     );
     if (adminResult) return adminResult;
 
-    await this.hashService.compare(dto.password, '$2b$10$dummyhashtopreventtiming');
+    await this.hashService.compare(dto.password, DUMMY_HASH);
 
     throw new UnauthorizedException(INVALID_CREDENTIALS);
   }
