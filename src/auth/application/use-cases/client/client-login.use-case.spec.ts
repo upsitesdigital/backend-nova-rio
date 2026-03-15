@@ -1,7 +1,7 @@
 import { type Mock, vi } from 'vitest';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
+import { CLIENT_AUTH_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import { TOKEN_SERVICE } from '../../../domain/interfaces/token.service.interface.js';
 import { ClientLoginUseCase } from './client-login.use-case.js';
@@ -37,7 +37,7 @@ describe('ClientLoginUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ClientLoginUseCase,
-        { provide: CLIENT_REPOSITORY, useValue: clientRepository },
+        { provide: CLIENT_AUTH_REPOSITORY, useValue: clientRepository },
         { provide: HASH_SERVICE, useValue: hashService },
         { provide: TOKEN_SERVICE, useValue: tokenService },
       ],

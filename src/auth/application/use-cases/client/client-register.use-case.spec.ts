@@ -1,7 +1,7 @@
 import { type Mock, vi } from 'vitest';
 import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
+import { CLIENT_AUTH_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
 import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import { ClientRegisterUseCase } from './client-register.use-case.js';
@@ -30,7 +30,7 @@ describe('ClientRegisterUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ClientRegisterUseCase,
-        { provide: CLIENT_REPOSITORY, useValue: clientRepository },
+        { provide: CLIENT_AUTH_REPOSITORY, useValue: clientRepository },
         { provide: EMAIL_SERVICE, useValue: emailService },
         { provide: HASH_SERVICE, useValue: hashService },
       ],

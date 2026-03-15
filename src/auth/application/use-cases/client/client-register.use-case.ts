@@ -1,6 +1,6 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
-import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
-import type { IClientRepository } from '../../../domain/interfaces/client.repository.interface.js';
+import { CLIENT_AUTH_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
+import type { IClientAuthRepository } from '../../../domain/interfaces/client.repository.interface.js';
 import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
@@ -10,7 +10,7 @@ import { ClientRegisterDto } from '../../../dto/client-register.dto.js';
 @Injectable()
 export class ClientRegisterUseCase {
   constructor(
-    @Inject(CLIENT_REPOSITORY) private clientRepository: IClientRepository,
+    @Inject(CLIENT_AUTH_REPOSITORY) private clientRepository: IClientAuthRepository,
     @Inject(EMAIL_SERVICE) private emailService: IEmailService,
     @Inject(HASH_SERVICE) private hashService: IHashService,
   ) {}

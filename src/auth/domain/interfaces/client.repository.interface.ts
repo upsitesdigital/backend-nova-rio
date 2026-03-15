@@ -1,6 +1,9 @@
 import type { Client, VerificationCode } from '@prisma/client';
 
 export const CLIENT_REPOSITORY = Symbol('CLIENT_REPOSITORY');
+export const CLIENT_AUTH_REPOSITORY = Symbol('CLIENT_AUTH_REPOSITORY');
+export const CLIENT_VERIFICATION_REPOSITORY = Symbol('CLIENT_VERIFICATION_REPOSITORY');
+export const CLIENT_PROFILE_REPOSITORY = Symbol('CLIENT_PROFILE_REPOSITORY');
 
 export type ClientData = Pick<
   Client,
@@ -41,15 +44,20 @@ export type ClientProfile = Pick<
 
 export type VerificationCodeRecord = Pick<VerificationCode, 'id' | 'code' | 'expiresAt'>;
 
-export interface IClientRepository {
+export type ClientForPayment = Pick<
+  Client,
+  'id' | 'name' | 'email' | 'cpfCnpj' | 'phone' | 'vindiCustomerId'
+>;
+
+/** Auth-focused methods: login flow, password, failed attempts, token management */
+export interface IClientAuthRepository {
   findByEmail(email: string): Promise<ClientData | null>;
   findById(id: number): Promise<ClientData | null>;
-  findProfileById(id: number): Promise<ClientProfile | null>;
   create(data: CreateClientData): Promise<ClientData>;
-  updateRefreshToken(id: number, refreshToken: string | null): Promise<void>;
-  getRefreshToken(id: number): Promise<string | null>;
   incrementFailedLoginAttempts(id: number): Promise<void>;
   resetFailedLoginAttempts(id: number): Promise<void>;
+  updateRefreshToken(id: number, refreshToken: string | null): Promise<void>;
+  getRefreshToken(id: number): Promise<string | null>;
   updateRefreshTokenWithFamily(
     id: number,
     refreshToken: string,
@@ -59,6 +67,12 @@ export interface IClientRepository {
     id: number,
   ): Promise<{ refreshToken: string | null; tokenFamily: string | null }>;
   revokeTokenFamily(id: number): Promise<void>;
+}
+
+/** Verification code lifecycle methods */
+export interface IClientVerificationRepository {
+  findById(id: number): Promise<ClientData | null>;
+  findByEmail(email: string): Promise<ClientData | null>;
   createVerificationCode(
     clientId: number,
     code: string,
@@ -76,5 +90,20 @@ export interface IClientRepository {
     hashedPassword: string,
     matchedCodeId: number,
   ): Promise<void>;
+}
+
+/** Profile and account management methods */
+export interface IClientProfileRepository {
+  findById(id: number): Promise<ClientData | null>;
+  findByEmail(email: string): Promise<ClientData | null>;
+  findProfileById(id: number): Promise<ClientProfile | null>;
+  findClientForPayment(id: number): Promise<ClientForPayment | null>;
+  updateEmail(id: number, email: string): Promise<void>;
+  updatePassword(id: number, password: string): Promise<void>;
+  updateVindiCustomerId(id: number, vindiCustomerId: number): Promise<void>;
   deactivateClient(id: number): Promise<void>;
 }
+
+/** Combined interface — retained for backwards compatibility with the single DI token */
+export interface IClientRepository
+  extends IClientAuthRepository, IClientVerificationRepository, IClientProfileRepository {}

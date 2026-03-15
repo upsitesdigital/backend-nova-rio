@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
+import { CLIENT_VERIFICATION_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import { ResetPasswordUseCase } from './reset-password.use-case.js';
@@ -43,7 +43,7 @@ describe('ResetPasswordUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ResetPasswordUseCase,
-        { provide: CLIENT_REPOSITORY, useValue: clientRepository },
+        { provide: CLIENT_VERIFICATION_REPOSITORY, useValue: clientRepository },
         { provide: HASH_SERVICE, useValue: hashService },
         { provide: EMAIL_SERVICE, useValue: emailService },
       ],

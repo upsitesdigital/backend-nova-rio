@@ -7,12 +7,12 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import type { AuthUser } from '../../shared/types/auth-user.type.js';
-import { CLIENT_REPOSITORY } from '../domain/interfaces/client.repository.interface.js';
-import type { IClientRepository } from '../domain/interfaces/client.repository.interface.js';
+import { CLIENT_AUTH_REPOSITORY } from '../domain/interfaces/client.repository.interface.js';
+import type { IClientAuthRepository } from '../domain/interfaces/client.repository.interface.js';
 
 @Injectable()
 export class ClientGuard implements CanActivate {
-  constructor(@Inject(CLIENT_REPOSITORY) private clientRepository: IClientRepository) {}
+  constructor(@Inject(CLIENT_AUTH_REPOSITORY) private clientRepository: IClientAuthRepository) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();

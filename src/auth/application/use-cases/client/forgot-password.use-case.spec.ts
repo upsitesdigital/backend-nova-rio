@@ -1,6 +1,6 @@
 import { type Mock, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
+import { CLIENT_VERIFICATION_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import { ForgotPasswordUseCase } from './forgot-password.use-case.js';
@@ -31,7 +31,7 @@ describe('ForgotPasswordUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ForgotPasswordUseCase,
-        { provide: CLIENT_REPOSITORY, useValue: clientRepository },
+        { provide: CLIENT_VERIFICATION_REPOSITORY, useValue: clientRepository },
         { provide: HASH_SERVICE, useValue: hashService },
         { provide: EMAIL_SERVICE, useValue: emailService },
       ],

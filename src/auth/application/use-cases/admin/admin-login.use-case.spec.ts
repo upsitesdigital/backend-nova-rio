@@ -1,7 +1,7 @@
 import { type Mock, vi } from 'vitest';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ADMIN_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
+import { ADMIN_AUTH_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import { TOKEN_SERVICE } from '../../../domain/interfaces/token.service.interface.js';
 import { AdminLoginUseCase } from './admin-login.use-case.js';
@@ -37,7 +37,7 @@ describe('AdminLoginUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminLoginUseCase,
-        { provide: ADMIN_REPOSITORY, useValue: adminRepository },
+        { provide: ADMIN_AUTH_REPOSITORY, useValue: adminRepository },
         { provide: HASH_SERVICE, useValue: hashService },
         { provide: TOKEN_SERVICE, useValue: tokenService },
       ],

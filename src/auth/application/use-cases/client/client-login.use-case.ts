@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
-import type { IClientRepository } from '../../../domain/interfaces/client.repository.interface.js';
+import { CLIENT_AUTH_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
+import type { IClientAuthRepository } from '../../../domain/interfaces/client.repository.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import type { IHashService } from '../../../domain/interfaces/hash.service.interface.js';
 import { TOKEN_SERVICE } from '../../../domain/interfaces/token.service.interface.js';
@@ -14,7 +14,7 @@ import { ClientLoginDto } from '../../../dto/client-login.dto.js';
 @Injectable()
 export class ClientLoginUseCase {
   constructor(
-    @Inject(CLIENT_REPOSITORY) private clientRepository: IClientRepository,
+    @Inject(CLIENT_AUTH_REPOSITORY) private clientRepository: IClientAuthRepository,
     @Inject(HASH_SERVICE) private hashService: IHashService,
     @Inject(TOKEN_SERVICE) private tokenService: ITokenService,
   ) {}

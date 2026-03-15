@@ -1,8 +1,8 @@
 import { type Mock, vi } from 'vitest';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ADMIN_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
-import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
+import { ADMIN_PROFILE_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
+import { CLIENT_PROFILE_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
 import { GetProfileUseCase } from './get-profile.use-case.js';
 
 describe('GetProfileUseCase', () => {
@@ -21,8 +21,8 @@ describe('GetProfileUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetProfileUseCase,
-        { provide: CLIENT_REPOSITORY, useValue: clientRepository },
-        { provide: ADMIN_REPOSITORY, useValue: adminRepository },
+        { provide: CLIENT_PROFILE_REPOSITORY, useValue: clientRepository },
+        { provide: ADMIN_PROFILE_REPOSITORY, useValue: adminRepository },
       ],
     }).compile();
 

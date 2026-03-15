@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import type {
   ClientData,
+  ClientForPayment,
   ClientProfile,
   CreateClientData,
   IClientRepository,
@@ -21,6 +22,27 @@ export class PrismaClientRepository implements IClientRepository {
 
   async findById(id: number): Promise<ClientData | null> {
     return this.prisma.client.findUnique({ where: { id } });
+  }
+
+  async findClientForPayment(id: number): Promise<ClientForPayment | null> {
+    return this.prisma.client.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        cpfCnpj: true,
+        phone: true,
+        vindiCustomerId: true,
+      },
+    });
+  }
+
+  async updateVindiCustomerId(id: number, vindiCustomerId: number): Promise<void> {
+    await this.prisma.client.update({
+      where: { id },
+      data: { vindiCustomerId },
+    });
   }
 
   async findProfileById(id: number): Promise<ClientProfile | null> {
