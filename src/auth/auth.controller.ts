@@ -20,6 +20,7 @@ import { GetProfileUseCase } from './application/use-cases/auth/get-profile.use-
 import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.use-case.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
 import { LoginDto } from './dto/login.dto.js';
+import { LoginResponseDto } from './dto/login-response.dto.js';
 import { ClientRegisterDto } from './dto/client-register.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
@@ -52,7 +53,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @ApiOperation({ summary: 'Login (client or admin)' })
-  @ApiOkResponse({ description: 'Login successful, returns token pair + userType' })
+  @ApiOkResponse({
+    description: 'Login successful, returns token pair + userType',
+    type: LoginResponseDto,
+  })
   @ApiBadRequestResponse({ description: 'Validation failed' })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
   login(@Body() dto: LoginDto) {

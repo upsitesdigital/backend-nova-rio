@@ -52,7 +52,7 @@ describe('AuthController', () => {
   });
 
   it('login should call loginUseCase.authenticateUser', async () => {
-    const dto = { email: 'test@test.com', password: 'pass' };
+    const dto = { email: 'test@test.com', password: 'Str0ng@Pass' };
     await controller.login(dto);
     expect(loginUseCase.authenticateUser).toHaveBeenCalledWith(dto);
   });
