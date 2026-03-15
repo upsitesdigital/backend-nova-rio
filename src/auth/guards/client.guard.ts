@@ -22,7 +22,7 @@ export class ClientGuard implements CanActivate {
       throw new ForbiddenException('Only clients can access this resource');
     }
 
-    const client = await this.clientRepository.findById(user.id);
+    const client = await this.clientRepository.findStatusById(user.id);
 
     if (!client || client.status !== 'ACTIVE') {
       throw new ForbiddenException('Account is not active');

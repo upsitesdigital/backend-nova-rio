@@ -53,6 +53,7 @@ export type ClientForPayment = Pick<
 export interface IClientAuthRepository {
   findByEmail(email: string): Promise<ClientData | null>;
   findById(id: number): Promise<ClientData | null>;
+  findStatusById(id: number): Promise<{ status: string } | null>;
   create(data: CreateClientData): Promise<ClientData>;
   incrementFailedLoginAttempts(id: number): Promise<void>;
   resetFailedLoginAttempts(id: number): Promise<void>;

@@ -6,11 +6,11 @@ import { ClientGuard } from './client.guard.js';
 
 describe('ClientGuard', () => {
   let guard: ClientGuard;
-  let clientRepository: { findById: Mock };
+  let clientRepository: { findStatusById: Mock };
 
   beforeEach(async () => {
     clientRepository = {
-      findById: vi.fn(),
+      findStatusById: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -30,33 +30,33 @@ describe('ClientGuard', () => {
     }) as unknown as ExecutionContext;
 
   it('should allow active client users', async () => {
-    clientRepository.findById.mockResolvedValue({ id: 1, status: 'ACTIVE' });
+    clientRepository.findStatusById.mockResolvedValue({ id: 1, status: 'ACTIVE' });
 
     const result = await guard.canActivate(mockContext('client'));
 
     expect(result).toBe(true);
-    expect(clientRepository.findById).toHaveBeenCalledWith(1);
+    expect(clientRepository.findStatusById).toHaveBeenCalledWith(1);
   });
 
   it('should throw ForbiddenException for admin users', async () => {
     await expect(guard.canActivate(mockContext('admin'))).rejects.toThrow(ForbiddenException);
-    expect(clientRepository.findById).not.toHaveBeenCalled();
+    expect(clientRepository.findStatusById).not.toHaveBeenCalled();
   });
 
   it('should throw ForbiddenException for PENDING client', async () => {
-    clientRepository.findById.mockResolvedValue({ id: 1, status: 'PENDING' });
+    clientRepository.findStatusById.mockResolvedValue({ id: 1, status: 'PENDING' });
 
     await expect(guard.canActivate(mockContext('client'))).rejects.toThrow(ForbiddenException);
   });
 
   it('should throw ForbiddenException for INACTIVE client', async () => {
-    clientRepository.findById.mockResolvedValue({ id: 1, status: 'INACTIVE' });
+    clientRepository.findStatusById.mockResolvedValue({ id: 1, status: 'INACTIVE' });
 
     await expect(guard.canActivate(mockContext('client'))).rejects.toThrow(ForbiddenException);
   });
 
   it('should throw ForbiddenException when client not found', async () => {
-    clientRepository.findById.mockResolvedValue(null);
+    clientRepository.findStatusById.mockResolvedValue(null);
 
     await expect(guard.canActivate(mockContext('client'))).rejects.toThrow(ForbiddenException);
   });

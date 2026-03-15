@@ -24,6 +24,13 @@ export class PrismaClientRepository implements IClientRepository {
     return this.prisma.client.findUnique({ where: { id } });
   }
 
+  async findStatusById(id: number): Promise<{ status: string } | null> {
+    return this.prisma.client.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+  }
+
   async findClientForPayment(id: number): Promise<ClientForPayment | null> {
     return this.prisma.client.findUnique({
       where: { id },
