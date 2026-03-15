@@ -100,6 +100,6 @@ async function seedPayments() {
 seedPayments()
   .catch((e) => {
     console.error('Seed payments failed:', e);
-    throw e;
+    process.exitCode = 1;
   })
   .finally(() => prisma.$disconnect());
