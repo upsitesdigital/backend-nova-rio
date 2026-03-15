@@ -71,5 +71,10 @@ export interface IClientRepository {
   markVerificationCodeAsUsed(id: number): Promise<void>;
   updateEmail(id: number, email: string): Promise<void>;
   updatePassword(id: number, password: string): Promise<void>;
+  completePasswordReset(
+    clientId: number,
+    hashedPassword: string,
+    matchedCodeId: number,
+  ): Promise<void>;
   deactivateClient(id: number): Promise<void>;
 }

@@ -167,6 +167,26 @@ export class PrismaClientRepository implements IClientRepository {
     });
   }
 
+  async completePasswordReset(
+    clientId: number,
+    hashedPassword: string,
+    matchedCodeId: number,
+  ): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      await tx.client.update({
+        where: { id: clientId },
+        data: { password: hashedPassword },
+      });
+      await tx.verificationCode.update({
+        where: { id: matchedCodeId },
+        data: { usedAt: new Date() },
+      });
+      await tx.verificationCode.deleteMany({
+        where: { clientId, type: 'PASSWORD_CHANGE' },
+      });
+    });
+  }
+
   async deactivateClient(id: number): Promise<void> {
     await this.prisma.client.update({
       where: { id },
