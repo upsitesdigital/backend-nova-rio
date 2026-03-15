@@ -1,7 +1,8 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
-import { GenerateReceiptUseCase } from '../../../../receipts/application/use-cases/receipt/generate-receipt.use-case.js';
+import { RECEIPT_GENERATION_SERVICE } from '../../../../receipts/domain/interfaces/receipt-generation.service.interface.js';
+import type { IReceiptGenerationService } from '../../../../receipts/domain/interfaces/receipt-generation.service.interface.js';
 import { PAYMENT_REPOSITORY } from '../../../domain/interfaces/payment.repository.interface.js';
 import type {
   IPaymentRepository,
@@ -13,7 +14,7 @@ export class ApprovePaymentUseCase {
   constructor(
     @Inject(PAYMENT_REPOSITORY) private paymentRepository: IPaymentRepository,
     @Inject(EMAIL_SERVICE) private emailService: IEmailService,
-    private generateReceiptUseCase: GenerateReceiptUseCase,
+    @Inject(RECEIPT_GENERATION_SERVICE) private receiptGenerationService: IReceiptGenerationService,
   ) {}
 
   async approvePaymentById(id: number): Promise<PaymentResponse> {
@@ -39,7 +40,7 @@ export class ApprovePaymentUseCase {
       )
       .catch(() => {});
 
-    this.generateReceiptUseCase.generateReceiptForPayment(payment.id).catch(() => {});
+    this.receiptGenerationService.generateReceiptForPayment(payment.id).catch(() => {});
 
     return payment;
   }

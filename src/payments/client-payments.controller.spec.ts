@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
 import type { AuthUser } from '../shared/types/auth-user.type.js';
-import { CLIENT_REPOSITORY } from '../auth/domain/interfaces/client.repository.interface.js';
+import { CLIENT_AUTH_REPOSITORY } from '../auth/domain/interfaces/client.repository.interface.js';
 import { ClientPaymentsController } from './client-payments.controller.js';
 import { CreateClientPaymentUseCase } from './application/use-cases/payment/create-client-payment.use-case.js';
 import { ListClientPaymentsUseCase } from './application/use-cases/payment/list-client-payments.use-case.js';
@@ -27,7 +27,7 @@ describe('ClientPaymentsController', () => {
         { provide: CreateClientPaymentUseCase, useValue: createClientPaymentUseCase },
         { provide: ListClientPaymentsUseCase, useValue: listClientPaymentsUseCase },
         { provide: GetClientPaymentUseCase, useValue: getClientPaymentUseCase },
-        { provide: CLIENT_REPOSITORY, useValue: { findById: vi.fn() } },
+        { provide: CLIENT_AUTH_REPOSITORY, useValue: { findById: vi.fn() } },
       ],
     }).compile();
 

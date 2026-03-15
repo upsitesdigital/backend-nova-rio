@@ -2,17 +2,21 @@ import { BadRequestException, Inject, Injectable, Logger, NotFoundException } fr
 import { ConfigService } from '@nestjs/config';
 import { APPOINTMENT_REPOSITORY } from '../../../../appointments/domain/interfaces/appointment.repository.interface.js';
 import type { IAppointmentRepository } from '../../../../appointments/domain/interfaces/appointment.repository.interface.js';
+import { CLIENT_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
+import type { IClientRepository } from '../../../../auth/domain/interfaces/client.repository.interface.js';
 import { CARD_REPOSITORY } from '../../../../cards/domain/interfaces/card.repository.interface.js';
 import type { ICardRepository } from '../../../../cards/domain/interfaces/card.repository.interface.js';
 import { PAYMENT_GATEWAY_SERVICE } from '../../../../payment-gateway/domain/interfaces/payment-gateway.service.interface.js';
 import type { IPaymentGatewayService } from '../../../../payment-gateway/domain/interfaces/payment-gateway.service.interface.js';
-import { PrismaService } from '../../../../shared/prisma/prisma.service.js';
+import { PAYMENT_PRICING_SERVICE } from '../../../domain/services/payment-pricing.service.interface.js';
+import type { IPaymentPricingService } from '../../../domain/services/payment-pricing.service.interface.js';
 import { PAYMENT_REPOSITORY } from '../../../domain/interfaces/payment.repository.interface.js';
 import type {
   CreatePaymentData,
   IPaymentRepository,
   PaymentResponse,
 } from '../../../domain/interfaces/payment.repository.interface.js';
+import { mapPaymentMethodToVindi } from '../../mappers/payment-method.mapper.js';
 import type { CreatePaymentDto } from '../../../dto/payment/create-payment.dto.js';
 
 @Injectable()
@@ -25,7 +29,8 @@ export class CreateClientPaymentUseCase {
     @Inject(APPOINTMENT_REPOSITORY) private appointmentRepository: IAppointmentRepository,
     @Inject(CARD_REPOSITORY) private cardRepository: ICardRepository,
     @Inject(PAYMENT_GATEWAY_SERVICE) private paymentGatewayService: IPaymentGatewayService,
-    private prisma: PrismaService,
+    @Inject(PAYMENT_PRICING_SERVICE) private pricingService: IPaymentPricingService,
+    @Inject(CLIENT_REPOSITORY) private clientRepository: IClientRepository,
     configService: ConfigService,
   ) {
     this.vindiProductId = Number(configService.getOrThrow<string>('VINDI_PRODUCT_ID'));
@@ -56,7 +61,7 @@ export class CreateClientPaymentUseCase {
       }
     }
 
-    const { subtotal, discount } = await this.calculatePricing(
+    const { subtotal, discount } = await this.pricingService.calculatePricing(
       appointment.service.id,
       appointment.recurrenceType,
       appointment.package?.id ?? null,
@@ -69,7 +74,7 @@ export class CreateClientPaymentUseCase {
 
     const vindiBill = await this.paymentGatewayService.createGatewayBill({
       gatewayCustomerId: vindiCustomerId,
-      paymentMethodCode: this.mapPaymentMethodToVindi(dto.method),
+      paymentMethodCode: mapPaymentMethodToVindi(dto.method),
       amount,
       productId: this.vindiProductId,
     });
@@ -96,17 +101,7 @@ export class CreateClientPaymentUseCase {
   }
 
   private async ensureVindiCustomerExists(clientId: number): Promise<number> {
-    const client = await this.prisma.client.findUnique({
-      where: { id: clientId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        cpfCnpj: true,
-        phone: true,
-        vindiCustomerId: true,
-      },
-    });
+    const client = await this.clientRepository.findClientForPayment(clientId);
 
     if (!client) {
       throw new NotFoundException('Client not found');
@@ -123,62 +118,10 @@ export class CreateClientPaymentUseCase {
       ...(client.phone ? { phone: client.phone } : {}),
     });
 
-    await this.prisma.client.update({
-      where: { id: clientId },
-      data: { vindiCustomerId: vindiCustomer.id },
-    });
+    await this.clientRepository.updateVindiCustomerId(clientId, vindiCustomer.id);
 
     this.logger.log(`Created Vindi customer ${vindiCustomer.id} for client ${clientId}`);
 
     return vindiCustomer.id;
-  }
-
-  private mapPaymentMethodToVindi(method: string): string {
-    const methodMap: Record<string, string> = {
-      CREDIT_CARD: 'credit_card',
-      DEBIT_CARD: 'debit_card',
-      PIX: 'pix',
-    };
-    return methodMap[method] ?? 'pix';
-  }
-
-  private async calculatePricing(
-    serviceId: number,
-    recurrenceType: string,
-    packageId: number | null,
-  ): Promise<{ subtotal: number; discount: number }> {
-    if (recurrenceType === 'PACKAGE' && packageId) {
-      const pkg = await this.prisma.package.findUnique({
-        where: { id: packageId },
-        select: { price: true },
-      });
-
-      if (!pkg) {
-        throw new BadRequestException('Package not found');
-      }
-
-      return { subtotal: Number(pkg.price), discount: 0 };
-    }
-
-    const service = await this.prisma.service.findUnique({
-      where: { id: serviceId },
-      select: { basePrice: true },
-    });
-
-    if (!service) {
-      throw new BadRequestException('Service not found');
-    }
-
-    const basePrice = Number(service.basePrice);
-
-    let discountRate = 0;
-    if (recurrenceType === 'WEEKLY' || recurrenceType === 'BIWEEKLY') {
-      discountRate = 0.1;
-    } else if (recurrenceType === 'MONTHLY') {
-      discountRate = 0.05;
-    }
-
-    const discount = basePrice * discountRate;
-    return { subtotal: basePrice, discount };
   }
 }
