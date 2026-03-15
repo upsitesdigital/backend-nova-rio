@@ -133,12 +133,12 @@ model Client {
 model Card {
   id             Int      @id @default(autoincrement())
   uuid           String   @unique @default(uuid())
+  cardNumber     String
   lastFourDigits String
-  brand          String   // Visa, Mastercard, Elo
+  brand          String   // visa, mastercard, elo, amex, hipercard
   holderName     String
   expiryMonth    Int
   expiryYear     Int
-  // Token do gateway de pagamento (nunca armazenar dados completos)
   gatewayToken   String?
   isDefault      Boolean  @default(false)
   createdAt      DateTime @default(now())

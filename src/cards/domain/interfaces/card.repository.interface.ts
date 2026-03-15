@@ -8,6 +8,7 @@ export type CardResponse = Pick<
 >;
 
 export interface CreateCardData {
+  cardNumber: string;
   lastFourDigits: string;
   brand: string;
   holderName: string;

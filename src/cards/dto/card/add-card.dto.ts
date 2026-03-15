@@ -1,11 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
+  IsCreditCard,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
-  Matches,
   Max,
   MaxLength,
   Min,
@@ -13,17 +13,11 @@ import {
 import { IsValidExpiry } from '../../validators/is-valid-expiry.validator.js';
 
 export class AddCardDto {
-  @ApiProperty({ example: '1111' })
+  @ApiProperty({ example: '4111111111111111' })
   @IsString()
   @IsNotEmpty()
-  @Matches(/^\d{4}$/, { message: 'lastFourDigits must be exactly 4 digits' })
-  lastFourDigits: string;
-
-  @ApiProperty({ example: 'Visa' })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(50)
-  brand: string;
+  @IsCreditCard({ message: 'cardNumber must be a valid credit card number' })
+  cardNumber: string;
 
   @ApiProperty({ example: 'João Silva' })
   @IsString()

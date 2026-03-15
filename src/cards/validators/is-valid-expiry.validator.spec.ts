@@ -4,8 +4,7 @@ import { AddCardDto } from '../dto/card/add-card.dto.js';
 describe('IsValidExpiry', () => {
   const buildDto = (month: number, year: number): AddCardDto => {
     const dto = new AddCardDto();
-    dto.lastFourDigits = '1111';
-    dto.brand = 'Visa';
+    dto.cardNumber = '4111111111111111';
     dto.holderName = 'João Silva';
     dto.expiryMonth = month;
     dto.expiryYear = year;

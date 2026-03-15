@@ -41,8 +41,7 @@ describe('CardsController', () => {
 
   it('addCard should call addCardUseCase', async () => {
     const dto = {
-      lastFourDigits: '1111',
-      brand: 'Visa',
+      cardNumber: '4111111111111111',
       holderName: 'João',
       expiryMonth: 12,
       expiryYear: 2028,
