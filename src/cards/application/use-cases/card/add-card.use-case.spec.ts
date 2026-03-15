@@ -27,8 +27,8 @@ describe('AddCardUseCase', () => {
   it('should call createCard when isDefault is not set', async () => {
     const dto = {
       lastFourDigits: '1111',
-      brand: 'Visa',
-      holderName: 'João',
+      brand: 'visa',
+      holderName: 'Joao',
       expiryMonth: 12,
       expiryYear: 2028,
       gatewayToken: 'tok_abc',
@@ -36,8 +36,8 @@ describe('AddCardUseCase', () => {
     const created = {
       id: 1,
       lastFourDigits: '1111',
-      brand: 'Visa',
-      holderName: 'João',
+      brand: 'visa',
+      holderName: 'Joao',
       expiryMonth: 12,
       expiryYear: 2028,
       isDefault: false,
@@ -49,14 +49,23 @@ describe('AddCardUseCase', () => {
 
     expect(result).toEqual(created);
     expect(cardRepository.createDefaultCard).not.toHaveBeenCalled();
-    expect(cardRepository.createCard).toHaveBeenCalledWith({ ...dto, clientId: 1 });
+    expect(cardRepository.createCard).toHaveBeenCalledWith({
+      lastFourDigits: '1111',
+      brand: 'visa',
+      holderName: 'Joao',
+      expiryMonth: 12,
+      expiryYear: 2028,
+      gatewayToken: 'tok_abc',
+      isDefault: undefined,
+      clientId: 1,
+    });
   });
 
   it('should call createDefaultCard when isDefault is true', async () => {
     const dto = {
       lastFourDigits: '0004',
-      brand: 'Mastercard',
-      holderName: 'João',
+      brand: 'mastercard',
+      holderName: 'Joao',
       expiryMonth: 12,
       expiryYear: 2028,
       gatewayToken: 'tok_abc',
@@ -65,8 +74,8 @@ describe('AddCardUseCase', () => {
     const created = {
       id: 1,
       lastFourDigits: '0004',
-      brand: 'Mastercard',
-      holderName: 'João',
+      brand: 'mastercard',
+      holderName: 'Joao',
       expiryMonth: 12,
       expiryYear: 2028,
       isDefault: true,
@@ -78,6 +87,15 @@ describe('AddCardUseCase', () => {
 
     expect(result).toEqual(created);
     expect(cardRepository.createCard).not.toHaveBeenCalled();
-    expect(cardRepository.createDefaultCard).toHaveBeenCalledWith({ ...dto, clientId: 1 });
+    expect(cardRepository.createDefaultCard).toHaveBeenCalledWith({
+      lastFourDigits: '0004',
+      brand: 'mastercard',
+      holderName: 'Joao',
+      expiryMonth: 12,
+      expiryYear: 2028,
+      gatewayToken: 'tok_abc',
+      isDefault: true,
+      clientId: 1,
+    });
   });
 });

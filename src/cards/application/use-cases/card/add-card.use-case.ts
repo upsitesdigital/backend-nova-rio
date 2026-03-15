@@ -11,7 +11,16 @@ export class AddCardUseCase {
   constructor(@Inject(CARD_REPOSITORY) private cardRepository: ICardRepository) {}
 
   async addCard(clientId: number, dto: AddCardDto): Promise<CardResponse> {
-    const data = { ...dto, clientId };
+    const data = {
+      lastFourDigits: dto.lastFourDigits,
+      brand: dto.brand,
+      holderName: dto.holderName,
+      expiryMonth: dto.expiryMonth,
+      expiryYear: dto.expiryYear,
+      gatewayToken: dto.gatewayToken,
+      isDefault: dto.isDefault,
+      clientId,
+    };
 
     if (dto.isDefault) {
       return this.cardRepository.createDefaultCard(data);

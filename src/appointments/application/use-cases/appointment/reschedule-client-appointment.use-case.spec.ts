@@ -86,19 +86,19 @@ describe('RescheduleClientAppointmentUseCase', () => {
 
   it('should reschedule, validate 1h rule, and send email', async () => {
     appointmentRepository.findAppointmentByIdAndClientId.mockResolvedValue(existingAppointment);
-    appointmentRepository.rescheduleAppointment.mockResolvedValue({ id: 2 });
+    appointmentRepository.rescheduleAppointment.mockResolvedValue({ id: 1 });
 
     const result = await useCase.rescheduleAppointmentByIdAndClientId(1, 1, {
       date: '2026-03-20',
       startTime: '10:00',
     });
 
-    expect(result).toEqual({ id: 2 });
+    expect(result).toEqual({ id: 1 });
     expect(schedulingValidator.validateCancellationAdvance).toHaveBeenCalled();
     expect(schedulingValidator.validateSchedulingDate).toHaveBeenCalled();
     expect(appointmentRepository.rescheduleAppointment).toHaveBeenCalledWith(
       1,
-      expect.objectContaining({ clientId: 1 }),
+      { date: expect.any(Date) as Date, startTime: '10:00' },
       undefined,
       expect.objectContaining({ clientId: 1, excludeId: 1 }),
     );

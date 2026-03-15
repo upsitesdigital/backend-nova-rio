@@ -1,7 +1,7 @@
 import { randomInt } from 'node:crypto';
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { CLIENT_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
-import type { IClientRepository } from '../../../../auth/domain/interfaces/client.repository.interface.js';
+import { CLIENT_VERIFICATION_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
+import type { IClientVerificationRepository } from '../../../../auth/domain/interfaces/client.repository.interface.js';
 import { HASH_SERVICE } from '../../../../auth/domain/interfaces/hash.service.interface.js';
 import type { IHashService } from '../../../../auth/domain/interfaces/hash.service.interface.js';
 import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
@@ -11,7 +11,7 @@ import type { RequestEmailChangeDto } from '../../../dto/profile/request-email-c
 @Injectable()
 export class RequestEmailChangeUseCase {
   constructor(
-    @Inject(CLIENT_REPOSITORY) private clientRepository: IClientRepository,
+    @Inject(CLIENT_VERIFICATION_REPOSITORY) private clientRepository: IClientVerificationRepository,
     @Inject(HASH_SERVICE) private hashService: IHashService,
     @Inject(EMAIL_SERVICE) private emailService: IEmailService,
   ) {}

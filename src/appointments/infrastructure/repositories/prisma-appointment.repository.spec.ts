@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
+import { AppointmentConflictValidator } from '../../application/validators/appointment-conflict.validator.js';
 import { PrismaAppointmentRepository } from './prisma-appointment.repository.js';
 
 describe('PrismaAppointmentRepository', () => {
@@ -29,7 +30,6 @@ describe('PrismaAppointmentRepository', () => {
     locationZip: null,
     locationAddress: null,
     notes: null,
-    rescheduledFromId: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     client: { id: 1, name: 'João', email: 'joao@test.com' },
@@ -54,7 +54,11 @@ describe('PrismaAppointmentRepository', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [PrismaAppointmentRepository, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        PrismaAppointmentRepository,
+        { provide: PrismaService, useValue: prisma },
+        { provide: AppointmentConflictValidator, useValue: { assertNoTimeConflict: vi.fn() } },
+      ],
     }).compile();
 
     repository = module.get<PrismaAppointmentRepository>(PrismaAppointmentRepository);
@@ -169,23 +173,24 @@ describe('PrismaAppointmentRepository', () => {
     );
   });
 
-  it('rescheduleAppointment should cancel original and create new', async () => {
+  it('rescheduleAppointment should update existing appointment in place', async () => {
     prisma.$transaction.mockImplementation(async (fn: (tx: typeof prisma) => Promise<unknown>) => {
       return fn(prisma);
     });
-    prisma.appointment.update.mockResolvedValue({});
-    prisma.appointment.create.mockResolvedValue(mockAppointment);
+    prisma.appointment.update.mockResolvedValue(mockAppointment);
 
     const result = await repository.rescheduleAppointment(1, {
       date: new Date('2026-03-20'),
       startTime: '10:00',
-      duration: 120,
-      clientId: 1,
-      serviceId: 1,
     });
 
     expect(result).toEqual(mockAppointment);
-    expect(prisma.appointment.update).toHaveBeenCalled();
-    expect(prisma.appointment.create).toHaveBeenCalled();
+    expect(prisma.appointment.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 1 },
+        data: { date: expect.any(Date) as Date, startTime: '10:00' },
+      }),
+    );
+    expect(prisma.appointment.create).not.toHaveBeenCalled();
   });
 });

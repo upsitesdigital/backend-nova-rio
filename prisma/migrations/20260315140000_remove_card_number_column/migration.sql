@@ -1,0 +1,2 @@
+-- This migration was squashed (cardNumber add+remove combined)
+-- No-op: column was never persisted

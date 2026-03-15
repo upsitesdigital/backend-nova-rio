@@ -1,7 +1,7 @@
 import { randomInt } from 'node:crypto';
-import { Inject, Injectable } from '@nestjs/common';
-import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
-import type { IClientRepository } from '../../../domain/interfaces/client.repository.interface.js';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { CLIENT_VERIFICATION_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
+import type { IClientVerificationRepository } from '../../../domain/interfaces/client.repository.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import type { IHashService } from '../../../domain/interfaces/hash.service.interface.js';
 import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
@@ -10,8 +10,10 @@ import { ForgotPasswordDto } from '../../../dto/forgot-password.dto.js';
 
 @Injectable()
 export class ForgotPasswordUseCase {
+  private readonly logger = new Logger(ForgotPasswordUseCase.name);
+
   constructor(
-    @Inject(CLIENT_REPOSITORY) private clientRepository: IClientRepository,
+    @Inject(CLIENT_VERIFICATION_REPOSITORY) private clientRepository: IClientVerificationRepository,
     @Inject(HASH_SERVICE) private hashService: IHashService,
     @Inject(EMAIL_SERVICE) private emailService: IEmailService,
   ) {}
@@ -37,7 +39,9 @@ export class ForgotPasswordUseCase {
       expiresAt,
     );
 
-    void this.emailService.sendPasswordResetCode(dto.email, client.name, code);
+    this.emailService
+      .sendPasswordResetCode(dto.email, client.name, code)
+      .catch((err) => this.logger.error('Failed to send password reset code', err));
 
     return { message: 'If the email exists, a verification code was sent' };
   }

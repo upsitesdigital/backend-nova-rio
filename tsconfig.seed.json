@@ -3,5 +3,5 @@
   "compilerOptions": {
     "outDir": "./dist/prisma"
   },
-  "include": ["prisma/seed.ts"]
+  "include": ["prisma/seed.ts", "prisma/seed-payments.ts"]
 }

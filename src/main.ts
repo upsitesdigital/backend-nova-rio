@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
@@ -5,6 +6,13 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import compression from 'compression';
 import helmet from 'helmet';
 import { AppModule } from './app.module.js';
+
+function safeCompare(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a, 'utf8');
+  const bBuf = Buffer.from(b, 'utf8');
+  if (aBuf.length !== bBuf.length) return false;
+  return timingSafeEqual(aBuf, bBuf);
+}
 
 const REQUIRED_SECRETS = [
   'DATABASE_URL',
@@ -62,7 +70,12 @@ async function bootstrap() {
         }
         const decoded = Buffer.from(auth.slice(6), 'base64').toString();
         const [user, pass] = decoded.split(':');
-        if (user !== swaggerUser || pass !== swaggerPassword) {
+        if (
+          !user ||
+          !pass ||
+          !safeCompare(user, swaggerUser) ||
+          !safeCompare(pass, swaggerPassword)
+        ) {
           res.setHeader('WWW-Authenticate', 'Basic realm="Swagger"');
           res.status(401).end();
           return;
