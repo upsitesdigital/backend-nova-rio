@@ -26,8 +26,9 @@ describe('AddCardUseCase', () => {
 
   it('should call createCard when isDefault is not set', async () => {
     const dto = {
-      cardNumber: '4111111111111111',
-      holderName: 'João',
+      lastFourDigits: '1111',
+      brand: 'visa',
+      holderName: 'Joao',
       expiryMonth: 12,
       expiryYear: 2028,
       gatewayToken: 'tok_abc',
@@ -36,7 +37,7 @@ describe('AddCardUseCase', () => {
       id: 1,
       lastFourDigits: '1111',
       brand: 'visa',
-      holderName: 'João',
+      holderName: 'Joao',
       expiryMonth: 12,
       expiryYear: 2028,
       isDefault: false,
@@ -49,10 +50,9 @@ describe('AddCardUseCase', () => {
     expect(result).toEqual(created);
     expect(cardRepository.createDefaultCard).not.toHaveBeenCalled();
     expect(cardRepository.createCard).toHaveBeenCalledWith({
-      cardNumber: '4111111111111111',
       lastFourDigits: '1111',
       brand: 'visa',
-      holderName: 'João',
+      holderName: 'Joao',
       expiryMonth: 12,
       expiryYear: 2028,
       gatewayToken: 'tok_abc',
@@ -63,8 +63,9 @@ describe('AddCardUseCase', () => {
 
   it('should call createDefaultCard when isDefault is true', async () => {
     const dto = {
-      cardNumber: '5500000000000004',
-      holderName: 'João',
+      lastFourDigits: '0004',
+      brand: 'mastercard',
+      holderName: 'Joao',
       expiryMonth: 12,
       expiryYear: 2028,
       gatewayToken: 'tok_abc',
@@ -74,7 +75,7 @@ describe('AddCardUseCase', () => {
       id: 1,
       lastFourDigits: '0004',
       brand: 'mastercard',
-      holderName: 'João',
+      holderName: 'Joao',
       expiryMonth: 12,
       expiryYear: 2028,
       isDefault: true,
@@ -87,10 +88,9 @@ describe('AddCardUseCase', () => {
     expect(result).toEqual(created);
     expect(cardRepository.createCard).not.toHaveBeenCalled();
     expect(cardRepository.createDefaultCard).toHaveBeenCalledWith({
-      cardNumber: '5500000000000004',
       lastFourDigits: '0004',
       brand: 'mastercard',
-      holderName: 'João',
+      holderName: 'Joao',
       expiryMonth: 12,
       expiryYear: 2028,
       gatewayToken: 'tok_abc',

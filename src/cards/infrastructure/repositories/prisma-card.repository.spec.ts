@@ -53,7 +53,6 @@ describe('PrismaCardRepository', () => {
 
   it('createCard should call prisma.card.create with data and select', async () => {
     const data = {
-      cardNumber: '4242424242424242',
       lastFourDigits: '4242',
       brand: 'visa',
       holderName: 'João Silva',
@@ -85,7 +84,6 @@ describe('PrismaCardRepository', () => {
 
   it('createDefaultCard should unset defaults and create in transaction', async () => {
     const data = {
-      cardNumber: '4242424242424242',
       lastFourDigits: '4242',
       brand: 'visa',
       holderName: 'João Silva',

@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import creditCardType from 'credit-card-type';
 import { CARD_REPOSITORY } from '../../../domain/interfaces/card.repository.interface.js';
 import type {
   CardResponse,
@@ -12,16 +11,9 @@ export class AddCardUseCase {
   constructor(@Inject(CARD_REPOSITORY) private cardRepository: ICardRepository) {}
 
   async addCard(clientId: number, dto: AddCardDto): Promise<CardResponse> {
-    const digits = dto.cardNumber.replace(/\D/g, '');
-    const lastFourDigits = digits.slice(-4);
-
-    const detected = creditCardType(digits);
-    const brand = detected.length > 0 ? detected[0].type : 'other';
-
     const data = {
-      cardNumber: digits,
-      lastFourDigits,
-      brand,
+      lastFourDigits: dto.lastFourDigits,
+      brand: dto.brand,
       holderName: dto.holderName,
       expiryMonth: dto.expiryMonth,
       expiryYear: dto.expiryYear,
