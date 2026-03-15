@@ -13,16 +13,14 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import type { AuthUser } from '../shared/types/auth-user.type.js';
-import { AdminLoginUseCase } from './application/use-cases/admin/admin-login.use-case.js';
-import { ClientLoginUseCase } from './application/use-cases/client/client-login.use-case.js';
+import { LoginUseCase } from './application/use-cases/auth/login.use-case.js';
 import { ClientRegisterUseCase } from './application/use-cases/client/client-register.use-case.js';
 import { ForgotPasswordUseCase } from './application/use-cases/client/forgot-password.use-case.js';
 import { ResetPasswordUseCase } from './application/use-cases/client/reset-password.use-case.js';
 import { GetProfileUseCase } from './application/use-cases/auth/get-profile.use-case.js';
 import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.use-case.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
-import { AdminLoginDto } from './dto/admin-login.dto.js';
-import { ClientLoginDto } from './dto/client-login.dto.js';
+import { LoginDto } from './dto/login.dto.js';
 import { ClientRegisterDto } from './dto/client-register.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
@@ -34,8 +32,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 export class AuthController {
   constructor(
     private readonly clientRegisterUseCase: ClientRegisterUseCase,
-    private readonly clientLoginUseCase: ClientLoginUseCase,
-    private readonly adminLoginUseCase: AdminLoginUseCase,
+    private readonly loginUseCase: LoginUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
     private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
@@ -52,25 +49,15 @@ export class AuthController {
     return this.clientRegisterUseCase.registerClient(dto);
   }
 
-  @Post('client/login')
+  @Post('login')
   @Throttle({ default: { ttl: 60_000, limit: 10 } })
-  @ApiOperation({ summary: 'Client login' })
-  @ApiCreatedResponse({ description: 'Login successful, returns token pair' })
+  @ApiOperation({ summary: 'Login (client or admin)' })
+  @ApiCreatedResponse({ description: 'Login successful, returns token pair + userType' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
-  clientLogin(@Body() dto: ClientLoginDto) {
-    return this.clientLoginUseCase.loginClient(dto);
-  }
-
-  @Post('admin/login')
-  @Throttle({ default: { ttl: 60_000, limit: 10 } })
-  @ApiOperation({ summary: 'Admin login' })
-  @ApiCreatedResponse({ description: 'Login successful, returns token pair' })
-  @ApiBadRequestResponse({ description: 'Validation failed' })
-  @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
-  @ApiForbiddenResponse({ description: 'Account is not active' })
-  adminLogin(@Body() dto: AdminLoginDto) {
-    return this.adminLoginUseCase.loginAdmin(dto);
+  @ApiForbiddenResponse({ description: 'Account locked, pending, or inactive' })
+  login(@Body() dto: LoginDto) {
+    return this.loginUseCase.login(dto);
   }
 
   @Post('refresh')

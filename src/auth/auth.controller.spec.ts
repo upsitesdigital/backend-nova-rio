@@ -2,8 +2,7 @@ import { type Mock, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import type { AuthUser } from '../shared/types/auth-user.type.js';
 import { AuthController } from './auth.controller.js';
-import { AdminLoginUseCase } from './application/use-cases/admin/admin-login.use-case.js';
-import { ClientLoginUseCase } from './application/use-cases/client/client-login.use-case.js';
+import { LoginUseCase } from './application/use-cases/auth/login.use-case.js';
 import { ClientRegisterUseCase } from './application/use-cases/client/client-register.use-case.js';
 import { ForgotPasswordUseCase } from './application/use-cases/client/forgot-password.use-case.js';
 import { ResetPasswordUseCase } from './application/use-cases/client/reset-password.use-case.js';
@@ -13,8 +12,7 @@ import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.
 describe('AuthController', () => {
   let controller: AuthController;
   let clientRegisterUseCase: { registerClient: Mock };
-  let clientLoginUseCase: { loginClient: Mock };
-  let adminLoginUseCase: { loginAdmin: Mock };
+  let loginUseCase: { login: Mock };
   let refreshTokenUseCase: { refreshTokens: Mock };
   let forgotPasswordUseCase: { requestPasswordReset: Mock };
   let resetPasswordUseCase: { resetPassword: Mock };
@@ -22,8 +20,7 @@ describe('AuthController', () => {
 
   beforeEach(async () => {
     clientRegisterUseCase = { registerClient: vi.fn() };
-    clientLoginUseCase = { loginClient: vi.fn() };
-    adminLoginUseCase = { loginAdmin: vi.fn() };
+    loginUseCase = { login: vi.fn() };
     refreshTokenUseCase = { refreshTokens: vi.fn() };
     forgotPasswordUseCase = { requestPasswordReset: vi.fn() };
     resetPasswordUseCase = { resetPassword: vi.fn() };
@@ -33,8 +30,7 @@ describe('AuthController', () => {
       controllers: [AuthController],
       providers: [
         { provide: ClientRegisterUseCase, useValue: clientRegisterUseCase },
-        { provide: ClientLoginUseCase, useValue: clientLoginUseCase },
-        { provide: AdminLoginUseCase, useValue: adminLoginUseCase },
+        { provide: LoginUseCase, useValue: loginUseCase },
         { provide: RefreshTokenUseCase, useValue: refreshTokenUseCase },
         { provide: ForgotPasswordUseCase, useValue: forgotPasswordUseCase },
         { provide: ResetPasswordUseCase, useValue: resetPasswordUseCase },
@@ -55,16 +51,10 @@ describe('AuthController', () => {
     expect(clientRegisterUseCase.registerClient).toHaveBeenCalledWith(dto);
   });
 
-  it('clientLogin should call clientLoginUseCase', async () => {
+  it('login should call loginUseCase', async () => {
     const dto = { email: 'test@test.com', password: 'pass' };
-    await controller.clientLogin(dto);
-    expect(clientLoginUseCase.loginClient).toHaveBeenCalledWith(dto);
-  });
-
-  it('adminLogin should call adminLoginUseCase', async () => {
-    const dto = { email: 'admin@test.com', password: 'pass' };
-    await controller.adminLogin(dto);
-    expect(adminLoginUseCase.loginAdmin).toHaveBeenCalledWith(dto);
+    await controller.login(dto);
+    expect(loginUseCase.login).toHaveBeenCalledWith(dto);
   });
 
   it('refreshToken should call refreshTokenUseCase', async () => {
