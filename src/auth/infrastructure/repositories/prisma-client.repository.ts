@@ -209,6 +209,36 @@ export class PrismaClientRepository implements IClientRepository {
     });
   }
 
+  async getResetAttempts(
+    clientId: number,
+  ): Promise<{ failedResetAttempts: number; resetLockedUntil: Date | null }> {
+    const result = await this.prisma.client.findUnique({
+      where: { id: clientId },
+      select: { failedResetAttempts: true, resetLockedUntil: true },
+    });
+    return {
+      failedResetAttempts: result?.failedResetAttempts ?? 0,
+      resetLockedUntil: result?.resetLockedUntil ?? null,
+    };
+  }
+
+  async incrementResetAttempts(clientId: number, lockUntil: Date | null): Promise<void> {
+    await this.prisma.client.update({
+      where: { id: clientId },
+      data: {
+        failedResetAttempts: { increment: 1 },
+        ...(lockUntil ? { resetLockedUntil: lockUntil } : {}),
+      },
+    });
+  }
+
+  async clearResetAttempts(clientId: number): Promise<void> {
+    await this.prisma.client.update({
+      where: { id: clientId },
+      data: { failedResetAttempts: 0, resetLockedUntil: null },
+    });
+  }
+
   async deactivateClient(id: number): Promise<void> {
     await this.prisma.client.update({
       where: { id },

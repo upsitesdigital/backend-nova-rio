@@ -107,6 +107,8 @@ model Client {
   refreshToken        String?
   failedLoginAttempts Int       @default(0)
   lockedUntil         DateTime?
+  failedResetAttempts Int       @default(0)
+  resetLockedUntil    DateTime?
   tokenFamily         String?
   status              UserStatus @default(PENDING)
   createdAt           DateTime   @default(now())
@@ -287,11 +289,6 @@ model Appointment {
   unitId Int?
 
   payment Payment?
-
-  // Para reagendamentos — referência ao agendamento original
-  rescheduledFrom   Appointment? @relation("Reschedule", fields: [rescheduledFromId], references: [id])
-  rescheduledFromId Int?         @unique
-  rescheduledTo     Appointment? @relation("Reschedule")
 
   @@index([date])
   @@index([status])

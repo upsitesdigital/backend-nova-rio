@@ -90,6 +90,11 @@ export interface IClientVerificationRepository {
     hashedPassword: string,
     matchedCodeId: number,
   ): Promise<void>;
+  getResetAttempts(
+    clientId: number,
+  ): Promise<{ failedResetAttempts: number; resetLockedUntil: Date | null }>;
+  incrementResetAttempts(clientId: number, lockUntil: Date | null): Promise<void>;
+  clearResetAttempts(clientId: number): Promise<void>;
 }
 
 /** Profile and account management methods */

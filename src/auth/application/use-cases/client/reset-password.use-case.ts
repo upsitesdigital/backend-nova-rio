@@ -10,16 +10,9 @@ import { ResetPasswordDto } from '../../../dto/reset-password.dto.js';
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_WINDOW_MS = 15 * 60 * 1000;
 
-interface AttemptRecord {
-  count: number;
-  firstAttemptAt: number;
-}
-
 @Injectable()
 export class ResetPasswordUseCase {
   private readonly logger = new Logger(ResetPasswordUseCase.name);
-  // TODO: Move to Redis/DB for persistence across restarts and horizontal scaling
-  private readonly failedAttempts = new Map<string, AttemptRecord>();
 
   constructor(
     @Inject(CLIENT_VERIFICATION_REPOSITORY) private clientRepository: IClientVerificationRepository,
@@ -28,14 +21,13 @@ export class ResetPasswordUseCase {
   ) {}
 
   async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
-    this.checkBruteForce(dto.email);
-
     const client = await this.clientRepository.findByEmail(dto.email);
 
     if (!client) {
-      this.recordFailedAttempt(dto.email);
       throw new BadRequestException('Invalid or expired code');
     }
+
+    await this.checkBruteForce(client.id);
 
     const activeCodes = await this.clientRepository.findActiveVerificationCodes(
       client.id,
@@ -43,7 +35,7 @@ export class ResetPasswordUseCase {
     );
 
     if (activeCodes.length === 0) {
-      this.recordFailedAttempt(dto.email);
+      await this.recordFailedAttempt(client.id);
       throw new BadRequestException('Invalid or expired code');
     }
 
@@ -58,17 +50,17 @@ export class ResetPasswordUseCase {
     }
 
     if (matchedCodeId === null) {
-      this.recordFailedAttempt(dto.email);
+      await this.recordFailedAttempt(client.id);
 
-      const attempt = this.failedAttempts.get(dto.email);
-      if (attempt && attempt.count >= MAX_FAILED_ATTEMPTS) {
+      const { failedResetAttempts } = await this.clientRepository.getResetAttempts(client.id);
+      if (failedResetAttempts >= MAX_FAILED_ATTEMPTS) {
         await this.clientRepository.deleteVerificationCodesByClientId(client.id, 'PASSWORD_CHANGE');
       }
 
       throw new BadRequestException('Invalid or expired code');
     }
 
-    this.failedAttempts.delete(dto.email);
+    await this.clientRepository.clearResetAttempts(client.id);
 
     const hashedPassword = await this.hashService.hash(dto.newPassword);
 
@@ -81,32 +73,30 @@ export class ResetPasswordUseCase {
     return { message: 'Password reset successfully' };
   }
 
-  private checkBruteForce(email: string): void {
-    const attempt = this.failedAttempts.get(email);
-    if (!attempt) return;
+  private async checkBruteForce(clientId: number): Promise<void> {
+    const { failedResetAttempts, resetLockedUntil } =
+      await this.clientRepository.getResetAttempts(clientId);
 
-    const elapsed = Date.now() - attempt.firstAttemptAt;
-    if (elapsed > LOCKOUT_WINDOW_MS) {
-      this.failedAttempts.delete(email);
+    if (resetLockedUntil && resetLockedUntil > new Date()) {
+      throw new BadRequestException('Too many failed attempts. Please request a new code.');
+    }
+
+    if (resetLockedUntil && resetLockedUntil <= new Date()) {
+      await this.clientRepository.clearResetAttempts(clientId);
       return;
     }
 
-    if (attempt.count >= MAX_FAILED_ATTEMPTS) {
+    if (failedResetAttempts >= MAX_FAILED_ATTEMPTS) {
       throw new BadRequestException('Too many failed attempts. Please request a new code.');
     }
   }
 
-  private recordFailedAttempt(email: string): void {
-    const existing = this.failedAttempts.get(email);
-    const now = Date.now();
+  private async recordFailedAttempt(clientId: number): Promise<void> {
+    const { failedResetAttempts } = await this.clientRepository.getResetAttempts(clientId);
+    const newCount = failedResetAttempts + 1;
+    const lockUntil =
+      newCount >= MAX_FAILED_ATTEMPTS ? new Date(Date.now() + LOCKOUT_WINDOW_MS) : null;
 
-    if (existing && now - existing.firstAttemptAt < LOCKOUT_WINDOW_MS) {
-      this.failedAttempts.set(email, {
-        count: existing.count + 1,
-        firstAttemptAt: existing.firstAttemptAt,
-      });
-    } else {
-      this.failedAttempts.set(email, { count: 1, firstAttemptAt: now });
-    }
+    await this.clientRepository.incrementResetAttempts(clientId, lockUntil);
   }
 }
