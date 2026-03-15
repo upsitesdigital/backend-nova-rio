@@ -1,7 +1,7 @@
 import { type Mock, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { CLIENT_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
+import { CLIENT_PROFILE_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
 import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import { DeleteClientAccountUseCase } from './delete-client-account.use-case.js';
 
@@ -22,7 +22,7 @@ describe('DeleteClientAccountUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteClientAccountUseCase,
-        { provide: CLIENT_REPOSITORY, useValue: clientRepository },
+        { provide: CLIENT_PROFILE_REPOSITORY, useValue: clientRepository },
         { provide: EMAIL_SERVICE, useValue: emailService },
       ],
     }).compile();
