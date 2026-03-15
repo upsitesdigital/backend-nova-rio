@@ -14,7 +14,6 @@ export interface AppointmentResponse {
   locationZip: string | null;
   locationAddress: string | null;
   notes: string | null;
-  rescheduledFromId: number | null;
   createdAt: Date;
   updatedAt: Date;
   client: { id: number; name: string; email: string };

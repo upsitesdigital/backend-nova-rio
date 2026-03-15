@@ -30,7 +30,6 @@ describe('PrismaAppointmentRepository', () => {
     locationZip: null,
     locationAddress: null,
     notes: null,
-    rescheduledFromId: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     client: { id: 1, name: 'João', email: 'joao@test.com' },
