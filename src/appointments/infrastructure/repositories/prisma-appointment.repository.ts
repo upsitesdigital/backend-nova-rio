@@ -1,5 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
+import { AppointmentConflictValidator } from '../../application/validators/appointment-conflict.validator.js';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import type {
   AppointmentResponse,
@@ -29,7 +30,10 @@ const APPOINTMENT_INCLUDE = {
 
 @Injectable()
 export class PrismaAppointmentRepository implements IAppointmentRepository {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private conflictValidator: AppointmentConflictValidator,
+  ) {}
 
   async createAppointment(
     data: CreateAppointmentData,
@@ -203,7 +207,11 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
       FOR UPDATE
     `;
 
-    this.assertNoTimeConflict(locked, params, 'Employee already has an appointment at this time');
+    this.conflictValidator.assertNoTimeConflict(
+      locked,
+      params,
+      'Employee already has an appointment at this time',
+    );
   }
 
   private async lockAndCheckClientConflict(
@@ -218,32 +226,11 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
       FOR UPDATE
     `;
 
-    this.assertNoTimeConflict(locked, params, 'Client already has an appointment at this time');
-  }
-
-  private assertNoTimeConflict(
-    locked: LockedAppointmentRow[],
-    params: { startTime: string; duration: number; excludeId?: number },
-    errorMessage: string,
-  ): void {
-    const filtered = params.excludeId
-      ? locked.filter((apt) => apt.id !== params.excludeId)
-      : locked;
-
-    const [reqHours, reqMinutes] = params.startTime.split(':').map(Number);
-    const reqStart = reqHours * 60 + reqMinutes;
-    const reqEnd = reqStart + params.duration;
-
-    const conflict = filtered.find((apt) => {
-      const [aptHours, aptMinutes] = apt.startTime.split(':').map(Number);
-      const aptStart = aptHours * 60 + aptMinutes;
-      const aptEnd = aptStart + apt.duration;
-      return reqStart < aptEnd && reqEnd > aptStart;
-    });
-
-    if (conflict) {
-      throw new BadRequestException(errorMessage);
-    }
+    this.conflictValidator.assertNoTimeConflict(
+      locked,
+      params,
+      'Client already has an appointment at this time',
+    );
   }
 
   private buildCreateInput(data: CreateAppointmentData): Prisma.AppointmentCreateInput {

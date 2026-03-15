@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
 import { HolidaysModule } from '../holidays/holidays.module.js';
+import { AppointmentConflictValidator } from './application/validators/appointment-conflict.validator.js';
 import { AppointmentSchedulingValidator } from './application/validators/appointment-scheduling.validator.js';
 import { CancelAppointmentUseCase } from './application/use-cases/appointment/cancel-appointment.use-case.js';
 import { CancelClientAppointmentUseCase } from './application/use-cases/appointment/cancel-client-appointment.use-case.js';
@@ -25,6 +26,7 @@ import { ClientAppointmentsController } from './client-appointments.controller.j
   controllers: [AdminAppointmentsController, ClientAppointmentsController],
   providers: [
     { provide: APPOINTMENT_REPOSITORY, useClass: PrismaAppointmentRepository },
+    AppointmentConflictValidator,
     AppointmentSchedulingValidator,
     CreateAppointmentUseCase,
     ListAppointmentsUseCase,

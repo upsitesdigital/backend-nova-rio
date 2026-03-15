@@ -1,7 +1,7 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
-  CLIENT_REPOSITORY,
-  type IClientRepository,
+  CLIENT_AUTH_REPOSITORY,
+  type IClientAuthRepository,
 } from '../../../../auth/domain/interfaces/client.repository.interface.js';
 import type { CreatePublicAppointmentDto } from '../../../dto/appointment/create-public-appointment.dto.js';
 import type { AppointmentResponse } from '../../../domain/interfaces/appointment.repository.interface.js';
@@ -10,7 +10,7 @@ import { CreateClientAppointmentUseCase } from './create-client-appointment.use-
 @Injectable()
 export class CreatePublicAppointmentUseCase {
   constructor(
-    @Inject(CLIENT_REPOSITORY) private clientRepository: IClientRepository,
+    @Inject(CLIENT_AUTH_REPOSITORY) private clientRepository: IClientAuthRepository,
     private createClientAppointmentUseCase: CreateClientAppointmentUseCase,
   ) {}
 
