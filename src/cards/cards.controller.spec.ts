@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
 import type { AuthUser } from '../shared/types/auth-user.type.js';
-import { CLIENT_REPOSITORY } from '../auth/domain/interfaces/client.repository.interface.js';
+import { CLIENT_AUTH_REPOSITORY } from '../auth/domain/interfaces/client.repository.interface.js';
 import { CardsController } from './cards.controller.js';
 import { AddCardUseCase } from './application/use-cases/card/add-card.use-case.js';
 import { ListCardsUseCase } from './application/use-cases/card/list-cards.use-case.js';
@@ -30,7 +30,7 @@ describe('CardsController', () => {
         { provide: ListCardsUseCase, useValue: listCardsUseCase },
         { provide: RemoveCardUseCase, useValue: removeCardUseCase },
         { provide: SetDefaultCardUseCase, useValue: setDefaultCardUseCase },
-        { provide: CLIENT_REPOSITORY, useValue: { findById: vi.fn() } },
+        { provide: CLIENT_AUTH_REPOSITORY, useValue: { findById: vi.fn() } },
       ],
     }).compile();
 

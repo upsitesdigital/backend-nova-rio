@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import type { Card } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import type {
   CardResponse,
@@ -45,8 +44,8 @@ export class PrismaCardRepository implements ICardRepository {
     return this.prisma.card.findMany({ where: { clientId }, select: CARD_RESPONSE_SELECT });
   }
 
-  async findCardByIdAndClientId(id: number, clientId: number): Promise<Card | null> {
-    return this.prisma.card.findFirst({ where: { id, clientId } });
+  async findCardByIdAndClientId(id: number, clientId: number): Promise<CardResponse | null> {
+    return this.prisma.card.findFirst({ where: { id, clientId }, select: CARD_RESPONSE_SELECT });
   }
 
   async deleteCardById(id: number): Promise<void> {
