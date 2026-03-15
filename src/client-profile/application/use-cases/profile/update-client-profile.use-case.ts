@@ -1,6 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { CLIENT_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
-import type { IClientRepository } from '../../../../auth/domain/interfaces/client.repository.interface.js';
+import { CLIENT_PROFILE_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
+import type { IClientProfileRepository as IClientAuthProfileRepository } from '../../../../auth/domain/interfaces/client.repository.interface.js';
 import { PROFILE_REPOSITORY } from '../../../domain/interfaces/client-profile.repository.interface.js';
 import type { IClientProfileRepository } from '../../../domain/interfaces/client-profile.repository.interface.js';
 import type { UpdateProfileDto } from '../../../dto/profile/update-profile.dto.js';
@@ -8,7 +8,7 @@ import type { UpdateProfileDto } from '../../../dto/profile/update-profile.dto.j
 @Injectable()
 export class UpdateClientProfileUseCase {
   constructor(
-    @Inject(CLIENT_REPOSITORY) private clientRepository: IClientRepository,
+    @Inject(CLIENT_PROFILE_REPOSITORY) private clientRepository: IClientAuthProfileRepository,
     @Inject(PROFILE_REPOSITORY) private profileRepository: IClientProfileRepository,
   ) {}
 

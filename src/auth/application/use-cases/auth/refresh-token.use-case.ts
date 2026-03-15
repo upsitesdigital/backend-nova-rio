@@ -1,8 +1,12 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { ADMIN_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
-import type { IAdminRepository } from '../../../domain/interfaces/admin.repository.interface.js';
-import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
-import type { IClientRepository } from '../../../domain/interfaces/client.repository.interface.js';
+import {
+  ADMIN_AUTH_REPOSITORY,
+  type IAdminAuthRepository,
+} from '../../../domain/interfaces/admin.repository.interface.js';
+import {
+  CLIENT_AUTH_REPOSITORY,
+  type IClientAuthRepository,
+} from '../../../domain/interfaces/client.repository.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import type { IHashService } from '../../../domain/interfaces/hash.service.interface.js';
 import { TOKEN_SERVICE } from '../../../domain/interfaces/token.service.interface.js';
@@ -17,14 +21,14 @@ export class RefreshTokenUseCase {
   constructor(
     @Inject(TOKEN_SERVICE) private tokenService: ITokenService,
     @Inject(HASH_SERVICE) private hashService: IHashService,
-    @Inject(CLIENT_REPOSITORY) private clientRepository: IClientRepository,
-    @Inject(ADMIN_REPOSITORY) private adminRepository: IAdminRepository,
+    @Inject(CLIENT_AUTH_REPOSITORY) private clientAuthRepository: IClientAuthRepository,
+    @Inject(ADMIN_AUTH_REPOSITORY) private adminAuthRepository: IAdminAuthRepository,
   ) {}
 
   async refreshTokens(dto: RefreshTokenDto): Promise<TokenPair> {
     const payload = await this.tokenService.verifyRefreshToken(dto.refreshToken);
 
-    const repo = payload.type === 'client' ? this.clientRepository : this.adminRepository;
+    const repo = payload.type === 'client' ? this.clientAuthRepository : this.adminAuthRepository;
 
     const { refreshToken: storedHash, tokenFamily } = await repo.getRefreshTokenAndFamily(
       payload.sub,

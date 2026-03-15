@@ -14,7 +14,6 @@ export interface AppointmentResponse {
   locationZip: string | null;
   locationAddress: string | null;
   notes: string | null;
-  rescheduledFromId: number | null;
   createdAt: Date;
   updatedAt: Date;
   client: { id: number; name: string; email: string };
@@ -104,8 +103,8 @@ export interface IAppointmentRepository {
   cancelAppointmentById(id: number): Promise<void>;
   completeAppointmentById(id: number): Promise<AppointmentResponse>;
   rescheduleAppointment(
-    originalId: number,
-    data: CreateAppointmentData,
+    id: number,
+    data: UpdateAppointmentData,
     conflictCheck?: ConflictCheckParams,
     clientConflictCheck?: ClientConflictCheckParams,
   ): Promise<AppointmentResponse>;

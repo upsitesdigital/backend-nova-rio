@@ -1,0 +1,2 @@
+-- This migration was squashed (cardNumber was added then removed in the next migration)
+-- No-op: column no longer exists in schema

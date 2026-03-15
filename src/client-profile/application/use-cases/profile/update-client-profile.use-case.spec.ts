@@ -1,7 +1,7 @@
 import { type Mock, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
-import { CLIENT_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
+import { CLIENT_PROFILE_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
 import { PROFILE_REPOSITORY } from '../../../domain/interfaces/client-profile.repository.interface.js';
 import { UpdateClientProfileUseCase } from './update-client-profile.use-case.js';
 
@@ -17,7 +17,7 @@ describe('UpdateClientProfileUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateClientProfileUseCase,
-        { provide: CLIENT_REPOSITORY, useValue: clientRepository },
+        { provide: CLIENT_PROFILE_REPOSITORY, useValue: clientRepository },
         { provide: PROFILE_REPOSITORY, useValue: profileRepository },
       ],
     }).compile();

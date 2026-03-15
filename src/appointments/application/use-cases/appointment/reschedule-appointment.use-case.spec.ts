@@ -74,18 +74,18 @@ describe('RescheduleAppointmentUseCase', () => {
 
   it('should reschedule with conflictCheck and send email', async () => {
     appointmentRepository.findAppointmentById.mockResolvedValue(existingAppointment);
-    appointmentRepository.rescheduleAppointment.mockResolvedValue({ id: 2 });
+    appointmentRepository.rescheduleAppointment.mockResolvedValue({ id: 1 });
 
     const result = await useCase.rescheduleAppointmentById(1, {
       date: '2026-03-20',
       startTime: '10:00',
     });
 
-    expect(result).toEqual({ id: 2 });
+    expect(result).toEqual({ id: 1 });
     expect(schedulingValidator.validateSchedulingDate).toHaveBeenCalled();
     expect(appointmentRepository.rescheduleAppointment).toHaveBeenCalledWith(
       1,
-      expect.objectContaining({ clientId: 1 }),
+      { date: expect.any(Date) as Date, startTime: '10:00' },
       expect.objectContaining({ employeeId: 1, startTime: '10:00', excludeId: 1 }),
       expect.objectContaining({ clientId: 1, excludeId: 1 }),
     );

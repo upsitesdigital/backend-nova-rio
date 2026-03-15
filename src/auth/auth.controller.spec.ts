@@ -6,6 +6,7 @@ import { AdminLoginUseCase } from './application/use-cases/admin/admin-login.use
 import { ClientLoginUseCase } from './application/use-cases/client/client-login.use-case.js';
 import { ClientRegisterUseCase } from './application/use-cases/client/client-register.use-case.js';
 import { ForgotPasswordUseCase } from './application/use-cases/client/forgot-password.use-case.js';
+import { ResetPasswordUseCase } from './application/use-cases/client/reset-password.use-case.js';
 import { GetProfileUseCase } from './application/use-cases/auth/get-profile.use-case.js';
 import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.use-case.js';
 
@@ -16,6 +17,7 @@ describe('AuthController', () => {
   let adminLoginUseCase: { loginAdmin: Mock };
   let refreshTokenUseCase: { refreshTokens: Mock };
   let forgotPasswordUseCase: { requestPasswordReset: Mock };
+  let resetPasswordUseCase: { resetPassword: Mock };
   let getProfileUseCase: { getProfile: Mock };
 
   beforeEach(async () => {
@@ -24,6 +26,7 @@ describe('AuthController', () => {
     adminLoginUseCase = { loginAdmin: vi.fn() };
     refreshTokenUseCase = { refreshTokens: vi.fn() };
     forgotPasswordUseCase = { requestPasswordReset: vi.fn() };
+    resetPasswordUseCase = { resetPassword: vi.fn() };
     getProfileUseCase = { getProfile: vi.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -34,6 +37,7 @@ describe('AuthController', () => {
         { provide: AdminLoginUseCase, useValue: adminLoginUseCase },
         { provide: RefreshTokenUseCase, useValue: refreshTokenUseCase },
         { provide: ForgotPasswordUseCase, useValue: forgotPasswordUseCase },
+        { provide: ResetPasswordUseCase, useValue: resetPasswordUseCase },
         { provide: GetProfileUseCase, useValue: getProfileUseCase },
       ],
     }).compile();

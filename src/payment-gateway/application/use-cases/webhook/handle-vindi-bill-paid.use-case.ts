@@ -3,7 +3,8 @@ import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
 import { PAYMENT_REPOSITORY } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
 import type { IPaymentRepository } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
-import { GenerateReceiptUseCase } from '../../../../receipts/application/use-cases/receipt/generate-receipt.use-case.js';
+import { RECEIPT_GENERATION_SERVICE } from '../../../../receipts/domain/interfaces/receipt-generation.service.interface.js';
+import type { IReceiptGenerationService } from '../../../../receipts/domain/interfaces/receipt-generation.service.interface.js';
 
 @Injectable()
 export class HandleVindiBillPaidUseCase {
@@ -12,7 +13,7 @@ export class HandleVindiBillPaidUseCase {
   constructor(
     @Inject(PAYMENT_REPOSITORY) private paymentRepository: IPaymentRepository,
     @Inject(EMAIL_SERVICE) private emailService: IEmailService,
-    private generateReceiptUseCase: GenerateReceiptUseCase,
+    @Inject(RECEIPT_GENERATION_SERVICE) private receiptGenerationService: IReceiptGenerationService,
   ) {}
 
   async handleBillPaid(billId: number): Promise<void> {
@@ -38,9 +39,11 @@ export class HandleVindiBillPaidUseCase {
         approved.appointment.service.name,
         approved.appointment.date.toISOString().slice(0, 10),
       )
-      .catch(() => {});
+      .catch((err) => this.logger.error('Failed to send payment approved email', err));
 
-    this.generateReceiptUseCase.generateReceiptForPayment(payment.id).catch(() => {});
+    this.receiptGenerationService
+      .generateReceiptForPayment(payment.id)
+      .catch((err) => this.logger.error('Failed to generate receipt', err));
 
     this.logger.log(`Payment ${payment.id} approved via webhook (bill ${billId})`);
   }

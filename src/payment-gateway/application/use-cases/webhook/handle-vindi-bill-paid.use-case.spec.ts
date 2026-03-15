@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
 import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import { PAYMENT_REPOSITORY } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
-import { GenerateReceiptUseCase } from '../../../../receipts/application/use-cases/receipt/generate-receipt.use-case.js';
+import { RECEIPT_GENERATION_SERVICE } from '../../../../receipts/domain/interfaces/receipt-generation.service.interface.js';
 import { HandleVindiBillPaidUseCase } from './handle-vindi-bill-paid.use-case.js';
 
 describe('HandleVindiBillPaidUseCase', () => {
@@ -12,7 +12,7 @@ describe('HandleVindiBillPaidUseCase', () => {
     approvePaymentById: Mock;
   };
   let emailService: { sendPaymentApprovedEmail: Mock };
-  let generateReceiptUseCase: { generateReceiptForPayment: Mock };
+  let receiptGenerationService: { generateReceiptForPayment: Mock };
 
   const pendingPayment = {
     id: 1,
@@ -35,14 +35,14 @@ describe('HandleVindiBillPaidUseCase', () => {
       approvePaymentById: vi.fn(),
     };
     emailService = { sendPaymentApprovedEmail: vi.fn().mockResolvedValue(undefined) };
-    generateReceiptUseCase = { generateReceiptForPayment: vi.fn().mockResolvedValue(undefined) };
+    receiptGenerationService = { generateReceiptForPayment: vi.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         HandleVindiBillPaidUseCase,
         { provide: PAYMENT_REPOSITORY, useValue: paymentRepository },
         { provide: EMAIL_SERVICE, useValue: emailService },
-        { provide: GenerateReceiptUseCase, useValue: generateReceiptUseCase },
+        { provide: RECEIPT_GENERATION_SERVICE, useValue: receiptGenerationService },
       ],
     }).compile();
 

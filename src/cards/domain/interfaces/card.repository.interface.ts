@@ -22,7 +22,7 @@ export interface ICardRepository {
   createCard(data: CreateCardData): Promise<CardResponse>;
   createDefaultCard(data: CreateCardData): Promise<CardResponse>;
   findCardsByClientId(clientId: number): Promise<CardResponse[]>;
-  findCardByIdAndClientId(id: number, clientId: number): Promise<Card | null>;
+  findCardByIdAndClientId(id: number, clientId: number): Promise<CardResponse | null>;
   deleteCardById(id: number): Promise<void>;
   switchDefaultCardById(id: number, clientId: number): Promise<CardResponse>;
 }

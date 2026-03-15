@@ -3,9 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
 import { APPOINTMENT_REPOSITORY } from '../../../../appointments/domain/interfaces/appointment.repository.interface.js';
+import { CLIENT_PROFILE_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
 import { CARD_REPOSITORY } from '../../../../cards/domain/interfaces/card.repository.interface.js';
 import { PAYMENT_GATEWAY_SERVICE } from '../../../../payment-gateway/domain/interfaces/payment-gateway.service.interface.js';
-import { PrismaService } from '../../../../shared/prisma/prisma.service.js';
+import { PAYMENT_PRICING_SERVICE } from '../../../domain/services/payment-pricing.service.interface.js';
 import { PAYMENT_REPOSITORY } from '../../../domain/interfaces/payment.repository.interface.js';
 import { CreateClientPaymentUseCase } from './create-client-payment.use-case.js';
 
@@ -18,11 +19,8 @@ describe('CreateClientPaymentUseCase', () => {
     createGatewayCustomer: Mock;
     createGatewayBill: Mock;
   };
-  let prisma: {
-    service: { findUnique: Mock };
-    package: { findUnique: Mock };
-    client: { findUnique: Mock; update: Mock };
-  };
+  let pricingService: { calculatePricing: Mock };
+  let clientRepository: { findClientForPayment: Mock; updateVindiCustomerId: Mock };
 
   const scheduledAppointment = {
     id: 1,
@@ -91,13 +89,12 @@ describe('CreateClientPaymentUseCase', () => {
       createGatewayCustomer: vi.fn().mockResolvedValue({ id: 50 }),
       createGatewayBill: vi.fn().mockResolvedValue(vindiBill),
     };
-    prisma = {
-      service: { findUnique: vi.fn() },
-      package: { findUnique: vi.fn() },
-      client: {
-        findUnique: vi.fn().mockResolvedValue(clientRecord),
-        update: vi.fn().mockResolvedValue({ ...clientRecord, vindiCustomerId: 50 }),
-      },
+    pricingService = {
+      calculatePricing: vi.fn().mockResolvedValue({ subtotal: 200, discount: 0 }),
+    };
+    clientRepository = {
+      findClientForPayment: vi.fn().mockResolvedValue(clientRecord),
+      updateVindiCustomerId: vi.fn().mockResolvedValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -107,7 +104,8 @@ describe('CreateClientPaymentUseCase', () => {
         { provide: APPOINTMENT_REPOSITORY, useValue: appointmentRepository },
         { provide: CARD_REPOSITORY, useValue: cardRepository },
         { provide: PAYMENT_GATEWAY_SERVICE, useValue: paymentGatewayService },
-        { provide: PrismaService, useValue: prisma },
+        { provide: PAYMENT_PRICING_SERVICE, useValue: pricingService },
+        { provide: CLIENT_PROFILE_REPOSITORY, useValue: clientRepository },
         {
           provide: ConfigService,
           useValue: {
@@ -162,7 +160,6 @@ describe('CreateClientPaymentUseCase', () => {
 
   it('should create PIX payment via Vindi gateway', async () => {
     appointmentRepository.findAppointmentByIdAndClientId.mockResolvedValue(scheduledAppointment);
-    prisma.service.findUnique.mockResolvedValue({ basePrice: 200 });
     paymentRepository.createPayment.mockResolvedValue(createdPayment);
 
     const result = await useCase.createClientPayment(1, { appointmentId: 1, method: 'PIX' });
@@ -190,8 +187,10 @@ describe('CreateClientPaymentUseCase', () => {
 
   it('should reuse existing vindiCustomerId if client already has one', async () => {
     appointmentRepository.findAppointmentByIdAndClientId.mockResolvedValue(scheduledAppointment);
-    prisma.service.findUnique.mockResolvedValue({ basePrice: 200 });
-    prisma.client.findUnique.mockResolvedValue({ ...clientRecord, vindiCustomerId: 42 });
+    clientRepository.findClientForPayment.mockResolvedValue({
+      ...clientRecord,
+      vindiCustomerId: 42,
+    });
     paymentRepository.createPayment.mockResolvedValue(createdPayment);
 
     await useCase.createClientPayment(1, { appointmentId: 1, method: 'PIX' });
@@ -207,7 +206,7 @@ describe('CreateClientPaymentUseCase', () => {
       ...scheduledAppointment,
       recurrenceType: 'WEEKLY',
     });
-    prisma.service.findUnique.mockResolvedValue({ basePrice: 200 });
+    pricingService.calculatePricing.mockResolvedValue({ subtotal: 200, discount: 20 });
     paymentRepository.createPayment.mockResolvedValue(createdPayment);
 
     await useCase.createClientPayment(1, { appointmentId: 1, method: 'PIX' });
@@ -229,7 +228,7 @@ describe('CreateClientPaymentUseCase', () => {
       ...scheduledAppointment,
       recurrenceType: 'MONTHLY',
     });
-    prisma.service.findUnique.mockResolvedValue({ basePrice: 200 });
+    pricingService.calculatePricing.mockResolvedValue({ subtotal: 200, discount: 10 });
     paymentRepository.createPayment.mockResolvedValue(createdPayment);
 
     await useCase.createClientPayment(1, { appointmentId: 1, method: 'PIX' });
@@ -252,7 +251,7 @@ describe('CreateClientPaymentUseCase', () => {
       recurrenceType: 'PACKAGE',
       package: { id: 1, name: 'Pacote 10h' },
     });
-    prisma.package.findUnique.mockResolvedValue({ price: 500 });
+    pricingService.calculatePricing.mockResolvedValue({ subtotal: 500, discount: 0 });
     paymentRepository.createPayment.mockResolvedValue(createdPayment);
 
     await useCase.createClientPayment(1, { appointmentId: 1, method: 'PIX' });

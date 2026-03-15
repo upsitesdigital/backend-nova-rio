@@ -1,8 +1,8 @@
 import { type Mock, vi } from 'vitest';
 import { UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ADMIN_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
-import { CLIENT_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
+import { ADMIN_AUTH_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
+import { CLIENT_AUTH_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import { TOKEN_SERVICE } from '../../../domain/interfaces/token.service.interface.js';
 import { RefreshTokenUseCase } from './refresh-token.use-case.js';
@@ -47,8 +47,8 @@ describe('RefreshTokenUseCase', () => {
         RefreshTokenUseCase,
         { provide: TOKEN_SERVICE, useValue: tokenService },
         { provide: HASH_SERVICE, useValue: hashService },
-        { provide: CLIENT_REPOSITORY, useValue: clientRepository },
-        { provide: ADMIN_REPOSITORY, useValue: adminRepository },
+        { provide: CLIENT_AUTH_REPOSITORY, useValue: clientRepository },
+        { provide: ADMIN_AUTH_REPOSITORY, useValue: adminRepository },
       ],
     }).compile();
 

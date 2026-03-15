@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import type {
   ClientData,
+  ClientForPayment,
   ClientProfile,
   CreateClientData,
   IClientRepository,
@@ -21,6 +22,34 @@ export class PrismaClientRepository implements IClientRepository {
 
   async findById(id: number): Promise<ClientData | null> {
     return this.prisma.client.findUnique({ where: { id } });
+  }
+
+  async findStatusById(id: number): Promise<{ status: string } | null> {
+    return this.prisma.client.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+  }
+
+  async findClientForPayment(id: number): Promise<ClientForPayment | null> {
+    return this.prisma.client.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        cpfCnpj: true,
+        phone: true,
+        vindiCustomerId: true,
+      },
+    });
+  }
+
+  async updateVindiCustomerId(id: number, vindiCustomerId: number): Promise<void> {
+    await this.prisma.client.update({
+      where: { id },
+      data: { vindiCustomerId },
+    });
   }
 
   async findProfileById(id: number): Promise<ClientProfile | null> {
@@ -164,6 +193,57 @@ export class PrismaClientRepository implements IClientRepository {
     await this.prisma.client.update({
       where: { id },
       data: { password },
+    });
+  }
+
+  async completePasswordReset(clientId: number, hashedPassword: string): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      await tx.client.update({
+        where: { id: clientId },
+        data: { password: hashedPassword },
+      });
+      await tx.verificationCode.deleteMany({
+        where: { clientId, type: 'PASSWORD_CHANGE' },
+      });
+    });
+  }
+
+  async getResetAttempts(
+    clientId: number,
+  ): Promise<{ failedResetAttempts: number; resetLockedUntil: Date | null }> {
+    const result = await this.prisma.client.findUnique({
+      where: { id: clientId },
+      select: { failedResetAttempts: true, resetLockedUntil: true },
+    });
+    return {
+      failedResetAttempts: result?.failedResetAttempts ?? 0,
+      resetLockedUntil: result?.resetLockedUntil ?? null,
+    };
+  }
+
+  async incrementResetAttempts(
+    clientId: number,
+    maxAttempts: number,
+    lockoutWindowMs: number,
+  ): Promise<void> {
+    const updated = await this.prisma.client.update({
+      where: { id: clientId },
+      data: { failedResetAttempts: { increment: 1 } },
+      select: { failedResetAttempts: true },
+    });
+
+    if (updated.failedResetAttempts >= maxAttempts) {
+      await this.prisma.client.update({
+        where: { id: clientId },
+        data: { resetLockedUntil: new Date(Date.now() + lockoutWindowMs) },
+      });
+    }
+  }
+
+  async clearResetAttempts(clientId: number): Promise<void> {
+    await this.prisma.client.update({
+      where: { id: clientId },
+      data: { failedResetAttempts: 0, resetLockedUntil: null },
     });
   }
 

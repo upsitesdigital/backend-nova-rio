@@ -1,6 +1,8 @@
 import type { AdminUser } from '@prisma/client';
 
 export const ADMIN_REPOSITORY = Symbol('ADMIN_REPOSITORY');
+export const ADMIN_AUTH_REPOSITORY = Symbol('ADMIN_AUTH_REPOSITORY');
+export const ADMIN_PROFILE_REPOSITORY = Symbol('ADMIN_PROFILE_REPOSITORY');
 
 export type AdminData = Pick<
   AdminUser,
@@ -22,14 +24,14 @@ export type AdminProfile = Pick<
   'id' | 'name' | 'email' | 'role' | 'status' | 'createdAt'
 >;
 
-export interface IAdminRepository {
+/** Auth-focused methods: login flow, failed attempts, token management */
+export interface IAdminAuthRepository {
   findByEmail(email: string): Promise<AdminData | null>;
   findById(id: number): Promise<AdminData | null>;
-  findProfileById(id: number): Promise<AdminProfile | null>;
-  updateRefreshToken(id: number, refreshToken: string | null): Promise<void>;
-  getRefreshToken(id: number): Promise<string | null>;
   incrementFailedLoginAttempts(id: number): Promise<void>;
   resetFailedLoginAttempts(id: number): Promise<void>;
+  updateRefreshToken(id: number, refreshToken: string | null): Promise<void>;
+  getRefreshToken(id: number): Promise<string | null>;
   updateRefreshTokenWithFamily(
     id: number,
     refreshToken: string,
@@ -40,3 +42,12 @@ export interface IAdminRepository {
   ): Promise<{ refreshToken: string | null; tokenFamily: string | null }>;
   revokeTokenFamily(id: number): Promise<void>;
 }
+
+/** Profile lookup methods */
+export interface IAdminProfileRepository {
+  findById(id: number): Promise<AdminData | null>;
+  findProfileById(id: number): Promise<AdminProfile | null>;
+}
+
+/** Combined interface — retained for backwards compatibility with the single DI token */
+export interface IAdminRepository extends IAdminAuthRepository, IAdminProfileRepository {}

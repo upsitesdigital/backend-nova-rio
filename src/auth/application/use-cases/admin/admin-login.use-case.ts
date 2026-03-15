@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { ADMIN_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
-import type { IAdminRepository } from '../../../domain/interfaces/admin.repository.interface.js';
+import { ADMIN_AUTH_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
+import type { IAdminAuthRepository } from '../../../domain/interfaces/admin.repository.interface.js';
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import type { IHashService } from '../../../domain/interfaces/hash.service.interface.js';
 import { TOKEN_SERVICE } from '../../../domain/interfaces/token.service.interface.js';
@@ -14,7 +14,7 @@ import { AdminLoginDto } from '../../../dto/admin-login.dto.js';
 @Injectable()
 export class AdminLoginUseCase {
   constructor(
-    @Inject(ADMIN_REPOSITORY) private adminRepository: IAdminRepository,
+    @Inject(ADMIN_AUTH_REPOSITORY) private adminRepository: IAdminAuthRepository,
     @Inject(HASH_SERVICE) private hashService: IHashService,
     @Inject(TOKEN_SERVICE) private tokenService: ITokenService,
   ) {}

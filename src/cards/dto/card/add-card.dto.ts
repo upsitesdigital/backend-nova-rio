@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -13,22 +14,39 @@ import {
 import { IsValidExpiry } from '../../validators/is-valid-expiry.validator.js';
 
 export class AddCardDto {
-  @ApiProperty({ example: '1111' })
+  @ApiProperty({ example: '1111', description: 'Last four digits of the card' })
   @IsString()
   @IsNotEmpty()
   @Matches(/^\d{4}$/, { message: 'lastFourDigits must be exactly 4 digits' })
   lastFourDigits: string;
 
-  @ApiProperty({ example: 'Visa' })
+  @ApiProperty({
+    example: 'VISA',
+    description: 'Card brand',
+    enum: [
+      'VISA',
+      'MASTERCARD',
+      'ELO',
+      'AMEX',
+      'HIPERCARD',
+      'DINERS',
+      'DISCOVER',
+      'JCB',
+      'UNKNOWN',
+    ],
+  })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(50)
+  @IsIn(['VISA', 'MASTERCARD', 'ELO', 'AMEX', 'HIPERCARD', 'DINERS', 'DISCOVER', 'JCB', 'UNKNOWN'])
   brand: string;
 
-  @ApiProperty({ example: 'João Silva' })
+  @ApiProperty({ example: 'JOAO SILVA' })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(255)
+  @MaxLength(26)
+  @Matches(/^[A-Za-z\s\-'.]+$/, {
+    message: 'holderName must contain only letters, spaces, hyphens, apostrophes, or periods',
+  })
   holderName: string;
 
   @ApiProperty({ example: 12 })
@@ -45,6 +63,7 @@ export class AddCardDto {
   @ApiProperty({ example: 'tok_abc123' })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   gatewayToken: string;
 
   @ApiPropertyOptional({ example: false, default: false })

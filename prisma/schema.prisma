@@ -107,6 +107,8 @@ model Client {
   refreshToken        String?
   failedLoginAttempts Int       @default(0)
   lockedUntil         DateTime?
+  failedResetAttempts Int       @default(0)
+  resetLockedUntil    DateTime?
   tokenFamily         String?
   status              UserStatus @default(PENDING)
   createdAt           DateTime   @default(now())
@@ -134,11 +136,10 @@ model Card {
   id             Int      @id @default(autoincrement())
   uuid           String   @unique @default(uuid())
   lastFourDigits String
-  brand          String   // Visa, Mastercard, Elo
+  brand          String   // visa, mastercard, elo, amex, hipercard
   holderName     String
   expiryMonth    Int
   expiryYear     Int
-  // Token do gateway de pagamento (nunca armazenar dados completos)
   gatewayToken   String?
   isDefault      Boolean  @default(false)
   createdAt      DateTime @default(now())
@@ -288,11 +289,6 @@ model Appointment {
   unitId Int?
 
   payment Payment?
-
-  // Para reagendamentos — referência ao agendamento original
-  rescheduledFrom   Appointment? @relation("Reschedule", fields: [rescheduledFromId], references: [id])
-  rescheduledFromId Int?         @unique
-  rescheduledTo     Appointment? @relation("Reschedule")
 
   @@index([date])
   @@index([status])

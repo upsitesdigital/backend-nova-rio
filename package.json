@@ -23,7 +23,8 @@
     "lint-staged:run": "lint-staged",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "seed:payments": "ts-node --compiler-options {\"module\":\"commonjs\"} prisma/seed-payments.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.15",
@@ -46,6 +47,7 @@
     "class-validator": "^0.15.1",
     "class-validator-cpf": "^1.1.1",
     "compression": "^1.8.1",
+    "date-fns": "^4.1.0",
     "dotenv": "^17.3.1",
     "helmet": "^8.1.0",
     "passport": "^0.7.0",
@@ -92,8 +94,5 @@
     "typescript-eslint": "^8.56.1",
     "unplugin-swc": "^1.5.9",
     "vitest": "^4.0.18"
-  },
-  "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"commonjs\"} prisma/seed.ts"
   }
 }
