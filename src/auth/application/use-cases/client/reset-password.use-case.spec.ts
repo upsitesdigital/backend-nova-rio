@@ -75,7 +75,7 @@ describe('ResetPasswordUseCase', () => {
     const result = await useCase.resetPassword(validDto);
 
     expect(result).toEqual({ message: 'Password reset successfully' });
-    expect(clientRepository.completePasswordReset).toHaveBeenCalledWith(1, 'hashedPassword', 10);
+    expect(clientRepository.completePasswordReset).toHaveBeenCalledWith(1, 'hashedPassword');
     expect(clientRepository.clearResetAttempts).toHaveBeenCalledWith(1);
   });
 
@@ -91,7 +91,7 @@ describe('ResetPasswordUseCase', () => {
     clientRepository.findActiveVerificationCodes.mockResolvedValue([]);
 
     await expect(useCase.resetPassword(validDto)).rejects.toThrow(BadRequestException);
-    expect(clientRepository.incrementResetAttempts).toHaveBeenCalledWith(1, null);
+    expect(clientRepository.incrementResetAttempts).toHaveBeenCalledWith(1, 5, 900000);
   });
 
   it('should throw BadRequestException for wrong code', async () => {
@@ -116,9 +116,7 @@ describe('ResetPasswordUseCase', () => {
       resetLockedUntil: null,
     });
 
-    await expect(useCase.resetPassword(validDto)).rejects.toThrow(
-      'Too many failed attempts. Please request a new code.',
-    );
+    await expect(useCase.resetPassword(validDto)).rejects.toThrow('Invalid or expired code');
   });
 
   it('should delete codes when attempts reach threshold after increment', async () => {
@@ -129,9 +127,8 @@ describe('ResetPasswordUseCase', () => {
     hashService.compare.mockResolvedValue(false);
 
     clientRepository.getResetAttempts
-      .mockResolvedValueOnce({ failedResetAttempts: 4, resetLockedUntil: null })
-      .mockResolvedValueOnce({ failedResetAttempts: 4, resetLockedUntil: null })
-      .mockResolvedValueOnce({ failedResetAttempts: 5, resetLockedUntil: null });
+      .mockResolvedValueOnce({ failedResetAttempts: 4, resetLockedUntil: null }) // checkBruteForce
+      .mockResolvedValueOnce({ failedResetAttempts: 5, resetLockedUntil: null }); // after recordFailedAttempt
 
     await expect(useCase.resetPassword(validDto)).rejects.toThrow(BadRequestException);
 

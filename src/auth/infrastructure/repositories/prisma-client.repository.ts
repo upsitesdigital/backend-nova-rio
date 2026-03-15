@@ -196,19 +196,11 @@ export class PrismaClientRepository implements IClientRepository {
     });
   }
 
-  async completePasswordReset(
-    clientId: number,
-    hashedPassword: string,
-    matchedCodeId: number,
-  ): Promise<void> {
+  async completePasswordReset(clientId: number, hashedPassword: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       await tx.client.update({
         where: { id: clientId },
         data: { password: hashedPassword },
-      });
-      await tx.verificationCode.update({
-        where: { id: matchedCodeId },
-        data: { usedAt: new Date() },
       });
       await tx.verificationCode.deleteMany({
         where: { clientId, type: 'PASSWORD_CHANGE' },
@@ -229,14 +221,23 @@ export class PrismaClientRepository implements IClientRepository {
     };
   }
 
-  async incrementResetAttempts(clientId: number, lockUntil: Date | null): Promise<void> {
-    await this.prisma.client.update({
+  async incrementResetAttempts(
+    clientId: number,
+    maxAttempts: number,
+    lockoutWindowMs: number,
+  ): Promise<void> {
+    const updated = await this.prisma.client.update({
       where: { id: clientId },
-      data: {
-        failedResetAttempts: { increment: 1 },
-        ...(lockUntil ? { resetLockedUntil: lockUntil } : {}),
-      },
+      data: { failedResetAttempts: { increment: 1 } },
+      select: { failedResetAttempts: true },
     });
+
+    if (updated.failedResetAttempts >= maxAttempts) {
+      await this.prisma.client.update({
+        where: { id: clientId },
+        data: { resetLockedUntil: new Date(Date.now() + lockoutWindowMs) },
+      });
+    }
   }
 
   async clearResetAttempts(clientId: number): Promise<void> {

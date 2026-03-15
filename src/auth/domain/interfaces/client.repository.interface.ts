@@ -86,15 +86,15 @@ export interface IClientVerificationRepository {
   markVerificationCodeAsUsed(id: number): Promise<void>;
   updateEmail(id: number, email: string): Promise<void>;
   updatePassword(id: number, password: string): Promise<void>;
-  completePasswordReset(
-    clientId: number,
-    hashedPassword: string,
-    matchedCodeId: number,
-  ): Promise<void>;
+  completePasswordReset(clientId: number, hashedPassword: string): Promise<void>;
   getResetAttempts(
     clientId: number,
   ): Promise<{ failedResetAttempts: number; resetLockedUntil: Date | null }>;
-  incrementResetAttempts(clientId: number, lockUntil: Date | null): Promise<void>;
+  incrementResetAttempts(
+    clientId: number,
+    maxAttempts: number,
+    lockoutWindowMs: number,
+  ): Promise<void>;
   clearResetAttempts(clientId: number): Promise<void>;
 }
 

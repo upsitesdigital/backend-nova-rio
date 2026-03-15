@@ -64,7 +64,7 @@ export class ResetPasswordUseCase {
 
     const hashedPassword = await this.hashService.hash(dto.newPassword);
 
-    await this.clientRepository.completePasswordReset(client.id, hashedPassword, matchedCodeId);
+    await this.clientRepository.completePasswordReset(client.id, hashedPassword);
 
     this.emailService
       .sendPasswordChangedEmail(dto.email, client.name)
@@ -78,7 +78,7 @@ export class ResetPasswordUseCase {
       await this.clientRepository.getResetAttempts(clientId);
 
     if (resetLockedUntil && resetLockedUntil > new Date()) {
-      throw new BadRequestException('Too many failed attempts. Please request a new code.');
+      throw new BadRequestException('Invalid or expired code');
     }
 
     if (resetLockedUntil && resetLockedUntil <= new Date()) {
@@ -87,16 +87,15 @@ export class ResetPasswordUseCase {
     }
 
     if (failedResetAttempts >= MAX_FAILED_ATTEMPTS) {
-      throw new BadRequestException('Too many failed attempts. Please request a new code.');
+      throw new BadRequestException('Invalid or expired code');
     }
   }
 
   private async recordFailedAttempt(clientId: number): Promise<void> {
-    const { failedResetAttempts } = await this.clientRepository.getResetAttempts(clientId);
-    const newCount = failedResetAttempts + 1;
-    const lockUntil =
-      newCount >= MAX_FAILED_ATTEMPTS ? new Date(Date.now() + LOCKOUT_WINDOW_MS) : null;
-
-    await this.clientRepository.incrementResetAttempts(clientId, lockUntil);
+    await this.clientRepository.incrementResetAttempts(
+      clientId,
+      MAX_FAILED_ATTEMPTS,
+      LOCKOUT_WINDOW_MS,
+    );
   }
 }
