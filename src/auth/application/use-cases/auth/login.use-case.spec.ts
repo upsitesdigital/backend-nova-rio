@@ -192,6 +192,21 @@ describe('LoginUseCase', () => {
     });
   });
 
+  describe('expired lock', () => {
+    it('should allow login when lockedUntil is in the past', async () => {
+      const client = buildActiveClient({ lockedUntil: new Date(Date.now() - 60_000) });
+      clientRepository.findByEmail.mockResolvedValue(client);
+      adminRepository.findByEmail.mockResolvedValue(null);
+      hashService.compare.mockResolvedValue(true);
+      tokenService.generateTokens.mockResolvedValue(tokens);
+      hashService.hash.mockResolvedValue('hashedRefresh');
+
+      const result = await useCase.authenticateUser(dto);
+
+      expect(result.userType).toBe('client');
+    });
+  });
+
   describe('priority: client takes precedence over admin', () => {
     it('should authenticate as client when same email exists in both tables', async () => {
       const client = buildActiveClient({ email: 'shared@example.com' });
@@ -205,6 +220,18 @@ describe('LoginUseCase', () => {
       const result = await useCase.authenticateUser(dto);
 
       expect(result.userType).toBe('client');
+    });
+
+    it('should reject when inactive client exists even if active admin has same email', async () => {
+      clientRepository.findByEmail.mockResolvedValue(
+        buildActiveClient({ status: 'INACTIVE', email: 'shared@example.com' }),
+      );
+      adminRepository.findByEmail.mockResolvedValue(
+        buildActiveAdmin({ email: 'shared@example.com' }),
+      );
+
+      await expect(useCase.authenticateUser(dto)).rejects.toThrow(UnauthorizedException);
+      expect(hashService.compare).not.toHaveBeenCalled();
     });
   });
 

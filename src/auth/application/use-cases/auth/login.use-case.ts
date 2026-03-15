@@ -12,6 +12,8 @@ import type {
   TokenPair,
   TokenPayload,
 } from '../../../domain/interfaces/token.service.interface.js';
+import { UserStatus } from '@prisma/client';
+import type { AdminRole } from '@prisma/client';
 import type { LoginDto } from '../../../dto/login.dto.js';
 
 export interface LoginResult extends TokenPair {
@@ -22,10 +24,10 @@ interface AuthenticableUser {
   id: number;
   email: string;
   password: string;
-  status: string;
+  status: UserStatus;
   lockedUntil: Date | null;
   failedLoginAttempts: number;
-  role?: string;
+  role?: AdminRole;
 }
 
 interface AuthRepository {
@@ -43,10 +45,10 @@ export class LoginUseCase {
   private readonly logger = new Logger(LoginUseCase.name);
 
   constructor(
-    @Inject(CLIENT_AUTH_REPOSITORY) private clientRepository: IClientAuthRepository,
-    @Inject(ADMIN_AUTH_REPOSITORY) private adminRepository: IAdminAuthRepository,
-    @Inject(HASH_SERVICE) private hashService: IHashService,
-    @Inject(TOKEN_SERVICE) private tokenService: ITokenService,
+    @Inject(CLIENT_AUTH_REPOSITORY) private readonly clientRepository: IClientAuthRepository,
+    @Inject(ADMIN_AUTH_REPOSITORY) private readonly adminRepository: IAdminAuthRepository,
+    @Inject(HASH_SERVICE) private readonly hashService: IHashService,
+    @Inject(TOKEN_SERVICE) private readonly tokenService: ITokenService,
   ) {}
 
   async authenticateUser(dto: LoginDto): Promise<LoginResult> {
@@ -57,6 +59,9 @@ export class LoginUseCase {
       this.adminRepository.findByEmail(email),
     ]);
 
+    // Client takes precedence. If a client account exists but is locked/inactive,
+    // authentication fails immediately — it does NOT fall through to admin lookup.
+    // This prevents bypassing account restrictions via a secondary user type.
     const clientResult = await this.tryAuthenticate(
       client,
       dto.password,
@@ -91,7 +96,7 @@ export class LoginUseCase {
       throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
 
-    if (user.status !== 'ACTIVE') {
+    if (user.status !== UserStatus.ACTIVE) {
       this.logger.warn(`Non-active ${userType}#${user.id} login attempt (status: ${user.status})`);
       throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
