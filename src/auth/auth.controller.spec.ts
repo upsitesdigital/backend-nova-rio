@@ -12,7 +12,7 @@ import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.
 describe('AuthController', () => {
   let controller: AuthController;
   let clientRegisterUseCase: { registerClient: Mock };
-  let loginUseCase: { login: Mock };
+  let loginUseCase: { authenticateUser: Mock };
   let refreshTokenUseCase: { refreshTokens: Mock };
   let forgotPasswordUseCase: { requestPasswordReset: Mock };
   let resetPasswordUseCase: { resetPassword: Mock };
@@ -20,7 +20,7 @@ describe('AuthController', () => {
 
   beforeEach(async () => {
     clientRegisterUseCase = { registerClient: vi.fn() };
-    loginUseCase = { login: vi.fn() };
+    loginUseCase = { authenticateUser: vi.fn() };
     refreshTokenUseCase = { refreshTokens: vi.fn() };
     forgotPasswordUseCase = { requestPasswordReset: vi.fn() };
     resetPasswordUseCase = { resetPassword: vi.fn() };
@@ -51,10 +51,16 @@ describe('AuthController', () => {
     expect(clientRegisterUseCase.registerClient).toHaveBeenCalledWith(dto);
   });
 
-  it('login should call loginUseCase', async () => {
+  it('login should call loginUseCase.authenticateUser', async () => {
     const dto = { email: 'test@test.com', password: 'pass' };
     await controller.login(dto);
-    expect(loginUseCase.login).toHaveBeenCalledWith(dto);
+    expect(loginUseCase.authenticateUser).toHaveBeenCalledWith(dto);
+  });
+
+  it('resetPassword should call resetPasswordUseCase', async () => {
+    const dto = { email: 'test@test.com', code: '123456', newPassword: 'NewPass@2026!' };
+    await controller.resetPassword(dto);
+    expect(resetPasswordUseCase.resetPassword).toHaveBeenCalledWith(dto);
   });
 
   it('refreshToken should call refreshTokenUseCase', async () => {

@@ -5,7 +5,6 @@ import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
-  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -50,14 +49,14 @@ export class AuthController {
   }
 
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @ApiOperation({ summary: 'Login (client or admin)' })
-  @ApiCreatedResponse({ description: 'Login successful, returns token pair + userType' })
+  @ApiOkResponse({ description: 'Login successful, returns token pair + userType' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
-  @ApiForbiddenResponse({ description: 'Account locked, pending, or inactive' })
   login(@Body() dto: LoginDto) {
-    return this.loginUseCase.login(dto);
+    return this.loginUseCase.authenticateUser(dto);
   }
 
   @Post('refresh')

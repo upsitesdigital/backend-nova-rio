@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { CLIENT_AUTH_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
 import type { IClientAuthRepository } from '../../../domain/interfaces/client.repository.interface.js';
 import { ADMIN_AUTH_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
@@ -7,17 +7,40 @@ import type { IAdminAuthRepository } from '../../../domain/interfaces/admin.repo
 import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import type { IHashService } from '../../../domain/interfaces/hash.service.interface.js';
 import { TOKEN_SERVICE } from '../../../domain/interfaces/token.service.interface.js';
-import type { ITokenService } from '../../../domain/interfaces/token.service.interface.js';
+import type {
+  ITokenService,
+  TokenPair,
+  TokenPayload,
+} from '../../../domain/interfaces/token.service.interface.js';
 import type { LoginDto } from '../../../dto/login.dto.js';
 
-export interface LoginResult {
-  accessToken: string;
-  refreshToken: string;
+export interface LoginResult extends TokenPair {
   userType: 'client' | 'admin';
 }
 
+interface AuthenticableUser {
+  id: number;
+  email: string;
+  password: string;
+  status: string;
+  lockedUntil: Date | null;
+  failedLoginAttempts: number;
+  role?: string;
+}
+
+interface AuthRepository {
+  findByEmail(email: string): Promise<AuthenticableUser | null>;
+  incrementFailedLoginAttempts(id: number): Promise<void>;
+  resetFailedLoginAttempts(id: number): Promise<void>;
+  updateRefreshTokenWithFamily(id: number, hash: string, family: string): Promise<void>;
+}
+
+const INVALID_CREDENTIALS = 'Invalid credentials';
+
 @Injectable()
 export class LoginUseCase {
+  private readonly logger = new Logger(LoginUseCase.name);
+
   constructor(
     @Inject(CLIENT_AUTH_REPOSITORY) private clientRepository: IClientAuthRepository,
     @Inject(ADMIN_AUTH_REPOSITORY) private adminRepository: IAdminAuthRepository,
@@ -25,84 +48,74 @@ export class LoginUseCase {
     @Inject(TOKEN_SERVICE) private tokenService: ITokenService,
   ) {}
 
-  async login(dto: LoginDto): Promise<LoginResult> {
-    const clientResult = await this.tryClientLogin(dto);
+  async authenticateUser(dto: LoginDto): Promise<LoginResult> {
+    const email = dto.email.toLowerCase().trim();
+
+    const [client, admin] = await Promise.all([
+      this.clientRepository.findByEmail(email),
+      this.adminRepository.findByEmail(email),
+    ]);
+
+    const clientResult = await this.tryAuthenticate(
+      client,
+      dto.password,
+      this.clientRepository,
+      'client',
+    );
     if (clientResult) return clientResult;
 
-    const adminResult = await this.tryAdminLogin(dto);
+    const adminResult = await this.tryAuthenticate(
+      admin,
+      dto.password,
+      this.adminRepository,
+      'admin',
+    );
     if (adminResult) return adminResult;
 
-    throw new UnauthorizedException('Invalid credentials');
+    await this.hashService.compare(dto.password, '$2b$10$dummyhashtopreventtiming');
+
+    throw new UnauthorizedException(INVALID_CREDENTIALS);
   }
 
-  private async tryClientLogin(dto: LoginDto): Promise<LoginResult | null> {
-    const client = await this.clientRepository.findByEmail(dto.email);
-    if (!client) return null;
+  private async tryAuthenticate(
+    user: AuthenticableUser | null,
+    password: string,
+    repository: AuthRepository,
+    userType: 'client' | 'admin',
+  ): Promise<LoginResult | null> {
+    if (!user) return null;
 
-    if (client.lockedUntil && client.lockedUntil > new Date()) {
-      throw new ForbiddenException('Account is temporarily locked. Try again later');
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      this.logger.warn(`Locked account login attempt: ${userType}#${user.id}`);
+      throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
 
-    if (client.status === 'PENDING') {
-      throw new ForbiddenException(
-        'Your account is pending approval. Please wait for activation before logging in.',
-      );
+    if (user.status !== 'ACTIVE') {
+      this.logger.warn(`Non-active ${userType}#${user.id} login attempt (status: ${user.status})`);
+      throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
 
-    if (client.status !== 'ACTIVE') return null;
-
-    const valid = await this.hashService.compare(dto.password, client.password);
+    const valid = await this.hashService.compare(password, user.password);
     if (!valid) {
-      await this.clientRepository.incrementFailedLoginAttempts(client.id);
-      throw new UnauthorizedException('Invalid credentials');
+      await repository.incrementFailedLoginAttempts(user.id);
+      throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
 
-    await this.clientRepository.resetFailedLoginAttempts(client.id);
+    await repository.resetFailedLoginAttempts(user.id);
 
-    const tokens = await this.tokenService.generateTokens({
-      sub: client.id,
-      email: client.email,
-      type: 'client',
-    });
+    const payload: TokenPayload = {
+      sub: user.id,
+      email: user.email,
+      type: userType,
+      ...(userType === 'admin' && user.role ? { role: user.role } : {}),
+    };
+
+    const tokens = await this.tokenService.generateTokens(payload);
 
     const hashedRefresh = await this.hashService.hash(tokens.refreshToken);
     const family = randomUUID();
-    await this.clientRepository.updateRefreshTokenWithFamily(client.id, hashedRefresh, family);
+    await repository.updateRefreshTokenWithFamily(user.id, hashedRefresh, family);
 
-    return { ...tokens, userType: 'client' };
-  }
-
-  private async tryAdminLogin(dto: LoginDto): Promise<LoginResult | null> {
-    const admin = await this.adminRepository.findByEmail(dto.email);
-    if (!admin) return null;
-
-    if (admin.lockedUntil && admin.lockedUntil > new Date()) {
-      throw new ForbiddenException('Account is temporarily locked. Try again later');
-    }
-
-    if (admin.status !== 'ACTIVE') {
-      throw new ForbiddenException('Account is not active');
-    }
-
-    const valid = await this.hashService.compare(dto.password, admin.password);
-    if (!valid) {
-      await this.adminRepository.incrementFailedLoginAttempts(admin.id);
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    await this.adminRepository.resetFailedLoginAttempts(admin.id);
-
-    const tokens = await this.tokenService.generateTokens({
-      sub: admin.id,
-      email: admin.email,
-      type: 'admin',
-      role: admin.role,
-    });
-
-    const hashedRefresh = await this.hashService.hash(tokens.refreshToken);
-    const family = randomUUID();
-    await this.adminRepository.updateRefreshTokenWithFamily(admin.id, hashedRefresh, family);
-
-    return { ...tokens, userType: 'admin' };
+    return { ...tokens, userType };
   }
 }
