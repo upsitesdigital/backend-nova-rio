@@ -17,6 +17,17 @@ export class UpdateEmployeeUseCase {
       throw new NotFoundException('Employee not found');
     }
 
+    if (dto.status && dto.status !== existing.status) {
+      const validTransitions: Record<string, string[]> = {
+        ACTIVE: ['INACTIVE'],
+        INACTIVE: ['ACTIVE'],
+      };
+      const allowed = validTransitions[existing.status] ?? [];
+      if (!allowed.includes(dto.status as string)) {
+        throw new ConflictException(`Cannot transition from ${existing.status} to ${dto.status}`);
+      }
+    }
+
     const needsEmailCheck = dto.email && dto.email !== existing.email;
     const needsCpfCheck = dto.cpf && dto.cpf !== existing.cpf;
 
