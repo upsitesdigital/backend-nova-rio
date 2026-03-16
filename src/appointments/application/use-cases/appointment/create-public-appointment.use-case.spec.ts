@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
+import type { CreatePublicAppointmentDto } from '../../../dto/appointment/create-public-appointment.dto.js';
 import { CLIENT_AUTH_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
 import { CreateClientAppointmentUseCase } from './create-client-appointment.use-case.js';
 import { CreatePublicAppointmentUseCase } from './create-public-appointment.use-case.js';
@@ -30,7 +31,7 @@ describe('CreatePublicAppointmentUseCase', () => {
   });
 
   it('should create appointment when client exists', async () => {
-    const dto = {
+    const dto: CreatePublicAppointmentDto = {
       email: 'joao@test.com',
       date: '2026-03-20',
       startTime: '09:00',
@@ -51,7 +52,7 @@ describe('CreatePublicAppointmentUseCase', () => {
   });
 
   it('should throw NotFoundException when client is not found', async () => {
-    const dto = {
+    const dto: CreatePublicAppointmentDto = {
       email: 'unknown@test.com',
       date: '2026-03-20',
       startTime: '09:00',
