@@ -1,8 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { EmployeeStatus } from '@prisma/client';
 import {
   IsEmail,
-  IsEnum,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -73,9 +71,4 @@ export class CreateEmployeeDto {
   @IsPositive()
   @IsOptional()
   unitId?: number;
-
-  @ApiPropertyOptional({ enum: EmployeeStatus, example: 'ACTIVE' })
-  @IsEnum(EmployeeStatus)
-  @IsOptional()
-  status?: EmployeeStatus;
 }
