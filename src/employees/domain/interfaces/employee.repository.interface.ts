@@ -45,6 +45,7 @@ export interface UpdateEmployeeData {
   availabilityTo?: string;
   notes?: string;
   unitId?: number;
+  status?: EmployeeStatus;
 }
 
 export interface ListEmployeesFilters {
