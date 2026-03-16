@@ -24,7 +24,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "seed:payments": "ts-node --compiler-options {\"module\":\"commonjs\"} prisma/seed-payments.ts"
+    "seed:payments": "ts-node --compiler-options {\"module\":\"commonjs\"} prisma/seed-payments.ts",
+    "seed:full": "ts-node --compiler-options {\"module\":\"commonjs\",\"strict\":false,\"skipLibCheck\":true} prisma/seed-full.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.15",
