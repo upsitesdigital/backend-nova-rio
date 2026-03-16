@@ -19,6 +19,12 @@ import * as bcrypt from 'bcrypt';
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
+if (process.env.NODE_ENV === 'production') {
+  console.error('Seed script must not run in production.');
+  process.exitCode = 1;
+  process.exit();
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
