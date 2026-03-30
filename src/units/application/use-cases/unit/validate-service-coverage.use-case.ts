@@ -31,14 +31,23 @@ export class ValidateServiceCoverageUseCase {
   ) {}
 
   async validateCoverageByCep(cep: string): Promise<CoverageResult> {
+    const cleanCep = cep.replace(/\D/g, '');
     const geocoded = await this.geocodingService.geocodeByCep(cep);
     const addressPayload = this.buildAddress(geocoded);
+    const { data: units } = await this.unitRepository.listUnits({ page: 1, limit: 100 });
+
+    // Fallback: if a unit address explicitly contains this CEP, consider it covered.
+    // This prevents false negatives when external geocoding providers omit coordinates.
+    for (const unit of units) {
+      const unitCep = this.extractCepFromText(unit.address ?? '');
+      if (unitCep && unitCep === cleanCep) {
+        return { covered: true, address: addressPayload, unitId: unit.id, unitName: unit.name };
+      }
+    }
 
     if (!geocoded.coordinates) {
       return { covered: false, address: addressPayload, unitId: null, unitName: null };
     }
-
-    const { data: units } = await this.unitRepository.listUnits({ page: 1, limit: 100 });
 
     for (const unit of units) {
       if (unit.latitude === null || unit.longitude === null) {
@@ -64,5 +73,11 @@ export class ValidateServiceCoverageUseCase {
       city: geocoded.city,
       state: geocoded.state,
     };
+  }
+
+  private extractCepFromText(text: string): string | null {
+    const match = text.match(/\b\d{5}-?\d{3}\b/);
+    if (!match) return null;
+    return match[0].replace(/\D/g, '');
   }
 }
