@@ -12,7 +12,7 @@ import { CreateClientPaymentUseCase } from './create-client-payment.use-case.js'
 
 describe('CreateClientPaymentUseCase', () => {
   let useCase: CreateClientPaymentUseCase;
-  let paymentRepository: { createPayment: Mock };
+  let paymentRepository: { createPayment: Mock; findPaymentByAppointmentId: Mock };
   let appointmentRepository: { findAppointmentByIdAndClientId: Mock };
   let cardRepository: { findCardByIdAndClientId: Mock };
   let paymentGatewayService: {
@@ -82,7 +82,10 @@ describe('CreateClientPaymentUseCase', () => {
   };
 
   beforeEach(async () => {
-    paymentRepository = { createPayment: vi.fn() };
+    paymentRepository = {
+      createPayment: vi.fn(),
+      findPaymentByAppointmentId: vi.fn().mockResolvedValue(null),
+    };
     appointmentRepository = { findAppointmentByIdAndClientId: vi.fn() };
     cardRepository = { findCardByIdAndClientId: vi.fn() };
     paymentGatewayService = {

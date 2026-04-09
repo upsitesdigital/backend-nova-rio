@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import {
   CLIENT_AUTH_REPOSITORY,
   type IClientAuthRepository,
@@ -18,7 +18,9 @@ export class CreatePublicAppointmentUseCase {
     const client = await this.clientRepository.findByEmail(dto.email);
 
     if (!client) {
-      throw new NotFoundException('Client not found for the provided email');
+      throw new BadRequestException(
+        'Unable to create appointment. Please verify your information.',
+      );
     }
 
     return this.createClientAppointmentUseCase.createClientAppointment(client.id, dto);

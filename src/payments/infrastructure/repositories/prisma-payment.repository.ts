@@ -116,6 +116,13 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     return { data, total, page, limit };
   }
 
+  async findPaymentByAppointmentId(appointmentId: number): Promise<PaymentResponse | null> {
+    return this.prisma.payment.findFirst({
+      where: { appointmentId },
+      include: PAYMENT_INCLUDE,
+    });
+  }
+
   async findPaymentById(id: number): Promise<PaymentResponse | null> {
     return this.prisma.payment.findUnique({
       where: { id },

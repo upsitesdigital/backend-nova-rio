@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   IsStrongPassword,
+  Matches,
   MaxLength,
 } from 'class-validator';
 
@@ -22,9 +23,12 @@ export class ClientRegisterDto {
   @ApiPropertyOptional({ example: '+5521999999999' })
   @IsString()
   @IsOptional()
+  @MaxLength(20)
+  @Matches(/^\+?\d[\d\s()-]{7,19}$/, { message: 'Invalid phone number format' })
   phone?: string;
 
   @ApiProperty({ example: 'Admin@2026!' })
+  @MaxLength(128)
   @IsStrongPassword(
     {
       minLength: 8,

@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({ example: 'John Doe' })
@@ -12,6 +12,7 @@ export class UpdateProfileDto {
   @IsString()
   @IsOptional()
   @MaxLength(20)
+  @Matches(/^\+?\d[\d\s()-]{7,19}$/, { message: 'Invalid phone number format' })
   phone?: string;
 
   @ApiPropertyOptional({ example: 'Acme Corp' })
@@ -24,6 +25,7 @@ export class UpdateProfileDto {
   @IsString()
   @IsOptional()
   @MaxLength(20)
+  @Matches(/^\d{11}$|^\d{14}$/, { message: 'CPF must be 11 digits or CNPJ must be 14 digits' })
   cpfCnpj?: string;
 
   @ApiPropertyOptional({ example: 'Rua das Flores, 123' })

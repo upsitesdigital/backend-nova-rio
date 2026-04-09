@@ -112,7 +112,7 @@ describe('VindiHttpClient', () => {
     });
 
     await expect(client.sendRequest('/customers/999', { method: 'GET' })).rejects.toThrow(
-      'Vindi API error: 404',
+      'Payment gateway error: 404 GET /customers/999',
     );
   });
 });
