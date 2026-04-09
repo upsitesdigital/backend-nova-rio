@@ -50,6 +50,13 @@ export class CreateClientPaymentUseCase {
       throw new BadRequestException('Only scheduled appointments can be paid');
     }
 
+    const existingPayment = await this.paymentRepository.findPaymentByAppointmentId(
+      dto.appointmentId,
+    );
+    if (existingPayment) {
+      throw new BadRequestException('A payment already exists for this appointment');
+    }
+
     if ((dto.method === 'CREDIT_CARD' || dto.method === 'DEBIT_CARD') && !dto.cardId) {
       throw new BadRequestException('Card is required for card payments');
     }
