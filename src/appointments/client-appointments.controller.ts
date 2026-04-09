@@ -12,6 +12,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -51,10 +52,10 @@ export class ClientAppointmentsController {
   ) {}
 
   @Post('public')
+  @Throttle({ default: { ttl: 60_000, limit: 3 } })
   @ApiOperation({ summary: 'Create an appointment by email (no auth required)' })
   @ApiCreatedResponse({ description: 'Appointment created successfully' })
   @ApiBadRequestResponse({ description: 'Validation failed or scheduling conflict' })
-  @ApiNotFoundResponse({ description: 'Client not found for the provided email' })
   createPublicAppointment(@Body() dto: CreatePublicAppointmentDto) {
     return this.createPublicAppointmentUseCase.createPublicAppointment(dto);
   }

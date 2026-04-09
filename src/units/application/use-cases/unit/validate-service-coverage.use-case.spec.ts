@@ -23,7 +23,7 @@ describe('ValidateServiceCoverageUseCase', () => {
 
   beforeEach(async () => {
     unitRepository = {
-      listUnits: vi.fn(),
+      listUnits: vi.fn().mockResolvedValue({ data: [mockUnit], total: 1, page: 1, limit: 100 }),
       createUnit: vi.fn(),
       findUnitById: vi.fn(),
       findUnitByName: vi.fn(),

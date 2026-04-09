@@ -45,7 +45,7 @@ export class VindiHttpClient {
         `Vindi API error: ${response.status} ${options.method} ${path}`,
         JSON.stringify(data),
       );
-      throw new Error(`Vindi API error: ${response.status} — ${JSON.stringify(data)}`);
+      throw new Error(`Payment gateway error: ${response.status} ${options.method} ${path}`);
     }
 
     return data as T;
