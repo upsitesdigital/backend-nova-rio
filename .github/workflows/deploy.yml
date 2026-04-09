@@ -95,7 +95,8 @@ jobs:
             cd /root/backend-nova-rio
 
             echo "📥 Atualizando código..."
-            git pull origin develop
+            git fetch origin develop
+            git reset --hard origin/develop
 
             echo "🔧 Gerando Prisma Client..."
             export NVM_DIR="$HOME/.nvm"
