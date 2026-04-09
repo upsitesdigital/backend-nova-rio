@@ -137,7 +137,7 @@ describe('VindiWebhooksController', () => {
     expect(result).toEqual({ received: true });
   });
 
-  it('should return received:true even when handler throws', async () => {
+  it('should re-throw when handler throws', async () => {
     handleBillPaid.handleBillPaid.mockRejectedValue(new Error('DB error'));
 
     const payload = {
@@ -150,8 +150,8 @@ describe('VindiWebhooksController', () => {
     };
     const signature = signPayload(payload);
 
-    const result = await controller.receiveVindiWebhook(signature, fakeReq(payload), payload);
-
-    expect(result).toEqual({ received: true });
+    await expect(
+      controller.receiveVindiWebhook(signature, fakeReq(payload), payload),
+    ).rejects.toThrow('DB error');
   });
 });

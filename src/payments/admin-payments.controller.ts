@@ -60,6 +60,7 @@ export class AdminPaymentsController {
   }
 
   @Patch(':id/approve')
+  @Roles('ADMIN_MASTER')
   @ApiOperation({ summary: 'Approve a pending payment' })
   @ApiOkResponse({ description: 'Payment approved successfully' })
   @ApiBadRequestResponse({ description: 'Payment is not pending' })
@@ -70,6 +71,7 @@ export class AdminPaymentsController {
   }
 
   @Delete(':id')
+  @Roles('ADMIN_MASTER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a payment' })
   @ApiNoContentResponse({ description: 'Payment deleted successfully' })

@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
 import type { CreatePublicAppointmentDto } from '../../../dto/appointment/create-public-appointment.dto.js';
@@ -51,7 +51,7 @@ describe('CreatePublicAppointmentUseCase', () => {
     expect(createClientAppointmentUseCase.createClientAppointment).toHaveBeenCalledWith(5, dto);
   });
 
-  it('should throw NotFoundException when client is not found', async () => {
+  it('should throw BadRequestException when client is not found', async () => {
     const dto: CreatePublicAppointmentDto = {
       email: 'unknown@test.com',
       date: '2026-03-20',
@@ -62,7 +62,7 @@ describe('CreatePublicAppointmentUseCase', () => {
 
     clientRepository.findByEmail.mockResolvedValue(null);
 
-    await expect(useCase.createPublicAppointment(dto)).rejects.toThrow(NotFoundException);
+    await expect(useCase.createPublicAppointment(dto)).rejects.toThrow(BadRequestException);
     expect(createClientAppointmentUseCase.createClientAppointment).not.toHaveBeenCalled();
   });
 });

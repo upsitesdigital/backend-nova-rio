@@ -65,6 +65,7 @@ export interface IPaymentRepository {
     limit: number,
     status?: PaymentStatus,
   ): Promise<PaginatedPayments>;
+  findPaymentByAppointmentId(appointmentId: number): Promise<PaymentResponse | null>;
   findPaymentById(id: number): Promise<PaymentResponse | null>;
   findPaymentByIdAndClientId(id: number, clientId: number): Promise<PaymentResponse | null>;
   findPaymentByGatewayTransactionId(transactionId: string): Promise<PaymentResponse | null>;

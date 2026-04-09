@@ -103,6 +103,7 @@ export class AdminAppointmentsController {
   }
 
   @Patch(':id/cancel')
+  @Roles('ADMIN_MASTER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Cancel an appointment' })
   @ApiNoContentResponse({ description: 'Appointment cancelled successfully' })

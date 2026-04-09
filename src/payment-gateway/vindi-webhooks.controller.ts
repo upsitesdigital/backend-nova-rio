@@ -71,6 +71,7 @@ export class VindiWebhooksController {
       }
     } catch (error) {
       this.logger.error(`Error processing Vindi webhook ${eventType}`, error);
+      throw error;
     }
 
     return { received: true };
