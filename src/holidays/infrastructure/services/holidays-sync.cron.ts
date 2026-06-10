@@ -13,6 +13,7 @@ import {
   type CreateHolidayData,
   type IHolidayRepository,
 } from '../../domain/interfaces/holiday.repository.interface.js';
+import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 
 @Injectable()
 export class HolidaysSyncCron {
@@ -21,6 +22,7 @@ export class HolidaysSyncCron {
   constructor(
     @Inject(HOLIDAY_REPOSITORY) private holidayRepository: IHolidayRepository,
     @Inject(BRASIL_API_HOLIDAYS_SERVICE) private brasilApiService: IBrasilApiHolidaysService,
+    private prisma: PrismaService,
   ) {}
 
   @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
@@ -29,6 +31,20 @@ export class HolidaysSyncCron {
     this.logger.log(`Starting monthly holidays sync for year ${year}`);
 
     try {
+      const acquired = await this.prisma.$queryRaw<Array<{ name: string }>>`
+        INSERT INTO job_locks ("name", "lockedUntil")
+        VALUES ('holidays_sync', NOW() + INTERVAL '15 minutes')
+        ON CONFLICT ("name") DO UPDATE
+        SET "lockedUntil" = EXCLUDED."lockedUntil"
+        WHERE job_locks."lockedUntil" <= NOW()
+        RETURNING "name"
+      `;
+
+      if (acquired.length !== 1) {
+        this.logger.log('Monthly holidays sync skipped because another instance is running');
+        return;
+      }
+
       const nationalHolidays = await this.brasilApiService.fetchHolidaysByYear(year);
 
       const carnavalEntry = nationalHolidays.find((h) => h.name.toLowerCase().includes('carnaval'));
@@ -83,7 +99,15 @@ export class HolidaysSyncCron {
 
       this.logger.log(`Synced ${allHolidays.length} holidays for year ${year}`);
     } catch (error) {
-      this.logger.error(`Failed to sync holidays: ${error}`);
+      this.logger.error(
+        `Failed to sync holidays: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    } finally {
+      await this.prisma.$executeRaw`
+        UPDATE job_locks
+        SET "lockedUntil" = NOW()
+        WHERE "name" = 'holidays_sync'
+      `;
     }
   }
 }

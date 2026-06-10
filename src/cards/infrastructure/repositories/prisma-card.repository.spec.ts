@@ -25,6 +25,7 @@ describe('PrismaCardRepository', () => {
       update: Mock;
     };
     $transaction: Mock;
+    $queryRaw: Mock;
   };
 
   beforeEach(async () => {
@@ -38,6 +39,7 @@ describe('PrismaCardRepository', () => {
         update: vi.fn(),
       },
       $transaction: vi.fn(),
+      $queryRaw: vi.fn().mockResolvedValue([]),
     };
 
     const module: TestingModule = await Test.createTestingModule({

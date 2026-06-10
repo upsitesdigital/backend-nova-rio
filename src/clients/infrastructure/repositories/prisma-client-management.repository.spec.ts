@@ -28,6 +28,7 @@ describe('PrismaClientManagementRepository', () => {
       findFirst: Mock;
       count: Mock;
       update: Mock;
+      updateMany: Mock;
     };
   };
 
@@ -38,6 +39,7 @@ describe('PrismaClientManagementRepository', () => {
         findFirst: vi.fn(),
         count: vi.fn(),
         update: vi.fn(),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       },
     };
 
@@ -170,23 +172,19 @@ describe('PrismaClientManagementRepository', () => {
   });
 
   it('approveClientById should set status to ACTIVE', async () => {
-    prisma.client.update.mockResolvedValue({});
-
     await repository.approveClientById(1);
 
-    expect(prisma.client.update).toHaveBeenCalledWith({
-      where: { id: 1 },
+    expect(prisma.client.updateMany).toHaveBeenCalledWith({
+      where: { id: 1, status: 'PENDING' },
       data: { status: 'ACTIVE' },
     });
   });
 
   it('rejectClientById should set status to INACTIVE', async () => {
-    prisma.client.update.mockResolvedValue({});
-
     await repository.rejectClientById(1);
 
-    expect(prisma.client.update).toHaveBeenCalledWith({
-      where: { id: 1 },
+    expect(prisma.client.updateMany).toHaveBeenCalledWith({
+      where: { id: 1, status: 'PENDING' },
       data: { status: 'INACTIVE' },
     });
   });

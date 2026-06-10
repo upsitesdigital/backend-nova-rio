@@ -67,17 +67,19 @@ export class PrismaClientManagementRepository implements IClientManagementReposi
     });
   }
 
-  async approveClientById(id: number): Promise<void> {
-    await this.prisma.client.update({
-      where: { id },
+  async approveClientById(id: number): Promise<boolean> {
+    const updated = await this.prisma.client.updateMany({
+      where: { id, status: 'PENDING' },
       data: { status: 'ACTIVE' },
     });
+    return updated.count === 1;
   }
 
-  async rejectClientById(id: number): Promise<void> {
-    await this.prisma.client.update({
-      where: { id },
+  async rejectClientById(id: number): Promise<boolean> {
+    const updated = await this.prisma.client.updateMany({
+      where: { id, status: 'PENDING' },
       data: { status: 'INACTIVE' },
     });
+    return updated.count === 1;
   }
 }
