@@ -7,6 +7,7 @@ import { ClientRegisterUseCase } from './application/use-cases/client/client-reg
 import { ForgotPasswordUseCase } from './application/use-cases/client/forgot-password.use-case.js';
 import { ResetPasswordUseCase } from './application/use-cases/client/reset-password.use-case.js';
 import { GetProfileUseCase } from './application/use-cases/auth/get-profile.use-case.js';
+import { LogoutUseCase } from './application/use-cases/auth/logout.use-case.js';
 import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.use-case.js';
 import { AuthController } from './auth.controller.js';
 import { PrismaAdminRepository } from './infrastructure/repositories/prisma-admin.repository.js';
@@ -36,6 +37,7 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
     ForgotPasswordUseCase,
     ResetPasswordUseCase,
     GetProfileUseCase,
+    LogoutUseCase,
     VerificationCodeCleanupCron,
   ],
   exports: [

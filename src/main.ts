@@ -17,6 +17,8 @@ async function bootstrap() {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
 
+  RequiredSecrets.validateStrength((key) => configService.get<string>(key));
+
   app.use(compression());
   app.use(helmet());
   app.enableCors({
@@ -35,7 +37,10 @@ async function bootstrap() {
     const swaggerUser = configService.getOrThrow<string>('SWAGGER_USER');
     const swaggerPassword = configService.getOrThrow<string>('SWAGGER_PASSWORD');
 
-    app.use('/api/docs', SwaggerBasicAuth.create(swaggerUser, swaggerPassword));
+    app.use(
+      ['/api/docs', '/api/docs-json', '/api/docs-yaml'],
+      SwaggerBasicAuth.create(swaggerUser, swaggerPassword),
+    );
 
     const config = new DocumentBuilder()
       .setTitle('Nova Rio API')

@@ -249,7 +249,7 @@ export class PrismaClientRepository implements IClientRepository {
 
       await tx.client.update({
         where: { id: clientId },
-        data: { password: hashedPassword },
+        data: { password: hashedPassword, refreshToken: null, tokenFamily: null },
       });
       await tx.verificationCode.deleteMany({
         where: { clientId, type: VerificationType.passwordChange, id: { not: verificationCodeId } },

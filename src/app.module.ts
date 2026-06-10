@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -20,6 +20,7 @@ import { PaymentsModule } from './payments/payments.module.js';
 import { ReceiptsModule } from './receipts/receipts.module.js';
 import { ReportsModule } from './reports/reports.module.js';
 import { ServicesModule } from './services/services.module.js';
+import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter.js';
 import { PrismaModule } from './shared/prisma/prisma.module.js';
 import { UnitsModule } from './units/units.module.js';
 
@@ -48,6 +49,9 @@ import { UnitsModule } from './units/units.module.js';
     PaymentGatewayModule,
     UnitsModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
+  ],
 })
 export class AppModule {}
