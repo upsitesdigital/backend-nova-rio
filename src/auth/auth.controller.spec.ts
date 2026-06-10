@@ -7,6 +7,7 @@ import { ClientRegisterUseCase } from './application/use-cases/client/client-reg
 import { ForgotPasswordUseCase } from './application/use-cases/client/forgot-password.use-case.js';
 import { ResetPasswordUseCase } from './application/use-cases/client/reset-password.use-case.js';
 import { GetProfileUseCase } from './application/use-cases/auth/get-profile.use-case.js';
+import { LogoutUseCase } from './application/use-cases/auth/logout.use-case.js';
 import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.use-case.js';
 
 describe('AuthController', () => {
@@ -17,6 +18,7 @@ describe('AuthController', () => {
   let forgotPasswordUseCase: { requestPasswordReset: Mock };
   let resetPasswordUseCase: { resetPassword: Mock };
   let getProfileUseCase: { getProfile: Mock };
+  let logoutUseCase: { logout: Mock };
 
   beforeEach(async () => {
     clientRegisterUseCase = { registerClient: vi.fn() };
@@ -25,6 +27,7 @@ describe('AuthController', () => {
     forgotPasswordUseCase = { requestPasswordReset: vi.fn() };
     resetPasswordUseCase = { resetPassword: vi.fn() };
     getProfileUseCase = { getProfile: vi.fn() };
+    logoutUseCase = { logout: vi.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
@@ -35,6 +38,7 @@ describe('AuthController', () => {
         { provide: ForgotPasswordUseCase, useValue: forgotPasswordUseCase },
         { provide: ResetPasswordUseCase, useValue: resetPasswordUseCase },
         { provide: GetProfileUseCase, useValue: getProfileUseCase },
+        { provide: LogoutUseCase, useValue: logoutUseCase },
       ],
     }).compile();
 
@@ -79,5 +83,11 @@ describe('AuthController', () => {
     const user: AuthUser = { id: 1, type: 'client', email: 'test@test.com' };
     await controller.getProfile(user);
     expect(getProfileUseCase.getProfile).toHaveBeenCalledWith(user);
+  });
+
+  it('logout should call logoutUseCase.logout', async () => {
+    const user: AuthUser = { id: 1, type: 'client', email: 'test@test.com' };
+    await controller.logout(user);
+    expect(logoutUseCase.logout).toHaveBeenCalledWith(user);
   });
 });
