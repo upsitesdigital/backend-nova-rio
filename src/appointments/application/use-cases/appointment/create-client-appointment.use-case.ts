@@ -1,7 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
-import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
-import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
 import type {
   AppointmentResponse,
   ClientConflictCheckParams,
@@ -9,13 +8,14 @@ import type {
   IAppointmentRepository,
 } from '../../../domain/interfaces/appointment.repository.interface.js';
 import type { CreateClientAppointmentDto } from '../../../dto/appointment/create-client-appointment.dto.js';
+import type { ICreateClientAppointmentService } from '../../../domain/interfaces/create-client-appointment.service.interface.js';
 import { AppointmentSchedulingValidator } from '../../validators/appointment-scheduling.validator.js';
 
 @Injectable()
-export class CreateClientAppointmentUseCase {
+export class CreateClientAppointmentUseCase implements ICreateClientAppointmentService {
   constructor(
-    @Inject(APPOINTMENT_REPOSITORY) private appointmentRepository: IAppointmentRepository,
-    @Inject(EMAIL_SERVICE) private emailService: IEmailService,
+    @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
+    @Inject(DiTokens.emailService) private emailService: IEmailService,
     private schedulingValidator: AppointmentSchedulingValidator,
   ) {}
 

@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { ADMIN_USER_REPOSITORY } from '../../../domain/interfaces/admin-user.repository.interface.js';
 import type {
   AdminUserSafe,
   IAdminUserRepository,
@@ -7,7 +7,9 @@ import type {
 
 @Injectable()
 export class GetAdminUserUseCase {
-  constructor(@Inject(ADMIN_USER_REPOSITORY) private adminUserRepository: IAdminUserRepository) {}
+  constructor(
+    @Inject(DiTokens.adminUserRepository) private adminUserRepository: IAdminUserRepository,
+  ) {}
 
   async getAdminUserById(id: number): Promise<AdminUserSafe> {
     const adminUser = await this.adminUserRepository.findAdminUserById(id);

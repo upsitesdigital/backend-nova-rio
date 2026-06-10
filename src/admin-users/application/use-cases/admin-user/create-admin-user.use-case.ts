@@ -1,8 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { ConflictException, ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { AdminRole } from '@prisma/client';
-import { HASH_SERVICE } from '../../../../auth/domain/interfaces/hash.service.interface.js';
 import type { IHashService } from '../../../../auth/domain/interfaces/hash.service.interface.js';
-import { ADMIN_USER_REPOSITORY } from '../../../domain/interfaces/admin-user.repository.interface.js';
 import type {
   AdminUserSafe,
   IAdminUserRepository,
@@ -12,8 +11,8 @@ import { CreateAdminUserDto } from '../../../dto/admin-user/create-admin-user.dt
 @Injectable()
 export class CreateAdminUserUseCase {
   constructor(
-    @Inject(ADMIN_USER_REPOSITORY) private adminUserRepository: IAdminUserRepository,
-    @Inject(HASH_SERVICE) private hashService: IHashService,
+    @Inject(DiTokens.adminUserRepository) private adminUserRepository: IAdminUserRepository,
+    @Inject(DiTokens.hashService) private hashService: IHashService,
   ) {}
 
   async createAdminUser(

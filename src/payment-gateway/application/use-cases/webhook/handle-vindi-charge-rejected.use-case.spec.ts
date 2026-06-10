@@ -1,7 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
-import { PAYMENT_REPOSITORY } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
 import { HandleVindiChargeRejectedUseCase } from './handle-vindi-charge-rejected.use-case.js';
 
 describe('HandleVindiChargeRejectedUseCase', () => {
@@ -37,8 +36,8 @@ describe('HandleVindiChargeRejectedUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         HandleVindiChargeRejectedUseCase,
-        { provide: PAYMENT_REPOSITORY, useValue: paymentRepository },
-        { provide: EMAIL_SERVICE, useValue: emailService },
+        { provide: DiTokens.paymentRepository, useValue: paymentRepository },
+        { provide: DiTokens.emailService, useValue: emailService },
       ],
     }).compile();
 

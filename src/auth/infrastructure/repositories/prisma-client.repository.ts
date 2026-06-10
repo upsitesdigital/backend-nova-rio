@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
+import { EmailAlreadyInUseError } from '../../domain/errors/email-already-in-use.error.js';
+import { VerificationType } from '../../domain/constants/verification-type.constant.js';
 import type {
   ClientData,
   ClientForPayment,
@@ -71,7 +74,14 @@ export class PrismaClientRepository implements IClientRepository {
   }
 
   async create(data: CreateClientData): Promise<ClientData> {
-    return this.prisma.client.create({ data });
+    try {
+      return await this.prisma.client.create({ data });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new EmailAlreadyInUseError();
+      }
+      throw error;
+    }
   }
 
   async updateRefreshToken(id: number, refreshToken: string | null): Promise<void> {
@@ -224,7 +234,12 @@ export class PrismaClientRepository implements IClientRepository {
   ): Promise<boolean> {
     return this.prisma.$transaction(async (tx) => {
       const consumed = await tx.verificationCode.updateMany({
-        where: { id: verificationCodeId, clientId, type: 'PASSWORD_CHANGE', usedAt: null },
+        where: {
+          id: verificationCodeId,
+          clientId,
+          type: VerificationType.passwordChange,
+          usedAt: null,
+        },
         data: { usedAt: new Date() },
       });
 
@@ -237,7 +252,7 @@ export class PrismaClientRepository implements IClientRepository {
         data: { password: hashedPassword },
       });
       await tx.verificationCode.deleteMany({
-        where: { clientId, type: 'PASSWORD_CHANGE', id: { not: verificationCodeId } },
+        where: { clientId, type: VerificationType.passwordChange, id: { not: verificationCodeId } },
       });
       return true;
     });
@@ -321,7 +336,7 @@ export class PrismaClientRepository implements IClientRepository {
   async deactivateClient(id: number): Promise<void> {
     await this.prisma.client.update({
       where: { id },
-      data: { status: 'INACTIVE', refreshToken: null, tokenFamily: null },
+      data: { status: UserStatus.INACTIVE, refreshToken: null, tokenFamily: null },
     });
   }
 }

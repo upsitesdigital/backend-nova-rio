@@ -1,8 +1,6 @@
 import type { EmployeeStatus } from '@prisma/client';
 import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 
-export const EMPLOYEE_REPOSITORY = Symbol('EMPLOYEE_REPOSITORY');
-
 export interface EmployeeSafe {
   id: number;
   uuid: string;

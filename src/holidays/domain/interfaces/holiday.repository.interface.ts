@@ -1,7 +1,5 @@
 import type { Holiday } from '@prisma/client';
 
-export const HOLIDAY_REPOSITORY = Symbol('HOLIDAY_REPOSITORY');
-
 export interface CreateHolidayData {
   date: Date;
   name: string;

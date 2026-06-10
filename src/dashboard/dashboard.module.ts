@@ -1,3 +1,4 @@
+import { DiTokens } from '../shared/di/di-tokens.js';
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
 import { AdminDashboardController } from './admin-dashboard.controller.js';
@@ -7,8 +8,6 @@ import { GetTodayAgendaUseCase } from './application/use-cases/dashboard/get-tod
 import { GetTodayAppointmentsCountUseCase } from './application/use-cases/dashboard/get-today-appointments-count.use-case.js';
 import { ClientDashboardController } from './client-dashboard.controller.js';
 import { GetClientDashboardSummaryUseCase } from './application/use-cases/client-dashboard/get-client-dashboard-summary.use-case.js';
-import { CLIENT_DASHBOARD_REPOSITORY } from './domain/interfaces/client-dashboard.repository.interface.js';
-import { DASHBOARD_REPOSITORY } from './domain/interfaces/dashboard.repository.interface.js';
 import { PrismaClientDashboardRepository } from './infrastructure/repositories/prisma-client-dashboard.repository.js';
 import { PrismaDashboardRepository } from './infrastructure/repositories/prisma-dashboard.repository.js';
 
@@ -16,8 +15,8 @@ import { PrismaDashboardRepository } from './infrastructure/repositories/prisma-
   imports: [AuthModule],
   controllers: [AdminDashboardController, ClientDashboardController],
   providers: [
-    { provide: DASHBOARD_REPOSITORY, useClass: PrismaDashboardRepository },
-    { provide: CLIENT_DASHBOARD_REPOSITORY, useClass: PrismaClientDashboardRepository },
+    { provide: DiTokens.dashboardRepository, useClass: PrismaDashboardRepository },
+    { provide: DiTokens.clientDashboardRepository, useClass: PrismaClientDashboardRepository },
     GetTodayAppointmentsCountUseCase,
     GetActiveClientsCountUseCase,
     GetPendingAppointmentsCountUseCase,

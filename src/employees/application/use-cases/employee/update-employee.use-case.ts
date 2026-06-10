@@ -1,5 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { EMPLOYEE_REPOSITORY } from '../../../domain/interfaces/employee.repository.interface.js';
+import { EmployeeStatus } from '@prisma/client';
 import type {
   EmployeeSafe,
   IEmployeeRepository,
@@ -8,7 +9,14 @@ import { UpdateEmployeeDto } from '../../../dto/employee/update-employee.dto.js'
 
 @Injectable()
 export class UpdateEmployeeUseCase {
-  constructor(@Inject(EMPLOYEE_REPOSITORY) private employeeRepository: IEmployeeRepository) {}
+  private static readonly validTransitions: Record<EmployeeStatus, EmployeeStatus[]> = {
+    [EmployeeStatus.ACTIVE]: [EmployeeStatus.INACTIVE],
+    [EmployeeStatus.INACTIVE]: [EmployeeStatus.ACTIVE],
+  };
+
+  constructor(
+    @Inject(DiTokens.employeeRepository) private employeeRepository: IEmployeeRepository,
+  ) {}
 
   async updateEmployeeById(id: number, dto: UpdateEmployeeDto): Promise<EmployeeSafe> {
     const existing = await this.employeeRepository.findEmployeeById(id);
@@ -18,11 +26,7 @@ export class UpdateEmployeeUseCase {
     }
 
     if (dto.status && dto.status !== existing.status) {
-      const validTransitions: Record<string, string[]> = {
-        ACTIVE: ['INACTIVE'],
-        INACTIVE: ['ACTIVE'],
-      };
-      const allowed = validTransitions[existing.status] ?? [];
+      const allowed = UpdateEmployeeUseCase.validTransitions[existing.status] ?? [];
       if (!allowed.includes(dto.status)) {
         throw new ConflictException(`Cannot transition from ${existing.status} to ${dto.status}`);
       }

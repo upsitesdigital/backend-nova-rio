@@ -1,6 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { HOLIDAY_REPOSITORY } from '../../../domain/interfaces/holiday.repository.interface.js';
 import { ListHolidaysUseCase } from './list-holidays.use-case.js';
 
 describe('ListHolidaysUseCase', () => {
@@ -19,7 +19,7 @@ describe('ListHolidaysUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListHolidaysUseCase,
-        { provide: HOLIDAY_REPOSITORY, useValue: holidayRepository },
+        { provide: DiTokens.holidayRepository, useValue: holidayRepository },
       ],
     }).compile();
 

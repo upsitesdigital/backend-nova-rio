@@ -1,10 +1,10 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { PACKAGE_REPOSITORY } from '../../../domain/interfaces/package.repository.interface.js';
 import type { IPackageRepository } from '../../../domain/interfaces/package.repository.interface.js';
 
 @Injectable()
 export class DeletePackageUseCase {
-  constructor(@Inject(PACKAGE_REPOSITORY) private packageRepository: IPackageRepository) {}
+  constructor(@Inject(DiTokens.packageRepository) private packageRepository: IPackageRepository) {}
 
   async deactivatePackageById(id: number): Promise<void> {
     const existing = await this.packageRepository.findPackageById(id);

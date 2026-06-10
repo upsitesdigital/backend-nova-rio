@@ -1,5 +1,3 @@
-export const TOKEN_SERVICE = Symbol('TOKEN_SERVICE');
-
 export interface TokenPayload {
   sub: number;
   email: string;

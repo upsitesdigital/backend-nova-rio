@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
-import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
 import type {
   IAppointmentRepository,
   ListAppointmentsFilters,
@@ -10,7 +10,7 @@ import type { ListAppointmentsQueryDto } from '../../../dto/appointment/list-app
 @Injectable()
 export class ListAppointmentsUseCase {
   constructor(
-    @Inject(APPOINTMENT_REPOSITORY) private appointmentRepository: IAppointmentRepository,
+    @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
   ) {}
 
   async listAppointments(query: ListAppointmentsQueryDto): Promise<PaginatedAppointments> {

@@ -1,20 +1,20 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { type Mock, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
-import { CLIENT_PROFILE_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
 import { GetClientProfileUseCase } from './get-client-profile.use-case.js';
 
 describe('GetClientProfileUseCase', () => {
   let useCase: GetClientProfileUseCase;
-  let clientRepository: { findProfileById: Mock };
+  let clientRepository: { findClientProfileById: Mock };
 
   beforeEach(async () => {
-    clientRepository = { findProfileById: vi.fn() };
+    clientRepository = { findClientProfileById: vi.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetClientProfileUseCase,
-        { provide: CLIENT_PROFILE_REPOSITORY, useValue: clientRepository },
+        { provide: DiTokens.profileRepository, useValue: clientRepository },
       ],
     }).compile();
 
@@ -38,16 +38,16 @@ describe('GetClientProfileUseCase', () => {
       status: 'APPROVED',
       createdAt: new Date(),
     };
-    clientRepository.findProfileById.mockResolvedValue(profile);
+    clientRepository.findClientProfileById.mockResolvedValue(profile);
 
     const result = await useCase.getClientProfile(1);
 
     expect(result).toEqual(profile);
-    expect(clientRepository.findProfileById).toHaveBeenCalledWith(1);
+    expect(clientRepository.findClientProfileById).toHaveBeenCalledWith(1);
   });
 
   it('should throw NotFoundException when client not found', async () => {
-    clientRepository.findProfileById.mockResolvedValue(null);
+    clientRepository.findClientProfileById.mockResolvedValue(null);
 
     await expect(useCase.getClientProfile(999)).rejects.toThrow(NotFoundException);
   });

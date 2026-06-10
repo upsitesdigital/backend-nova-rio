@@ -1,6 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
 import type { PaginatedResponse } from '../../../../shared/types/paginated-response.type.js';
-import { EMPLOYEE_REPOSITORY } from '../../../domain/interfaces/employee.repository.interface.js';
 import type {
   EmployeeSafe,
   IEmployeeRepository,
@@ -9,7 +9,9 @@ import type { ListEmployeesQueryDto } from '../../../dto/employee/list-employees
 
 @Injectable()
 export class ListEmployeesUseCase {
-  constructor(@Inject(EMPLOYEE_REPOSITORY) private employeeRepository: IEmployeeRepository) {}
+  constructor(
+    @Inject(DiTokens.employeeRepository) private employeeRepository: IEmployeeRepository,
+  ) {}
 
   async listEmployees(query: ListEmployeesQueryDto): Promise<PaginatedResponse<EmployeeSafe>> {
     return this.employeeRepository.listEmployees({

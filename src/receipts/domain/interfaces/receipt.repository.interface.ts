@@ -1,5 +1,3 @@
-export const RECEIPT_REPOSITORY = Symbol('RECEIPT_REPOSITORY');
-
 export interface ReceiptResponse {
   id: number;
   uuid: string;

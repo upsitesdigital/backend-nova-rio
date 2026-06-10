@@ -1,7 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { CLIENT_MGMT_REPOSITORY } from '../../../domain/interfaces/client-management.repository.interface.js';
 import { GetClientUseCase } from './get-client.use-case.js';
 
 describe('GetClientUseCase', () => {
@@ -14,7 +14,7 @@ describe('GetClientUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetClientUseCase,
-        { provide: CLIENT_MGMT_REPOSITORY, useValue: clientMgmtRepository },
+        { provide: DiTokens.clientManagementRepository, useValue: clientMgmtRepository },
       ],
     }).compile();
 

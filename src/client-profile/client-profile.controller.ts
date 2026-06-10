@@ -121,7 +121,7 @@ export class ClientProfileController {
   @ApiBadRequestResponse({ description: 'Invalid confirmation phrase' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
   @ApiNotFoundResponse({ description: 'Client not found' })
-  deleteAccount(@CurrentUser() user: AuthUser, @Body() dto: DeleteAccountDto) {
-    return this.deleteClientAccountUseCase.deleteClientAccount(user.id, dto);
+  deleteAccount(@CurrentUser() user: AuthUser, @Body() _dto: DeleteAccountDto) {
+    return this.deleteClientAccountUseCase.deleteClientAccount(user.id);
   }
 }

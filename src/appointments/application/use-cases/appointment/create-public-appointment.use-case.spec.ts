@@ -1,9 +1,8 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
 import type { CreatePublicAppointmentDto } from '../../../dto/appointment/create-public-appointment.dto.js';
-import { CLIENT_AUTH_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
-import { CreateClientAppointmentUseCase } from './create-client-appointment.use-case.js';
 import { CreatePublicAppointmentUseCase } from './create-public-appointment.use-case.js';
 
 describe('CreatePublicAppointmentUseCase', () => {
@@ -18,8 +17,11 @@ describe('CreatePublicAppointmentUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreatePublicAppointmentUseCase,
-        { provide: CLIENT_AUTH_REPOSITORY, useValue: clientRepository },
-        { provide: CreateClientAppointmentUseCase, useValue: createClientAppointmentUseCase },
+        { provide: DiTokens.clientAuthRepository, useValue: clientRepository },
+        {
+          provide: DiTokens.createClientAppointmentService,
+          useValue: createClientAppointmentUseCase,
+        },
       ],
     }).compile();
 

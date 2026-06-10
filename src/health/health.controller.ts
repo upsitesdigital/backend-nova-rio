@@ -1,12 +1,12 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
-import { PrismaService } from '../shared/prisma/prisma.service.js';
+import { CheckReadinessUseCase } from './application/use-cases/health/check-readiness.use-case.js';
 
 @ApiTags('Health')
 @Controller('health')
 export class HealthController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly checkReadinessUseCase: CheckReadinessUseCase) {}
 
   @Get('live')
   @SkipThrottle()
@@ -21,7 +21,7 @@ export class HealthController {
   @ApiOperation({ summary: 'Readiness check (includes DB)' })
   @ApiOkResponse({ description: 'Service is ready and database is reachable' })
   async checkReadiness() {
-    await this.prisma.$queryRaw`SELECT 1`;
+    await this.checkReadinessUseCase.checkReadiness();
     return { status: 'ok' };
   }
 }

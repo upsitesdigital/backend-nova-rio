@@ -1,7 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { EMPLOYEE_REPOSITORY } from '../../../domain/interfaces/employee.repository.interface.js';
 import { UpdateEmployeeUseCase } from './update-employee.use-case.js';
 
 describe('UpdateEmployeeUseCase', () => {
@@ -33,7 +33,7 @@ describe('UpdateEmployeeUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateEmployeeUseCase,
-        { provide: EMPLOYEE_REPOSITORY, useValue: employeeRepository },
+        { provide: DiTokens.employeeRepository, useValue: employeeRepository },
       ],
     }).compile();
 

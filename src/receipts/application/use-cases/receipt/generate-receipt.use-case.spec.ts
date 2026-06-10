@@ -1,8 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { PAYMENT_REPOSITORY } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
-import { RECEIPT_GENERATOR } from '../../../domain/interfaces/receipt-generator.interface.js';
-import { RECEIPT_REPOSITORY } from '../../../domain/interfaces/receipt.repository.interface.js';
 import { GenerateReceiptUseCase } from './generate-receipt.use-case.js';
 
 describe('GenerateReceiptUseCase', () => {
@@ -54,9 +52,9 @@ describe('GenerateReceiptUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GenerateReceiptUseCase,
-        { provide: RECEIPT_REPOSITORY, useValue: receiptRepository },
-        { provide: RECEIPT_GENERATOR, useValue: receiptGenerator },
-        { provide: PAYMENT_REPOSITORY, useValue: paymentRepository },
+        { provide: DiTokens.receiptRepository, useValue: receiptRepository },
+        { provide: DiTokens.receiptGenerator, useValue: receiptGenerator },
+        { provide: DiTokens.paymentRepository, useValue: paymentRepository },
       ],
     }).compile();
 

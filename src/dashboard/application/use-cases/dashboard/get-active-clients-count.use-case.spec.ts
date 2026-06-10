@@ -1,6 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { DASHBOARD_REPOSITORY } from '../../../domain/interfaces/dashboard.repository.interface.js';
 import { GetActiveClientsCountUseCase } from './get-active-clients-count.use-case.js';
 
 describe('GetActiveClientsCountUseCase', () => {
@@ -13,7 +13,7 @@ describe('GetActiveClientsCountUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetActiveClientsCountUseCase,
-        { provide: DASHBOARD_REPOSITORY, useValue: dashboardRepository },
+        { provide: DiTokens.dashboardRepository, useValue: dashboardRepository },
       ],
     }).compile();
 

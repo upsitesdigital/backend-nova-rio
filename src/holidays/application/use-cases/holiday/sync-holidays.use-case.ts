@@ -1,14 +1,8 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
+import { RioHolidays } from '../../../domain/constants/rio-holidays.constant.js';
+import { type IBrasilApiHolidaysService } from '../../../domain/interfaces/brasil-api-holidays.service.interface.js';
 import {
-  PONTOS_FACULTATIVOS,
-  RIO_DE_JANEIRO_HOLIDAYS,
-} from '../../../domain/constants/rio-holidays.constant.js';
-import {
-  BRASIL_API_HOLIDAYS_SERVICE,
-  type IBrasilApiHolidaysService,
-} from '../../../domain/interfaces/brasil-api-holidays.service.interface.js';
-import {
-  HOLIDAY_REPOSITORY,
   type CreateHolidayData,
   type IHolidayRepository,
 } from '../../../domain/interfaces/holiday.repository.interface.js';
@@ -17,8 +11,8 @@ import type { SyncHolidaysDto } from '../../../dto/holiday/sync-holidays.dto.js'
 @Injectable()
 export class SyncHolidaysUseCase {
   constructor(
-    @Inject(HOLIDAY_REPOSITORY) private holidayRepository: IHolidayRepository,
-    @Inject(BRASIL_API_HOLIDAYS_SERVICE) private brasilApiService: IBrasilApiHolidaysService,
+    @Inject(DiTokens.holidayRepository) private holidayRepository: IHolidayRepository,
+    @Inject(DiTokens.brasilApiHolidaysService) private brasilApiService: IBrasilApiHolidaysService,
   ) {}
 
   async syncHolidaysByYear(dto: SyncHolidaysDto) {
@@ -33,13 +27,13 @@ export class SyncHolidaysUseCase {
         type: 'national',
         isBlocked: true,
       })),
-      ...RIO_DE_JANEIRO_HOLIDAYS.map((h) => ({
+      ...RioHolidays.stateMunicipal.map((h) => ({
         date: new Date(dto.year, h.month - 1, h.day),
         name: h.name,
         type: h.type,
         isBlocked: true,
       })),
-      ...PONTOS_FACULTATIVOS.map((h) => ({
+      ...RioHolidays.pontosFacultativos.map((h) => ({
         date: new Date(dto.year, h.month - 1, h.day),
         name: h.name,
         type: h.type,

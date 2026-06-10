@@ -1,5 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
+import { AppointmentStatus } from '@prisma/client';
 import type {
   AppointmentResponse,
   IAppointmentRepository,
@@ -8,7 +9,7 @@ import type {
 @Injectable()
 export class CompleteAppointmentUseCase {
   constructor(
-    @Inject(APPOINTMENT_REPOSITORY) private appointmentRepository: IAppointmentRepository,
+    @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
   ) {}
 
   async completeAppointmentById(id: number): Promise<AppointmentResponse> {
@@ -18,7 +19,7 @@ export class CompleteAppointmentUseCase {
       throw new NotFoundException('Appointment not found');
     }
 
-    if (existing.status !== 'SCHEDULED') {
+    if (existing.status !== AppointmentStatus.SCHEDULED) {
       throw new BadRequestException('Only scheduled appointments can be completed');
     }
 
