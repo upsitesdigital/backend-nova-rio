@@ -22,7 +22,10 @@ export class CancelAppointmentUseCase {
       throw new BadRequestException('Only scheduled appointments can be cancelled');
     }
 
-    await this.appointmentRepository.cancelAppointmentById(id);
+    const cancelled = await this.appointmentRepository.cancelAppointmentById(id);
+    if (cancelled === false) {
+      throw new BadRequestException('Only scheduled appointments can be cancelled');
+    }
 
     this.emailService
       .sendAppointmentCancelledEmail(

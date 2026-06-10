@@ -156,19 +156,25 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
     });
   }
 
-  async cancelAppointmentById(id: number): Promise<void> {
-    await this.prisma.appointment.update({
-      where: { id },
+  async cancelAppointmentById(id: number): Promise<boolean> {
+    const updated = await this.prisma.appointment.updateMany({
+      where: { id, status: 'SCHEDULED' },
       data: { status: 'CANCELLED' },
     });
+    return updated.count === 1;
   }
 
-  async completeAppointmentById(id: number): Promise<AppointmentResponse> {
-    return this.prisma.appointment.update({
-      where: { id },
+  async completeAppointmentById(id: number): Promise<AppointmentResponse | null> {
+    const updated = await this.prisma.appointment.updateMany({
+      where: { id, status: 'SCHEDULED' },
       data: { status: 'COMPLETED' },
-      include: APPOINTMENT_INCLUDE,
     });
+
+    if (updated.count !== 1) {
+      return null;
+    }
+
+    return this.findAppointmentById(id);
   }
 
   async rescheduleAppointment(
@@ -176,7 +182,7 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
     data: UpdateAppointmentData,
     conflictCheck?: ConflictCheckParams,
     clientConflictCheck?: ClientConflictCheckParams,
-  ): Promise<AppointmentResponse> {
+  ): Promise<AppointmentResponse | null> {
     const updateData = this.buildUpdateInput(data);
 
     return this.prisma.$transaction(async (tx) => {
@@ -187,9 +193,17 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
         await this.lockAndCheckClientConflict(tx, clientConflictCheck);
       }
 
-      return tx.appointment.update({
-        where: { id },
+      const updated = await tx.appointment.updateMany({
+        where: { id, status: 'SCHEDULED' },
         data: updateData,
+      });
+
+      if (updated.count !== 1) {
+        return null;
+      }
+
+      return tx.appointment.findUnique({
+        where: { id },
         include: APPOINTMENT_INCLUDE,
       });
     });
