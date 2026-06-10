@@ -26,7 +26,13 @@ export class RefreshTokenUseCase {
   ) {}
 
   async refreshTokens(dto: RefreshTokenDto): Promise<TokenPair> {
-    const payload = await this.tokenService.verifyRefreshToken(dto.refreshToken);
+    const verified = await this.tokenService.verifyRefreshToken(dto.refreshToken);
+    const payload = {
+      sub: verified.sub,
+      email: verified.email,
+      type: verified.type,
+      ...(verified.role ? { role: verified.role } : {}),
+    };
 
     const repo = payload.type === 'client' ? this.clientAuthRepository : this.adminAuthRepository;
 
