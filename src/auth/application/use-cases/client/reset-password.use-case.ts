@@ -8,8 +8,6 @@ import type { IEmailService } from '../../../../email/domain/interfaces/email.se
 import type { ResetPasswordDto } from '../../../dto/reset-password.dto.js';
 
 const MAX_FAILED_ATTEMPTS = 5;
-const LOCKOUT_WINDOW_MS = 15 * 60 * 1000;
-
 @Injectable()
 export class ResetPasswordUseCase {
   private readonly logger = new Logger(ResetPasswordUseCase.name);
@@ -27,7 +25,10 @@ export class ResetPasswordUseCase {
       throw new BadRequestException('Invalid or expired code');
     }
 
-    await this.checkBruteForce(client.id);
+    const attempt = await this.clientRepository.reserveResetAttempt(client.id);
+    if (!attempt.allowed) {
+      throw new BadRequestException('Invalid or expired code');
+    }
 
     const activeCodes = await this.clientRepository.findActiveVerificationCodes(
       client.id,
@@ -35,7 +36,6 @@ export class ResetPasswordUseCase {
     );
 
     if (activeCodes.length === 0) {
-      await this.recordFailedAttempt(client.id);
       throw new BadRequestException('Invalid or expired code');
     }
 
@@ -50,52 +50,31 @@ export class ResetPasswordUseCase {
     }
 
     if (matchedCodeId === null) {
-      await this.recordFailedAttempt(client.id);
-
-      const { failedResetAttempts } = await this.clientRepository.getResetAttempts(client.id);
-      if (failedResetAttempts >= MAX_FAILED_ATTEMPTS) {
+      if (attempt.failedResetAttempts >= MAX_FAILED_ATTEMPTS) {
         await this.clientRepository.deleteVerificationCodesByClientId(client.id, 'PASSWORD_CHANGE');
       }
 
       throw new BadRequestException('Invalid or expired code');
     }
 
-    await this.clientRepository.clearResetAttempts(client.id);
-
     const hashedPassword = await this.hashService.hash(dto.newPassword);
 
-    await this.clientRepository.completePasswordReset(client.id, hashedPassword);
+    const completed = await this.clientRepository.completePasswordReset(
+      client.id,
+      matchedCodeId,
+      hashedPassword,
+    );
+
+    if (completed === false) {
+      throw new BadRequestException('Invalid or expired code');
+    }
+
+    await this.clientRepository.clearResetAttempts(client.id);
 
     this.emailService
       .sendPasswordChangedEmail(dto.email, client.name)
       .catch((err) => this.logger.error('Failed to send password changed email', err));
 
     return { message: 'Password reset successfully' };
-  }
-
-  private async checkBruteForce(clientId: number): Promise<void> {
-    const { failedResetAttempts, resetLockedUntil } =
-      await this.clientRepository.getResetAttempts(clientId);
-
-    if (resetLockedUntil && resetLockedUntil > new Date()) {
-      throw new BadRequestException('Invalid or expired code');
-    }
-
-    if (resetLockedUntil && resetLockedUntil <= new Date()) {
-      await this.clientRepository.clearResetAttempts(clientId);
-      return;
-    }
-
-    if (failedResetAttempts >= MAX_FAILED_ATTEMPTS) {
-      throw new BadRequestException('Invalid or expired code');
-    }
-  }
-
-  private async recordFailedAttempt(clientId: number): Promise<void> {
-    await this.clientRepository.incrementResetAttempts(
-      clientId,
-      MAX_FAILED_ATTEMPTS,
-      LOCKOUT_WINDOW_MS,
-    );
   }
 }

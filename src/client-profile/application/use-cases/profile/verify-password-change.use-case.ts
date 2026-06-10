@@ -48,7 +48,11 @@ export class VerifyPasswordChangeUseCase {
 
     const hashedPassword = await this.hashService.hash(dto.newPassword);
 
-    await this.clientRepository.markVerificationCodeAsUsed(matchedCodeId);
+    const consumed = await this.clientRepository.markVerificationCodeAsUsed(matchedCodeId);
+    if (consumed === false) {
+      throw new BadRequestException('Invalid verification code');
+    }
+
     await this.clientRepository.updatePassword(clientId, hashedPassword);
 
     void this.emailService.sendPasswordChangedEmail(client.email, client.name);

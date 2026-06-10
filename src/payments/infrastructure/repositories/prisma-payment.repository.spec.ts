@@ -40,6 +40,7 @@ describe('PrismaPaymentRepository', () => {
       findUnique: ReturnType<typeof vi.fn>;
       findFirst: ReturnType<typeof vi.fn>;
       update: ReturnType<typeof vi.fn>;
+      updateMany: ReturnType<typeof vi.fn>;
       count: ReturnType<typeof vi.fn>;
     };
   };
@@ -52,6 +53,7 @@ describe('PrismaPaymentRepository', () => {
         findUnique: vi.fn().mockResolvedValue(mockPayment),
         findFirst: vi.fn().mockResolvedValue(mockPayment),
         update: vi.fn().mockResolvedValue(mockPayment),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
         count: vi.fn().mockResolvedValue(1),
       },
     };
@@ -181,9 +183,9 @@ describe('PrismaPaymentRepository', () => {
     it('should approve payment and set paidAt', async () => {
       await repository.approvePaymentById(1);
 
-      expect(prisma.payment.update).toHaveBeenCalledWith(
+      expect(prisma.payment.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 1 },
+          where: { id: 1, status: 'PENDING' },
           data: { status: 'APPROVED', paidAt: expect.any(Date) as Date },
         }),
       );
@@ -194,9 +196,9 @@ describe('PrismaPaymentRepository', () => {
     it('should cancel payment with reason', async () => {
       await repository.cancelPaymentById(1, 'Customer request');
 
-      expect(prisma.payment.update).toHaveBeenCalledWith(
+      expect(prisma.payment.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 1 },
+          where: { id: 1, status: 'PENDING' },
           data: { status: 'CANCELLED', cancellationReason: 'Customer request' },
         }),
       );

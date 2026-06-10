@@ -22,6 +22,11 @@ export class CompleteAppointmentUseCase {
       throw new BadRequestException('Only scheduled appointments can be completed');
     }
 
-    return this.appointmentRepository.completeAppointmentById(id);
+    const completed = await this.appointmentRepository.completeAppointmentById(id);
+    if (completed === null) {
+      throw new BadRequestException('Only scheduled appointments can be completed');
+    }
+
+    return completed;
   }
 }

@@ -58,6 +58,10 @@ export interface ListPaymentsFilters {
 
 export interface IPaymentRepository {
   createPayment(data: CreatePaymentData): Promise<PaymentResponse>;
+  updatePaymentGatewayDetails(
+    id: number,
+    data: Pick<CreatePaymentData, 'gatewayTransactionId' | 'pixCode' | 'pixQrCodeUrl'>,
+  ): Promise<PaymentResponse>;
   listPayments(filters: ListPaymentsFilters): Promise<PaginatedPayments>;
   listPaymentsByClientId(
     clientId: number,
@@ -69,7 +73,7 @@ export interface IPaymentRepository {
   findPaymentById(id: number): Promise<PaymentResponse | null>;
   findPaymentByIdAndClientId(id: number, clientId: number): Promise<PaymentResponse | null>;
   findPaymentByGatewayTransactionId(transactionId: string): Promise<PaymentResponse | null>;
-  approvePaymentById(id: number): Promise<PaymentResponse>;
-  cancelPaymentById(id: number, reason: string): Promise<PaymentResponse>;
+  approvePaymentById(id: number): Promise<PaymentResponse | null>;
+  cancelPaymentById(id: number, reason: string): Promise<PaymentResponse | null>;
   deletePaymentById(id: number): Promise<void>;
 }

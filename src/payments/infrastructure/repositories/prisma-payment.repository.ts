@@ -58,6 +58,21 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     }
   }
 
+  async updatePaymentGatewayDetails(
+    id: number,
+    data: Pick<CreatePaymentData, 'gatewayTransactionId' | 'pixCode' | 'pixQrCodeUrl'>,
+  ): Promise<PaymentResponse> {
+    return this.prisma.payment.update({
+      where: { id },
+      data: {
+        gatewayTransactionId: data.gatewayTransactionId,
+        pixCode: data.pixCode,
+        pixQrCodeUrl: data.pixQrCodeUrl,
+      },
+      include: PAYMENT_INCLUDE,
+    });
+  }
+
   async listPayments(filters: ListPaymentsFilters): Promise<PaginatedPayments> {
     const where: Prisma.PaymentWhereInput = {
       ...(filters.status ? { status: filters.status } : {}),
@@ -144,20 +159,30 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     });
   }
 
-  async approvePaymentById(id: number): Promise<PaymentResponse> {
-    return this.prisma.payment.update({
-      where: { id },
+  async approvePaymentById(id: number): Promise<PaymentResponse | null> {
+    const updated = await this.prisma.payment.updateMany({
+      where: { id, status: 'PENDING' },
       data: { status: 'APPROVED', paidAt: new Date() },
-      include: PAYMENT_INCLUDE,
     });
+
+    if (updated.count !== 1) {
+      return null;
+    }
+
+    return this.findPaymentById(id);
   }
 
-  async cancelPaymentById(id: number, reason: string): Promise<PaymentResponse> {
-    return this.prisma.payment.update({
-      where: { id },
+  async cancelPaymentById(id: number, reason: string): Promise<PaymentResponse | null> {
+    const updated = await this.prisma.payment.updateMany({
+      where: { id, status: 'PENDING' },
       data: { status: 'CANCELLED', cancellationReason: reason },
-      include: PAYMENT_INCLUDE,
     });
+
+    if (updated.count !== 1) {
+      return null;
+    }
+
+    return this.findPaymentById(id);
   }
 
   async deletePaymentById(id: number): Promise<void> {

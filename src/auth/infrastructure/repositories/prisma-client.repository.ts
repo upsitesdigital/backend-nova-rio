@@ -89,19 +89,37 @@ export class PrismaClientRepository implements IClientRepository {
     return result?.refreshToken ?? null;
   }
 
-  async incrementFailedLoginAttempts(id: number): Promise<void> {
-    const client = await this.prisma.client.update({
-      where: { id },
-      data: { failedLoginAttempts: { increment: 1 } },
-      select: { failedLoginAttempts: true },
-    });
+  async reserveLoginAttempt(id: number): Promise<boolean> {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`
+        UPDATE clients
+        SET "failedLoginAttempts" = 0, "lockedUntil" = NULL
+        WHERE id = ${id}
+          AND "lockedUntil" IS NOT NULL
+          AND "lockedUntil" <= NOW()
+      `;
 
-    if (client.failedLoginAttempts >= LOCKOUT_THRESHOLD) {
-      await this.prisma.client.update({
-        where: { id },
-        data: { lockedUntil: new Date(Date.now() + LOCKOUT_DURATION_MS) },
-      });
-    }
+      const rows = await tx.$queryRaw<Array<{ failedLoginAttempts: number }>>`
+        UPDATE clients
+        SET
+          "failedLoginAttempts" = "failedLoginAttempts" + 1,
+          "lockedUntil" = CASE
+            WHEN "failedLoginAttempts" + 1 >= ${LOCKOUT_THRESHOLD}
+            THEN NOW() + (${LOCKOUT_DURATION_MS} * INTERVAL '1 millisecond')
+            ELSE "lockedUntil"
+          END
+        WHERE id = ${id}
+          AND ("lockedUntil" IS NULL OR "lockedUntil" <= NOW())
+          AND "failedLoginAttempts" < ${LOCKOUT_THRESHOLD}
+        RETURNING "failedLoginAttempts"
+      `;
+
+      return rows.length === 1;
+    });
+  }
+
+  async incrementFailedLoginAttempts(id: number): Promise<void> {
+    await this.reserveLoginAttempt(id);
   }
 
   async resetFailedLoginAttempts(id: number): Promise<void> {
@@ -115,11 +133,13 @@ export class PrismaClientRepository implements IClientRepository {
     id: number,
     refreshToken: string,
     tokenFamily: string,
-  ): Promise<void> {
-    await this.prisma.client.update({
-      where: { id },
+    currentRefreshToken?: string,
+  ): Promise<boolean> {
+    const updated = await this.prisma.client.updateMany({
+      where: { id, ...(currentRefreshToken ? { refreshToken: currentRefreshToken } : {}) },
       data: { refreshToken, tokenFamily },
     });
+    return updated.count === 1;
   }
 
   async getRefreshTokenAndFamily(
@@ -175,11 +195,12 @@ export class PrismaClientRepository implements IClientRepository {
     });
   }
 
-  async markVerificationCodeAsUsed(id: number): Promise<void> {
-    await this.prisma.verificationCode.update({
-      where: { id },
+  async markVerificationCodeAsUsed(id: number): Promise<boolean> {
+    const updated = await this.prisma.verificationCode.updateMany({
+      where: { id, usedAt: null },
       data: { usedAt: new Date() },
     });
+    return updated.count === 1;
   }
 
   async updateEmail(id: number, email: string): Promise<void> {
@@ -196,15 +217,29 @@ export class PrismaClientRepository implements IClientRepository {
     });
   }
 
-  async completePasswordReset(clientId: number, hashedPassword: string): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
+  async completePasswordReset(
+    clientId: number,
+    verificationCodeId: number,
+    hashedPassword: string,
+  ): Promise<boolean> {
+    return this.prisma.$transaction(async (tx) => {
+      const consumed = await tx.verificationCode.updateMany({
+        where: { id: verificationCodeId, clientId, type: 'PASSWORD_CHANGE', usedAt: null },
+        data: { usedAt: new Date() },
+      });
+
+      if (consumed.count !== 1) {
+        return false;
+      }
+
       await tx.client.update({
         where: { id: clientId },
         data: { password: hashedPassword },
       });
       await tx.verificationCode.deleteMany({
-        where: { clientId, type: 'PASSWORD_CHANGE' },
+        where: { clientId, type: 'PASSWORD_CHANGE', id: { not: verificationCodeId } },
       });
+      return true;
     });
   }
 
@@ -221,23 +256,59 @@ export class PrismaClientRepository implements IClientRepository {
     };
   }
 
+  async reserveResetAttempt(
+    clientId: number,
+  ): Promise<{ allowed: boolean; failedResetAttempts: number }> {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`
+        UPDATE clients
+        SET "failedResetAttempts" = 0, "resetLockedUntil" = NULL
+        WHERE id = ${clientId}
+          AND "resetLockedUntil" IS NOT NULL
+          AND "resetLockedUntil" <= NOW()
+      `;
+
+      const rows = await tx.$queryRaw<Array<{ failedResetAttempts: number }>>`
+        UPDATE clients
+        SET
+          "failedResetAttempts" = "failedResetAttempts" + 1,
+          "resetLockedUntil" = CASE
+            WHEN "failedResetAttempts" + 1 >= ${LOCKOUT_THRESHOLD}
+            THEN NOW() + (${LOCKOUT_DURATION_MS} * INTERVAL '1 millisecond')
+            ELSE "resetLockedUntil"
+          END
+        WHERE id = ${clientId}
+          AND ("resetLockedUntil" IS NULL OR "resetLockedUntil" <= NOW())
+          AND "failedResetAttempts" < ${LOCKOUT_THRESHOLD}
+        RETURNING "failedResetAttempts"
+      `;
+
+      return {
+        allowed: rows.length === 1,
+        failedResetAttempts: rows[0]?.failedResetAttempts ?? LOCKOUT_THRESHOLD,
+      };
+    });
+  }
+
   async incrementResetAttempts(
     clientId: number,
     maxAttempts: number,
     lockoutWindowMs: number,
   ): Promise<void> {
-    const updated = await this.prisma.client.update({
-      where: { id: clientId },
-      data: { failedResetAttempts: { increment: 1 } },
-      select: { failedResetAttempts: true },
-    });
-
-    if (updated.failedResetAttempts >= maxAttempts) {
-      await this.prisma.client.update({
-        where: { id: clientId },
-        data: { resetLockedUntil: new Date(Date.now() + lockoutWindowMs) },
-      });
-    }
+    const lockoutThreshold = maxAttempts;
+    const rows = await this.prisma.$queryRaw<Array<{ failedResetAttempts: number }>>`
+      UPDATE clients
+      SET
+        "failedResetAttempts" = "failedResetAttempts" + 1,
+        "resetLockedUntil" = CASE
+          WHEN "failedResetAttempts" + 1 >= ${lockoutThreshold}
+          THEN NOW() + (${lockoutWindowMs} * INTERVAL '1 millisecond')
+          ELSE "resetLockedUntil"
+        END
+      WHERE id = ${clientId}
+      RETURNING "failedResetAttempts"
+    `;
+    void rows;
   }
 
   async clearResetAttempts(clientId: number): Promise<void> {

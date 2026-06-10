@@ -28,6 +28,7 @@ export type AdminProfile = Pick<
 export interface IAdminAuthRepository {
   findByEmail(email: string): Promise<AdminData | null>;
   findById(id: number): Promise<AdminData | null>;
+  reserveLoginAttempt(id: number): Promise<boolean>;
   incrementFailedLoginAttempts(id: number): Promise<void>;
   resetFailedLoginAttempts(id: number): Promise<void>;
   updateRefreshToken(id: number, refreshToken: string | null): Promise<void>;
@@ -36,7 +37,8 @@ export interface IAdminAuthRepository {
     id: number,
     refreshToken: string,
     tokenFamily: string,
-  ): Promise<void>;
+    currentRefreshToken?: string,
+  ): Promise<boolean>;
   getRefreshTokenAndFamily(
     id: number,
   ): Promise<{ refreshToken: string | null; tokenFamily: string | null }>;

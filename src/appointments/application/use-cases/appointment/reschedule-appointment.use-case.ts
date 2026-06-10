@@ -65,6 +65,10 @@ export class RescheduleAppointmentUseCase {
       clientConflictCheck,
     );
 
+    if (rescheduled === null) {
+      throw new BadRequestException('Only scheduled appointments can be rescheduled');
+    }
+
     this.emailService
       .sendAppointmentRescheduledEmail(
         existing.client.email,

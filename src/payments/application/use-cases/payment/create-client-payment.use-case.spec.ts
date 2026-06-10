@@ -12,7 +12,11 @@ import { CreateClientPaymentUseCase } from './create-client-payment.use-case.js'
 
 describe('CreateClientPaymentUseCase', () => {
   let useCase: CreateClientPaymentUseCase;
-  let paymentRepository: { createPayment: Mock; findPaymentByAppointmentId: Mock };
+  let paymentRepository: {
+    createPayment: Mock;
+    updatePaymentGatewayDetails: Mock;
+    findPaymentByAppointmentId: Mock;
+  };
   let appointmentRepository: { findAppointmentByIdAndClientId: Mock };
   let cardRepository: { findCardByIdAndClientId: Mock };
   let paymentGatewayService: {
@@ -84,6 +88,7 @@ describe('CreateClientPaymentUseCase', () => {
   beforeEach(async () => {
     paymentRepository = {
       createPayment: vi.fn(),
+      updatePaymentGatewayDetails: vi.fn().mockResolvedValue(createdPayment),
       findPaymentByAppointmentId: vi.fn().mockResolvedValue(null),
     };
     appointmentRepository = { findAppointmentByIdAndClientId: vi.fn() };
@@ -181,6 +186,11 @@ describe('CreateClientPaymentUseCase', () => {
     expect(paymentRepository.createPayment).toHaveBeenCalledWith(
       expect.objectContaining({
         amount: 200,
+      }),
+    );
+    expect(paymentRepository.updatePaymentGatewayDetails).toHaveBeenCalledWith(
+      createdPayment.id,
+      expect.objectContaining({
         gatewayTransactionId: '100',
         pixCode: 'pix-code-from-vindi',
         pixQrCodeUrl: 'https://vindi.com/qr/abc123',

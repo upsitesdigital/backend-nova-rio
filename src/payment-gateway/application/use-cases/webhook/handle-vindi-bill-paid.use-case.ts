@@ -30,6 +30,10 @@ export class HandleVindiBillPaidUseCase {
     }
 
     const approved = await this.paymentRepository.approvePaymentById(payment.id);
+    if (!approved) {
+      this.logger.log(`Payment ${payment.id} changed before webhook approval, skipping`);
+      return;
+    }
 
     this.emailService
       .sendPaymentApprovedEmail(
