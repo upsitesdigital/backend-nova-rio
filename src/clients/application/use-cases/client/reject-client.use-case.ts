@@ -22,7 +22,10 @@ export class RejectClientUseCase {
       throw new BadRequestException('Only pending clients can be rejected');
     }
 
-    await this.clientMgmtRepository.rejectClientById(id);
+    const rejected = await this.clientMgmtRepository.rejectClientById(id);
+    if (rejected === false) {
+      throw new BadRequestException('Only pending clients can be rejected');
+    }
 
     void this.emailService.sendClientRejectedEmail(client.email, client.name);
   }

@@ -55,6 +55,7 @@ export interface IClientAuthRepository {
   findById(id: number): Promise<ClientData | null>;
   findStatusById(id: number): Promise<{ status: string } | null>;
   create(data: CreateClientData): Promise<ClientData>;
+  reserveLoginAttempt(id: number): Promise<boolean>;
   incrementFailedLoginAttempts(id: number): Promise<void>;
   resetFailedLoginAttempts(id: number): Promise<void>;
   updateRefreshToken(id: number, refreshToken: string | null): Promise<void>;
@@ -63,7 +64,8 @@ export interface IClientAuthRepository {
     id: number,
     refreshToken: string,
     tokenFamily: string,
-  ): Promise<void>;
+    currentRefreshToken?: string,
+  ): Promise<boolean>;
   getRefreshTokenAndFamily(
     id: number,
   ): Promise<{ refreshToken: string | null; tokenFamily: string | null }>;
@@ -83,13 +85,18 @@ export interface IClientVerificationRepository {
   ): Promise<void>;
   deleteVerificationCodesByClientId(clientId: number, type: string): Promise<void>;
   findActiveVerificationCodes(clientId: number, type: string): Promise<VerificationCodeRecord[]>;
-  markVerificationCodeAsUsed(id: number): Promise<void>;
+  markVerificationCodeAsUsed(id: number): Promise<boolean>;
   updateEmail(id: number, email: string): Promise<void>;
   updatePassword(id: number, password: string): Promise<void>;
-  completePasswordReset(clientId: number, hashedPassword: string): Promise<void>;
+  completePasswordReset(
+    clientId: number,
+    verificationCodeId: number,
+    hashedPassword: string,
+  ): Promise<boolean>;
   getResetAttempts(
     clientId: number,
   ): Promise<{ failedResetAttempts: number; resetLockedUntil: Date | null }>;
+  reserveResetAttempt(clientId: number): Promise<{ allowed: boolean; failedResetAttempts: number }>;
   incrementResetAttempts(
     clientId: number,
     maxAttempts: number,

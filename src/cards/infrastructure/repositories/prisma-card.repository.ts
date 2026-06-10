@@ -29,6 +29,7 @@ export class PrismaCardRepository implements ICardRepository {
 
   async createDefaultCard(data: CreateCardData): Promise<CardResponse> {
     return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM cards WHERE "clientId" = ${data.clientId} FOR UPDATE`;
       await tx.card.updateMany({
         where: { clientId: data.clientId, isDefault: true },
         data: { isDefault: false },
@@ -54,6 +55,7 @@ export class PrismaCardRepository implements ICardRepository {
 
   async switchDefaultCardById(id: number, clientId: number): Promise<CardResponse> {
     return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM cards WHERE "clientId" = ${clientId} FOR UPDATE`;
       await tx.card.updateMany({
         where: { clientId, isDefault: true },
         data: { isDefault: false },

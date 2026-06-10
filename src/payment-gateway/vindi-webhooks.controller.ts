@@ -13,6 +13,7 @@ import { ApiExcludeController } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { Request } from 'express';
+import { PrismaService } from '../shared/prisma/prisma.service.js';
 import type {
   VindiWebhookBillData,
   VindiWebhookChargeData,
@@ -31,6 +32,7 @@ export class VindiWebhooksController {
     private readonly handleBillPaid: HandleVindiBillPaidUseCase,
     private readonly handleChargeRejected: HandleVindiChargeRejectedUseCase,
     private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Post()
@@ -44,6 +46,17 @@ export class VindiWebhooksController {
 
     const eventType = payload?.event?.type;
     this.logger.log(`Received Vindi webhook: ${eventType}`);
+
+    const eventId = this.getEventId(payload);
+    const inserted = await this.prisma.processedWebhookEvent.createMany({
+      data: { eventId, provider: 'vindi' },
+      skipDuplicates: true,
+    });
+
+    if (inserted.count === 0) {
+      this.logger.log(`Duplicate Vindi webhook skipped: ${eventId}`);
+      return { received: true };
+    }
 
     try {
       switch (eventType) {
@@ -75,6 +88,17 @@ export class VindiWebhooksController {
     }
 
     return { received: true };
+  }
+
+  private getEventId(payload: VindiWebhookPayload): string {
+    const rawEvent = payload.event as VindiWebhookPayload['event'] & { id?: string | number };
+    if (rawEvent.id !== undefined && rawEvent.id !== null) {
+      return String(rawEvent.id);
+    }
+
+    return createHmac('sha256', this.configService.getOrThrow<string>('VINDI_WEBHOOK_SECRET'))
+      .update(JSON.stringify(payload))
+      .digest('hex');
   }
 
   private verifyWebhookSignature(signature: string | undefined, req: Request): void {

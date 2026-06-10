@@ -26,14 +26,18 @@ export class HandleVindiChargeRejectedUseCase {
       return;
     }
 
-    await this.paymentRepository.cancelPaymentById(payment.id, reason);
+    const cancelled = await this.paymentRepository.cancelPaymentById(payment.id, reason);
+    if (!cancelled) {
+      this.logger.log(`Payment ${payment.id} changed before webhook cancellation, skipping`);
+      return;
+    }
 
     this.emailService
       .sendPaymentCancelledEmail(
-        payment.client.email,
-        payment.client.name,
-        String(payment.amount),
-        payment.appointment.service.name,
+        cancelled.client.email,
+        cancelled.client.name,
+        String(cancelled.amount),
+        cancelled.appointment.service.name,
       )
       .catch(() => {});
 

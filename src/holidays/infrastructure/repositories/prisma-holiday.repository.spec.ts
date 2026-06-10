@@ -14,6 +14,7 @@ describe('PrismaHolidayRepository', () => {
       update: Mock;
       delete: Mock;
       upsert: Mock;
+      createMany: Mock;
     };
     $transaction: Mock;
   };
@@ -28,6 +29,7 @@ describe('PrismaHolidayRepository', () => {
         update: vi.fn(),
         delete: vi.fn(),
         upsert: vi.fn(),
+        createMany: vi.fn().mockResolvedValue({ count: 0 }),
       },
       $transaction: vi.fn(),
     };
@@ -160,37 +162,25 @@ describe('PrismaHolidayRepository', () => {
     });
   });
 
-  it('bulkUpsertHolidays should call prisma.$transaction with upsert operations', async () => {
+  it('bulkUpsertHolidays should create missing rows and update all rows', async () => {
     const holidays = [
       { date: new Date('2026-01-01'), name: 'Ano Novo', type: 'national', isBlocked: true },
       { date: new Date('2026-04-21'), name: 'Tiradentes', type: 'national', isBlocked: true },
     ];
 
-    prisma.$transaction.mockResolvedValue(undefined);
-
     await repository.bulkUpsertHolidays(holidays);
 
-    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
-    const transactionArg = prisma.$transaction.mock.calls[0][0] as unknown[];
-    expect(transactionArg).toHaveLength(2);
-    expect(prisma.holiday.upsert).toHaveBeenCalledTimes(2);
-    expect(prisma.holiday.upsert).toHaveBeenCalledWith({
-      where: { date: holidays[0].date },
-      update: { name: 'Ano Novo', type: 'national', isBlocked: true },
-      create: { date: holidays[0].date, name: 'Ano Novo', type: 'national', isBlocked: true },
+    expect(prisma.holiday.createMany).toHaveBeenCalledWith({
+      data: holidays,
+      skipDuplicates: true,
     });
-    expect(prisma.holiday.upsert).toHaveBeenCalledWith({
-      where: { date: holidays[1].date },
-      update: { name: 'Tiradentes', type: 'national', isBlocked: true },
-      create: { date: holidays[1].date, name: 'Tiradentes', type: 'national', isBlocked: true },
-    });
+    expect(prisma.holiday.update).toHaveBeenCalledTimes(2);
   });
 
   it('bulkUpsertHolidays should handle empty array', async () => {
-    prisma.$transaction.mockResolvedValue(undefined);
-
     await repository.bulkUpsertHolidays([]);
 
-    expect(prisma.$transaction).toHaveBeenCalledWith([]);
+    expect(prisma.holiday.createMany).toHaveBeenCalledWith({ data: [], skipDuplicates: true });
+    expect(prisma.holiday.update).not.toHaveBeenCalled();
   });
 });

@@ -6,6 +6,7 @@ import { type Mock, vi } from 'vitest';
 import { HandleVindiBillPaidUseCase } from './application/use-cases/webhook/handle-vindi-bill-paid.use-case.js';
 import { HandleVindiChargeRejectedUseCase } from './application/use-cases/webhook/handle-vindi-charge-rejected.use-case.js';
 import { VindiWebhooksController } from './vindi-webhooks.controller.js';
+import { PrismaService } from '../shared/prisma/prisma.service.js';
 
 const WEBHOOK_SECRET = 'test-webhook-secret';
 
@@ -21,10 +22,12 @@ describe('VindiWebhooksController', () => {
   let controller: VindiWebhooksController;
   let handleBillPaid: { handleBillPaid: Mock };
   let handleChargeRejected: { handleChargeRejected: Mock };
+  let prisma: { processedWebhookEvent: { createMany: Mock } };
 
   beforeEach(async () => {
     handleBillPaid = { handleBillPaid: vi.fn().mockResolvedValue(undefined) };
     handleChargeRejected = { handleChargeRejected: vi.fn().mockResolvedValue(undefined) };
+    prisma = { processedWebhookEvent: { createMany: vi.fn().mockResolvedValue({ count: 1 }) } };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [VindiWebhooksController],
@@ -35,6 +38,7 @@ describe('VindiWebhooksController', () => {
           provide: ConfigService,
           useValue: { getOrThrow: vi.fn().mockReturnValue(WEBHOOK_SECRET) },
         },
+        { provide: PrismaService, useValue: prisma },
       ],
     }).compile();
 

@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { unlink } from 'node:fs/promises';
 import { PAYMENT_REPOSITORY } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
 import type { IPaymentRepository } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
 import { RECEIPT_GENERATOR } from '../../../domain/interfaces/receipt-generator.interface.js';
@@ -34,6 +35,26 @@ export class GenerateReceiptUseCase implements IReceiptGenerationService {
 
     const fileUrl = await this.receiptGenerator.generateReceiptPdf(payment);
 
-    return this.receiptRepository.createReceipt({ paymentId, fileUrl });
+    try {
+      return await this.receiptRepository.createReceipt({ paymentId, fileUrl });
+    } catch (error) {
+      const duplicateReceipt =
+        error instanceof Error && 'code' in error && (error as { code: string }).code === 'P2002';
+
+      if (!duplicateReceipt) {
+        throw error;
+      }
+
+      await unlink(fileUrl).catch((err) =>
+        this.logger.warn(`Failed to remove duplicate receipt PDF ${fileUrl}`, err),
+      );
+
+      const winner = await this.receiptRepository.findReceiptByPaymentId(paymentId);
+      if (winner) {
+        return winner;
+      }
+
+      throw error;
+    }
   }
 }

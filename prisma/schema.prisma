@@ -314,7 +314,7 @@ model Payment {
   method          PaymentMethod
   status          PaymentStatus @default(PENDING)
   cancellationReason String?
-  gatewayTransactionId String?  // ID da transação no gateway
+  gatewayTransactionId String?  @unique // ID da transação no gateway
   pixCode         String?       // Código PIX quando aplicável
   pixQrCodeUrl    String?       // URL do QR Code PIX
   paidAt          DateTime?
@@ -367,6 +367,15 @@ model Holiday {
 
   @@unique([date])
   @@map("holidays")
+}
+
+model ProcessedWebhookEvent {
+  id        Int      @id @default(autoincrement())
+  eventId   String   @unique
+  provider  String
+  createdAt DateTime @default(now())
+
+  @@map("processed_webhook_events")
 }
 
 // ============================================================

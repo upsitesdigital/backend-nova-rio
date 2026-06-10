@@ -23,7 +23,7 @@ export class UpdateEmployeeUseCase {
         INACTIVE: ['ACTIVE'],
       };
       const allowed = validTransitions[existing.status] ?? [];
-      if (!allowed.includes(dto.status as string)) {
+      if (!allowed.includes(dto.status)) {
         throw new ConflictException(`Cannot transition from ${existing.status} to ${dto.status}`);
       }
     }

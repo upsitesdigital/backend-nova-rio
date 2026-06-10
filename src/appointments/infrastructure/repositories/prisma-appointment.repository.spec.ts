@@ -13,6 +13,7 @@ describe('PrismaAppointmentRepository', () => {
       findUnique: Mock;
       findFirst: Mock;
       update: Mock;
+      updateMany: Mock;
       count: Mock;
     };
     $transaction: Mock;
@@ -47,6 +48,7 @@ describe('PrismaAppointmentRepository', () => {
         findUnique: vi.fn(),
         findFirst: vi.fn(),
         update: vi.fn(),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
         count: vi.fn(),
       },
       $transaction: vi.fn(),
@@ -153,23 +155,24 @@ describe('PrismaAppointmentRepository', () => {
   });
 
   it('cancelAppointmentById should set status to CANCELLED', async () => {
-    prisma.appointment.update.mockResolvedValue({});
-
     await repository.cancelAppointmentById(1);
 
-    expect(prisma.appointment.update).toHaveBeenCalledWith({
-      where: { id: 1 },
+    expect(prisma.appointment.updateMany).toHaveBeenCalledWith({
+      where: { id: 1, status: 'SCHEDULED' },
       data: { status: 'CANCELLED' },
     });
   });
 
   it('completeAppointmentById should set status to COMPLETED', async () => {
-    prisma.appointment.update.mockResolvedValue(mockAppointment);
+    prisma.appointment.findUnique.mockResolvedValue(mockAppointment);
 
     await repository.completeAppointmentById(1);
 
-    expect(prisma.appointment.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { status: 'COMPLETED' } }),
+    expect(prisma.appointment.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 1, status: 'SCHEDULED' },
+        data: { status: 'COMPLETED' },
+      }),
     );
   });
 
@@ -177,7 +180,7 @@ describe('PrismaAppointmentRepository', () => {
     prisma.$transaction.mockImplementation(async (fn: (tx: typeof prisma) => Promise<unknown>) => {
       return fn(prisma);
     });
-    prisma.appointment.update.mockResolvedValue(mockAppointment);
+    prisma.appointment.findUnique.mockResolvedValue(mockAppointment);
 
     const result = await repository.rescheduleAppointment(1, {
       date: new Date('2026-03-20'),
@@ -185,9 +188,9 @@ describe('PrismaAppointmentRepository', () => {
     });
 
     expect(result).toEqual(mockAppointment);
-    expect(prisma.appointment.update).toHaveBeenCalledWith(
+    expect(prisma.appointment.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 1 },
+        where: { id: 1, status: 'SCHEDULED' },
         data: { date: expect.any(Date) as Date, startTime: '10:00' },
       }),
     );

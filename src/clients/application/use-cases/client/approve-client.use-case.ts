@@ -22,7 +22,10 @@ export class ApproveClientUseCase {
       throw new BadRequestException('Only pending clients can be approved');
     }
 
-    await this.clientMgmtRepository.approveClientById(id);
+    const approved = await this.clientMgmtRepository.approveClientById(id);
+    if (approved === false) {
+      throw new BadRequestException('Only pending clients can be approved');
+    }
 
     void this.emailService.sendClientApprovedEmail(client.email, client.name);
   }

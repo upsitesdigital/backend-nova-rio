@@ -30,6 +30,6 @@ export interface ListClientsFilters {
 export interface IClientManagementRepository {
   listClients(filters: ListClientsFilters): Promise<PaginatedResponse<ClientSafe>>;
   findClientById(id: number): Promise<ClientSafe | null>;
-  approveClientById(id: number): Promise<void>;
-  rejectClientById(id: number): Promise<void>;
+  approveClientById(id: number): Promise<boolean>;
+  rejectClientById(id: number): Promise<boolean>;
 }

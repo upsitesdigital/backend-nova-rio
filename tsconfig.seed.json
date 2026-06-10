@@ -2,7 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "commonjs",
-    "moduleResolution": "node",
+    "moduleResolution": "node10",
+    "rootDir": "./prisma",
+    "ignoreDeprecations": "6.0",
     "resolvePackageJsonExports": false,
     "types": [],
     "outDir": "./dist"
