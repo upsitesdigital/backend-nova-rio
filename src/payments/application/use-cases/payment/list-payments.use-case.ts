@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
-import { PAYMENT_REPOSITORY } from '../../../domain/interfaces/payment.repository.interface.js';
 import type {
   IPaymentRepository,
   ListPaymentsFilters,
@@ -9,7 +9,7 @@ import type { ListPaymentsQueryDto } from '../../../dto/payment/list-payments-qu
 
 @Injectable()
 export class ListPaymentsUseCase {
-  constructor(@Inject(PAYMENT_REPOSITORY) private paymentRepository: IPaymentRepository) {}
+  constructor(@Inject(DiTokens.paymentRepository) private paymentRepository: IPaymentRepository) {}
 
   async listPayments(query: ListPaymentsQueryDto): Promise<PaginatedPayments> {
     const filters: ListPaymentsFilters = {

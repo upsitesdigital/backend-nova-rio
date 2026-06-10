@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
-import { CARD_REPOSITORY } from '../../../domain/interfaces/card.repository.interface.js';
 import type {
   CardResponse,
   ICardRepository,
@@ -8,7 +8,7 @@ import type { AddCardDto } from '../../../dto/card/add-card.dto.js';
 
 @Injectable()
 export class AddCardUseCase {
-  constructor(@Inject(CARD_REPOSITORY) private cardRepository: ICardRepository) {}
+  constructor(@Inject(DiTokens.cardRepository) private cardRepository: ICardRepository) {}
 
   async addCard(clientId: number, dto: AddCardDto): Promise<CardResponse> {
     const data = {

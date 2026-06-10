@@ -1,6 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { REPORT_REPOSITORY } from '../../../domain/interfaces/report.repository.interface.js';
 import { GetHoursByServiceUseCase } from './get-hours-by-service.use-case.js';
 
 describe('GetHoursByServiceUseCase', () => {
@@ -13,7 +13,7 @@ describe('GetHoursByServiceUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetHoursByServiceUseCase,
-        { provide: REPORT_REPOSITORY, useValue: reportRepository },
+        { provide: DiTokens.reportRepository, useValue: reportRepository },
       ],
     }).compile();
 

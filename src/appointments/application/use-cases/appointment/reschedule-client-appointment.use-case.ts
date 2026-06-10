@@ -1,11 +1,9 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
+import { AppointmentStatus } from '@prisma/client';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
-import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
 import type {
   AppointmentResponse,
-  ClientConflictCheckParams,
-  ConflictCheckParams,
   IAppointmentRepository,
 } from '../../../domain/interfaces/appointment.repository.interface.js';
 import type { RescheduleAppointmentDto } from '../../../dto/appointment/reschedule-appointment.dto.js';
@@ -16,8 +14,8 @@ export class RescheduleClientAppointmentUseCase {
   private readonly logger = new Logger(RescheduleClientAppointmentUseCase.name);
 
   constructor(
-    @Inject(APPOINTMENT_REPOSITORY) private appointmentRepository: IAppointmentRepository,
-    @Inject(EMAIL_SERVICE) private emailService: IEmailService,
+    @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
+    @Inject(DiTokens.emailService) private emailService: IEmailService,
     private schedulingValidator: AppointmentSchedulingValidator,
   ) {}
 
@@ -32,7 +30,7 @@ export class RescheduleClientAppointmentUseCase {
       throw new NotFoundException('Appointment not found');
     }
 
-    if (existing.status !== 'SCHEDULED') {
+    if (existing.status !== AppointmentStatus.SCHEDULED) {
       throw new BadRequestException('Only scheduled appointments can be rescheduled');
     }
 
@@ -42,24 +40,18 @@ export class RescheduleClientAppointmentUseCase {
 
     await this.schedulingValidator.validateSchedulingDate(newDate);
 
-    let conflictCheck: ConflictCheckParams | undefined;
-    if (existing.employee) {
-      conflictCheck = {
-        employeeId: existing.employee.id,
-        date: newDate,
-        startTime: dto.startTime,
-        duration: existing.duration,
-        excludeId: id,
-      };
-    }
+    const conflictCheck = AppointmentSchedulingValidator.buildRescheduleConflictCheck(
+      existing,
+      newDate,
+      dto.startTime,
+    );
 
-    const clientConflictCheck: ClientConflictCheckParams = {
+    const clientConflictCheck = AppointmentSchedulingValidator.buildRescheduleClientConflictCheck(
+      existing,
       clientId,
-      date: newDate,
-      startTime: dto.startTime,
-      duration: existing.duration,
-      excludeId: id,
-    };
+      newDate,
+      dto.startTime,
+    );
 
     const rescheduled = await this.appointmentRepository.rescheduleAppointment(
       id,

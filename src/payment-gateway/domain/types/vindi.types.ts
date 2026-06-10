@@ -97,6 +97,17 @@ export interface VindiWebhookChargeData {
   };
 }
 
+export class VindiWebhookEventType {
+  static readonly billPaid = 'bill_paid';
+  static readonly chargeRejected = 'charge_rejected';
+  static readonly billCanceled = 'bill_canceled';
+}
+
+export type VindiWebhookEventTypeValue =
+  | typeof VindiWebhookEventType.billPaid
+  | typeof VindiWebhookEventType.chargeRejected
+  | typeof VindiWebhookEventType.billCanceled;
+
 export interface VindiWebhookPayload {
   event: {
     type: string;

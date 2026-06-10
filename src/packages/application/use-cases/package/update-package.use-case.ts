@@ -1,16 +1,15 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { Package } from '@prisma/client';
-import { SERVICE_REPOSITORY } from '../../../../services/domain/interfaces/service.repository.interface.js';
 import type { IServiceRepository } from '../../../../services/domain/interfaces/service.repository.interface.js';
-import { PACKAGE_REPOSITORY } from '../../../domain/interfaces/package.repository.interface.js';
 import type { IPackageRepository } from '../../../domain/interfaces/package.repository.interface.js';
-import { UpdatePackageDto } from '../../../dto/package/update-package.dto.js';
+import type { UpdatePackageDto } from '../../../dto/package/update-package.dto.js';
 
 @Injectable()
 export class UpdatePackageUseCase {
   constructor(
-    @Inject(PACKAGE_REPOSITORY) private packageRepository: IPackageRepository,
-    @Inject(SERVICE_REPOSITORY) private serviceRepository: IServiceRepository,
+    @Inject(DiTokens.packageRepository) private packageRepository: IPackageRepository,
+    @Inject(DiTokens.serviceRepository) private serviceRepository: IServiceRepository,
   ) {}
 
   async updatePackageById(id: number, dto: UpdatePackageDto): Promise<Package> {

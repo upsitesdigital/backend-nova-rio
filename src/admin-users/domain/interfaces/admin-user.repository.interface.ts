@@ -1,8 +1,6 @@
 import type { AdminRole, UserStatus } from '@prisma/client';
 import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 
-export const ADMIN_USER_REPOSITORY = Symbol('ADMIN_USER_REPOSITORY');
-
 export interface AdminUserSafe {
   id: number;
   uuid: string;

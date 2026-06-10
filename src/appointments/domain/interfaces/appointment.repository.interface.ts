@@ -1,8 +1,6 @@
 import type { AppointmentStatus, RecurrenceType } from '@prisma/client';
 import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 
-export const APPOINTMENT_REPOSITORY = Symbol('APPOINTMENT_REPOSITORY');
-
 export interface AppointmentResponse {
   id: number;
   uuid: string;

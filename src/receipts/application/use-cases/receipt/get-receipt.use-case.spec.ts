@@ -1,7 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { RECEIPT_REPOSITORY } from '../../../domain/interfaces/receipt.repository.interface.js';
 import { GetReceiptUseCase } from './get-receipt.use-case.js';
 
 describe('GetReceiptUseCase', () => {
@@ -20,7 +20,10 @@ describe('GetReceiptUseCase', () => {
     receiptRepository = { findReceiptByPaymentId: vi.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [GetReceiptUseCase, { provide: RECEIPT_REPOSITORY, useValue: receiptRepository }],
+      providers: [
+        GetReceiptUseCase,
+        { provide: DiTokens.receiptRepository, useValue: receiptRepository },
+      ],
     }).compile();
 
     useCase = module.get<GetReceiptUseCase>(GetReceiptUseCase);

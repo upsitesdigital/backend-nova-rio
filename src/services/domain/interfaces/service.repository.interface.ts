@@ -1,8 +1,6 @@
 import type { Service } from '@prisma/client';
 import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 
-export const SERVICE_REPOSITORY = Symbol('SERVICE_REPOSITORY');
-
 export interface CreateServiceData {
   name: string;
   description?: string;

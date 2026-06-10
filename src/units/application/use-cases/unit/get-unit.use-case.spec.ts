@@ -1,7 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { UNIT_REPOSITORY } from '../../../domain/interfaces/unit.repository.interface.js';
 import { GetUnitUseCase } from './get-unit.use-case.js';
 
 describe('GetUnitUseCase', () => {
@@ -14,7 +14,7 @@ describe('GetUnitUseCase', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [GetUnitUseCase, { provide: UNIT_REPOSITORY, useValue: unitRepository }],
+      providers: [GetUnitUseCase, { provide: DiTokens.unitRepository, useValue: unitRepository }],
     }).compile();
 
     useCase = module.get<GetUnitUseCase>(GetUnitUseCase);

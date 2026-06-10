@@ -1,7 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { BRASIL_API_HOLIDAYS_SERVICE } from '../../../domain/interfaces/brasil-api-holidays.service.interface.js';
-import { HOLIDAY_REPOSITORY } from '../../../domain/interfaces/holiday.repository.interface.js';
 import { SyncHolidaysUseCase } from './sync-holidays.use-case.js';
 
 describe('SyncHolidaysUseCase', () => {
@@ -24,8 +23,8 @@ describe('SyncHolidaysUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SyncHolidaysUseCase,
-        { provide: HOLIDAY_REPOSITORY, useValue: holidayRepository },
-        { provide: BRASIL_API_HOLIDAYS_SERVICE, useValue: brasilApiService },
+        { provide: DiTokens.holidayRepository, useValue: holidayRepository },
+        { provide: DiTokens.brasilApiHolidaysService, useValue: brasilApiService },
       ],
     }).compile();
 

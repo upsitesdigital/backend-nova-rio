@@ -1,10 +1,48 @@
+import { DiTokens } from '../../../shared/di/di-tokens.js';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { HOLIDAY_REPOSITORY } from '../../../holidays/domain/interfaces/holiday.repository.interface.js';
 import type { IHolidayRepository } from '../../../holidays/domain/interfaces/holiday.repository.interface.js';
+import type {
+  AppointmentResponse,
+  ClientConflictCheckParams,
+  ConflictCheckParams,
+} from '../../domain/interfaces/appointment.repository.interface.js';
 
 @Injectable()
 export class AppointmentSchedulingValidator {
-  constructor(@Inject(HOLIDAY_REPOSITORY) private holidayRepository: IHolidayRepository) {}
+  constructor(@Inject(DiTokens.holidayRepository) private holidayRepository: IHolidayRepository) {}
+
+  static buildRescheduleConflictCheck(
+    existing: AppointmentResponse,
+    newDate: Date,
+    startTime: string,
+  ): ConflictCheckParams | undefined {
+    if (!existing.employee) {
+      return undefined;
+    }
+
+    return {
+      employeeId: existing.employee.id,
+      date: newDate,
+      startTime,
+      duration: existing.duration,
+      excludeId: existing.id,
+    };
+  }
+
+  static buildRescheduleClientConflictCheck(
+    existing: AppointmentResponse,
+    clientId: number,
+    newDate: Date,
+    startTime: string,
+  ): ClientConflictCheckParams {
+    return {
+      clientId,
+      date: newDate,
+      startTime,
+      duration: existing.duration,
+      excludeId: existing.id,
+    };
+  }
 
   async validateSchedulingDate(date: Date): Promise<void> {
     const dayOfWeek = date.getUTCDay();

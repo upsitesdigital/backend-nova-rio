@@ -6,15 +6,17 @@ import type {
   ICardRepository,
 } from '../../domain/interfaces/card.repository.interface.js';
 
-const CARD_RESPONSE_SELECT = {
-  id: true,
-  lastFourDigits: true,
-  brand: true,
-  holderName: true,
-  expiryMonth: true,
-  expiryYear: true,
-  isDefault: true,
-} as const;
+class CardQueryConfig {
+  static readonly responseSelect = {
+    id: true,
+    lastFourDigits: true,
+    brand: true,
+    holderName: true,
+    expiryMonth: true,
+    expiryYear: true,
+    isDefault: true,
+  } as const;
+}
 
 @Injectable()
 export class PrismaCardRepository implements ICardRepository {
@@ -23,7 +25,7 @@ export class PrismaCardRepository implements ICardRepository {
   async createCard(data: CreateCardData): Promise<CardResponse> {
     return this.prisma.card.create({
       data,
-      select: CARD_RESPONSE_SELECT,
+      select: CardQueryConfig.responseSelect,
     });
   }
 
@@ -36,17 +38,23 @@ export class PrismaCardRepository implements ICardRepository {
       });
       return tx.card.create({
         data: { ...data, isDefault: true },
-        select: CARD_RESPONSE_SELECT,
+        select: CardQueryConfig.responseSelect,
       });
     });
   }
 
   async findCardsByClientId(clientId: number): Promise<CardResponse[]> {
-    return this.prisma.card.findMany({ where: { clientId }, select: CARD_RESPONSE_SELECT });
+    return this.prisma.card.findMany({
+      where: { clientId },
+      select: CardQueryConfig.responseSelect,
+    });
   }
 
   async findCardByIdAndClientId(id: number, clientId: number): Promise<CardResponse | null> {
-    return this.prisma.card.findFirst({ where: { id, clientId }, select: CARD_RESPONSE_SELECT });
+    return this.prisma.card.findFirst({
+      where: { id, clientId },
+      select: CardQueryConfig.responseSelect,
+    });
   }
 
   async deleteCardById(id: number): Promise<void> {
@@ -63,7 +71,7 @@ export class PrismaCardRepository implements ICardRepository {
       return tx.card.update({
         where: { id },
         data: { isDefault: true },
-        select: CARD_RESPONSE_SELECT,
+        select: CardQueryConfig.responseSelect,
       });
     });
   }

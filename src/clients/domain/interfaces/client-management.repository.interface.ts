@@ -1,8 +1,6 @@
 import type { UserStatus } from '@prisma/client';
 import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 
-export const CLIENT_MGMT_REPOSITORY = Symbol('CLIENT_MGMT_REPOSITORY');
-
 export interface ClientSafe {
   id: number;
   uuid: string;

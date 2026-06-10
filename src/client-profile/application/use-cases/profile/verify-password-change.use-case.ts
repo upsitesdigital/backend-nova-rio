@@ -1,18 +1,18 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { CLIENT_VERIFICATION_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
 import type { IClientVerificationRepository } from '../../../../auth/domain/interfaces/client.repository.interface.js';
-import { HASH_SERVICE } from '../../../../auth/domain/interfaces/hash.service.interface.js';
 import type { IHashService } from '../../../../auth/domain/interfaces/hash.service.interface.js';
-import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
+import { VerificationType } from '../../../../auth/domain/constants/verification-type.constant.js';
 import type { VerifyPasswordChangeDto } from '../../../dto/profile/verify-password-change.dto.js';
 
 @Injectable()
 export class VerifyPasswordChangeUseCase {
   constructor(
-    @Inject(CLIENT_VERIFICATION_REPOSITORY) private clientRepository: IClientVerificationRepository,
-    @Inject(HASH_SERVICE) private hashService: IHashService,
-    @Inject(EMAIL_SERVICE) private emailService: IEmailService,
+    @Inject(DiTokens.clientVerificationRepository)
+    private clientRepository: IClientVerificationRepository,
+    @Inject(DiTokens.hashService) private hashService: IHashService,
+    @Inject(DiTokens.emailService) private emailService: IEmailService,
   ) {}
 
   async verifyPasswordChange(clientId: number, dto: VerifyPasswordChangeDto) {
@@ -24,7 +24,7 @@ export class VerifyPasswordChangeUseCase {
 
     const codes = await this.clientRepository.findActiveVerificationCodes(
       clientId,
-      'PASSWORD_CHANGE',
+      VerificationType.passwordChange,
     );
 
     if (codes.length === 0) {

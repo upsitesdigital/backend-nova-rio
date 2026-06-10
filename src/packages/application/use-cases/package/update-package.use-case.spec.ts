@@ -1,8 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { SERVICE_REPOSITORY } from '../../../../services/domain/interfaces/service.repository.interface.js';
-import { PACKAGE_REPOSITORY } from '../../../domain/interfaces/package.repository.interface.js';
 import { UpdatePackageUseCase } from './update-package.use-case.js';
 
 describe('UpdatePackageUseCase', () => {
@@ -23,8 +22,8 @@ describe('UpdatePackageUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdatePackageUseCase,
-        { provide: PACKAGE_REPOSITORY, useValue: packageRepository },
-        { provide: SERVICE_REPOSITORY, useValue: serviceRepository },
+        { provide: DiTokens.packageRepository, useValue: packageRepository },
+        { provide: DiTokens.serviceRepository, useValue: serviceRepository },
       ],
     }).compile();
 

@@ -23,6 +23,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { AdminRole } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -38,7 +39,7 @@ import { ListAdminUsersQueryDto } from './dto/admin-user/list-admin-users-query.
 @ApiTags('Admin Users')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN_MASTER', 'ADMIN_BASIC')
+@Roles(AdminRole.ADMIN_MASTER, AdminRole.ADMIN_BASIC)
 @Controller('admin-users')
 export class AdminUsersController {
   constructor(
@@ -49,7 +50,7 @@ export class AdminUsersController {
   ) {}
 
   @Post()
-  @Roles('ADMIN_MASTER')
+  @Roles(AdminRole.ADMIN_MASTER)
   @ApiOperation({ summary: 'Create a new admin user' })
   @ApiCreatedResponse({ description: 'Admin user created successfully' })
   @ApiConflictResponse({ description: 'Email already in use' })
@@ -77,7 +78,7 @@ export class AdminUsersController {
   }
 
   @Delete(':id')
-  @Roles('ADMIN_MASTER')
+  @Roles(AdminRole.ADMIN_MASTER)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Soft delete an admin user (set status INACTIVE)' })
   @ApiNoContentResponse({ description: 'Admin user deactivated successfully' })

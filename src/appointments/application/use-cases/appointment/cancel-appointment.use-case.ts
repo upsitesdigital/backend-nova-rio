@@ -1,14 +1,14 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
+import { AppointmentStatus } from '@prisma/client';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
-import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
 import type { IAppointmentRepository } from '../../../domain/interfaces/appointment.repository.interface.js';
 
 @Injectable()
 export class CancelAppointmentUseCase {
   constructor(
-    @Inject(APPOINTMENT_REPOSITORY) private appointmentRepository: IAppointmentRepository,
-    @Inject(EMAIL_SERVICE) private emailService: IEmailService,
+    @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
+    @Inject(DiTokens.emailService) private emailService: IEmailService,
   ) {}
 
   async cancelAppointmentById(id: number): Promise<void> {
@@ -18,7 +18,7 @@ export class CancelAppointmentUseCase {
       throw new NotFoundException('Appointment not found');
     }
 
-    if (existing.status !== 'SCHEDULED') {
+    if (existing.status !== AppointmentStatus.SCHEDULED) {
       throw new BadRequestException('Only scheduled appointments can be cancelled');
     }
 

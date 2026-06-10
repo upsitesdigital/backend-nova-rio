@@ -1,9 +1,8 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
+import { PaymentStatus } from '@prisma/client';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
-import { RECEIPT_GENERATION_SERVICE } from '../../../../receipts/domain/interfaces/receipt-generation.service.interface.js';
 import type { IReceiptGenerationService } from '../../../../receipts/domain/interfaces/receipt-generation.service.interface.js';
-import { PAYMENT_REPOSITORY } from '../../../domain/interfaces/payment.repository.interface.js';
 import type {
   IPaymentRepository,
   PaymentResponse,
@@ -14,9 +13,10 @@ export class ApprovePaymentUseCase {
   private readonly logger = new Logger(ApprovePaymentUseCase.name);
 
   constructor(
-    @Inject(PAYMENT_REPOSITORY) private paymentRepository: IPaymentRepository,
-    @Inject(EMAIL_SERVICE) private emailService: IEmailService,
-    @Inject(RECEIPT_GENERATION_SERVICE) private receiptGenerationService: IReceiptGenerationService,
+    @Inject(DiTokens.paymentRepository) private paymentRepository: IPaymentRepository,
+    @Inject(DiTokens.emailService) private emailService: IEmailService,
+    @Inject(DiTokens.receiptGenerationService)
+    private receiptGenerationService: IReceiptGenerationService,
   ) {}
 
   async approvePaymentById(id: number): Promise<PaymentResponse> {
@@ -26,7 +26,7 @@ export class ApprovePaymentUseCase {
       throw new NotFoundException('Payment not found');
     }
 
-    if (existing.status !== 'PENDING') {
+    if (existing.status !== PaymentStatus.PENDING) {
       throw new BadRequestException('Only pending payments can be approved');
     }
 

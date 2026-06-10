@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AppointmentStatus } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
 import { AppointmentConflictValidator } from '../../application/validators/appointment-conflict.validator.js';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
@@ -158,16 +159,16 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
 
   async cancelAppointmentById(id: number): Promise<boolean> {
     const updated = await this.prisma.appointment.updateMany({
-      where: { id, status: 'SCHEDULED' },
-      data: { status: 'CANCELLED' },
+      where: { id, status: AppointmentStatus.SCHEDULED },
+      data: { status: AppointmentStatus.CANCELLED },
     });
     return updated.count === 1;
   }
 
   async completeAppointmentById(id: number): Promise<AppointmentResponse | null> {
     const updated = await this.prisma.appointment.updateMany({
-      where: { id, status: 'SCHEDULED' },
-      data: { status: 'COMPLETED' },
+      where: { id, status: AppointmentStatus.SCHEDULED },
+      data: { status: AppointmentStatus.COMPLETED },
     });
 
     if (updated.count !== 1) {
@@ -194,7 +195,7 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
       }
 
       const updated = await tx.appointment.updateMany({
-        where: { id, status: 'SCHEDULED' },
+        where: { id, status: AppointmentStatus.SCHEDULED },
         data: updateData,
       });
 

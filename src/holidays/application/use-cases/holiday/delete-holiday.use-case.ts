@@ -1,12 +1,10 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import {
-  HOLIDAY_REPOSITORY,
-  type IHolidayRepository,
-} from '../../../domain/interfaces/holiday.repository.interface.js';
+import { type IHolidayRepository } from '../../../domain/interfaces/holiday.repository.interface.js';
 
 @Injectable()
 export class DeleteHolidayUseCase {
-  constructor(@Inject(HOLIDAY_REPOSITORY) private holidayRepository: IHolidayRepository) {}
+  constructor(@Inject(DiTokens.holidayRepository) private holidayRepository: IHolidayRepository) {}
 
   async deleteHolidayById(id: number): Promise<void> {
     const existing = await this.holidayRepository.findHolidayById(id);

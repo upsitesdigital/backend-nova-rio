@@ -25,7 +25,7 @@ describe('PrismaClientManagementRepository', () => {
   let prisma: {
     client: {
       findMany: Mock;
-      findFirst: Mock;
+      findUnique: Mock;
       count: Mock;
       update: Mock;
       updateMany: Mock;
@@ -36,7 +36,7 @@ describe('PrismaClientManagementRepository', () => {
     prisma = {
       client: {
         findMany: vi.fn(),
-        findFirst: vi.fn(),
+        findUnique: vi.fn(),
         count: vi.fn(),
         update: vi.fn(),
         updateMany: vi.fn().mockResolvedValue({ count: 1 }),
@@ -150,21 +150,21 @@ describe('PrismaClientManagementRepository', () => {
     });
   });
 
-  it('findClientById should call prisma.client.findFirst with id', async () => {
+  it('findClientById should call prisma.client.findUnique with id', async () => {
     const client = { id: 1, name: 'João' };
-    prisma.client.findFirst.mockResolvedValue(client);
+    prisma.client.findUnique.mockResolvedValue(client);
 
     const result = await repository.findClientById(1);
 
     expect(result).toEqual(client);
-    expect(prisma.client.findFirst).toHaveBeenCalledWith({
+    expect(prisma.client.findUnique).toHaveBeenCalledWith({
       where: { id: 1 },
       select: CLIENT_SAFE_SELECT,
     });
   });
 
   it('findClientById should return null when not found', async () => {
-    prisma.client.findFirst.mockResolvedValue(null);
+    prisma.client.findUnique.mockResolvedValue(null);
 
     const result = await repository.findClientById(999);
 

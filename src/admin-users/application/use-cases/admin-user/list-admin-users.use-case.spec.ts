@@ -1,6 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { ADMIN_USER_REPOSITORY } from '../../../domain/interfaces/admin-user.repository.interface.js';
 import { ListAdminUsersUseCase } from './list-admin-users.use-case.js';
 
 describe('ListAdminUsersUseCase', () => {
@@ -13,7 +13,7 @@ describe('ListAdminUsersUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListAdminUsersUseCase,
-        { provide: ADMIN_USER_REPOSITORY, useValue: adminUserRepository },
+        { provide: DiTokens.adminUserRepository, useValue: adminUserRepository },
       ],
     }).compile();
 

@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { AppointmentStatus } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import type { IClientDashboardRepository } from '../../domain/interfaces/client-dashboard.repository.interface.js';
 import type {
@@ -6,10 +7,10 @@ import type {
   RawDashboardAppointment,
 } from '../../domain/interfaces/client-dashboard.types.js';
 
-const DASHBOARD_HISTORY_LIMIT = 20;
-
 @Injectable()
 export class PrismaClientDashboardRepository implements IClientDashboardRepository {
+  private static readonly dashboardHistoryLimit = 20;
+
   constructor(private prisma: PrismaService) {}
 
   async getClientDashboardData(clientId: number): Promise<RawClientDashboardData> {
@@ -28,7 +29,7 @@ export class PrismaClientDashboardRepository implements IClientDashboardReposito
     const nextAppointment = await this.prisma.appointment.findFirst({
       where: {
         clientId,
-        status: 'SCHEDULED',
+        status: AppointmentStatus.SCHEDULED,
         date: { gte: today },
       },
       select: { id: true, date: true, startTime: true },
@@ -42,7 +43,7 @@ export class PrismaClientDashboardRepository implements IClientDashboardReposito
       where: {
         clientId,
         createdAt: { gte: twoMonthsAgo },
-        status: { in: ['SCHEDULED', 'COMPLETED'] },
+        status: { in: [AppointmentStatus.SCHEDULED, AppointmentStatus.COMPLETED] },
       },
     });
 
@@ -68,7 +69,7 @@ export class PrismaClientDashboardRepository implements IClientDashboardReposito
         },
       },
       orderBy: [{ date: 'desc' }, { startTime: 'desc' }],
-      take: DASHBOARD_HISTORY_LIMIT,
+      take: PrismaClientDashboardRepository.dashboardHistoryLimit,
     });
 
     const rawAppointments: RawDashboardAppointment[] = recentAppointments.map((apt) => ({

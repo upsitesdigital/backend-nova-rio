@@ -10,6 +10,24 @@ import type {
 export class PrismaClientProfileRepository implements IClientProfileRepository {
   constructor(private prisma: PrismaService) {}
 
+  async findClientProfileById(id: number): Promise<ClientProfile | null> {
+    return this.prisma.client.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        avatarUrl: true,
+        company: true,
+        cpfCnpj: true,
+        address: true,
+        status: true,
+        createdAt: true,
+      },
+    });
+  }
+
   async updateProfile(id: number, data: UpdateProfileData): Promise<ClientProfile> {
     return this.prisma.client.update({
       where: { id },

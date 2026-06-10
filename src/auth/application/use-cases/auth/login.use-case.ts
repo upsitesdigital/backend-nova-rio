@@ -1,12 +1,9 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { CLIENT_AUTH_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
 import type { IClientAuthRepository } from '../../../domain/interfaces/client.repository.interface.js';
-import { ADMIN_AUTH_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
 import type { IAdminAuthRepository } from '../../../domain/interfaces/admin.repository.interface.js';
-import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import type { IHashService } from '../../../domain/interfaces/hash.service.interface.js';
-import { TOKEN_SERVICE } from '../../../domain/interfaces/token.service.interface.js';
 import type {
   ITokenService,
   TokenPair,
@@ -46,10 +43,10 @@ export class LoginUseCase {
   private readonly logger = new Logger(LoginUseCase.name);
 
   constructor(
-    @Inject(CLIENT_AUTH_REPOSITORY) private readonly clientRepository: IClientAuthRepository,
-    @Inject(ADMIN_AUTH_REPOSITORY) private readonly adminRepository: IAdminAuthRepository,
-    @Inject(HASH_SERVICE) private readonly hashService: IHashService,
-    @Inject(TOKEN_SERVICE) private readonly tokenService: ITokenService,
+    @Inject(DiTokens.clientAuthRepository) private readonly clientRepository: IClientAuthRepository,
+    @Inject(DiTokens.adminAuthRepository) private readonly adminRepository: IAdminAuthRepository,
+    @Inject(DiTokens.hashService) private readonly hashService: IHashService,
+    @Inject(DiTokens.tokenService) private readonly tokenService: ITokenService,
   ) {}
 
   async authenticateUser(dto: LoginDto): Promise<LoginResult> {

@@ -1,17 +1,16 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import {
-  CLIENT_AUTH_REPOSITORY,
-  type IClientAuthRepository,
-} from '../../../../auth/domain/interfaces/client.repository.interface.js';
+import { type IClientAuthRepository } from '../../../../auth/domain/interfaces/client.repository.interface.js';
 import type { CreatePublicAppointmentDto } from '../../../dto/appointment/create-public-appointment.dto.js';
 import type { AppointmentResponse } from '../../../domain/interfaces/appointment.repository.interface.js';
-import { CreateClientAppointmentUseCase } from './create-client-appointment.use-case.js';
+import { type ICreateClientAppointmentService } from '../../../domain/interfaces/create-client-appointment.service.interface.js';
 
 @Injectable()
 export class CreatePublicAppointmentUseCase {
   constructor(
-    @Inject(CLIENT_AUTH_REPOSITORY) private clientRepository: IClientAuthRepository,
-    private createClientAppointmentUseCase: CreateClientAppointmentUseCase,
+    @Inject(DiTokens.clientAuthRepository) private clientRepository: IClientAuthRepository,
+    @Inject(DiTokens.createClientAppointmentService)
+    private createClientAppointmentService: ICreateClientAppointmentService,
   ) {}
 
   async createPublicAppointment(dto: CreatePublicAppointmentDto): Promise<AppointmentResponse> {
@@ -23,6 +22,6 @@ export class CreatePublicAppointmentUseCase {
       );
     }
 
-    return this.createClientAppointmentUseCase.createClientAppointment(client.id, dto);
+    return this.createClientAppointmentService.createClientAppointment(client.id, dto);
   }
 }

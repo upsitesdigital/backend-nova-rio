@@ -1,10 +1,5 @@
 import type { Client, VerificationCode } from '@prisma/client';
 
-export const CLIENT_REPOSITORY = Symbol('CLIENT_REPOSITORY');
-export const CLIENT_AUTH_REPOSITORY = Symbol('CLIENT_AUTH_REPOSITORY');
-export const CLIENT_VERIFICATION_REPOSITORY = Symbol('CLIENT_VERIFICATION_REPOSITORY');
-export const CLIENT_PROFILE_REPOSITORY = Symbol('CLIENT_PROFILE_REPOSITORY');
-
 export type ClientData = Pick<
   Client,
   | 'id'

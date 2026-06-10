@@ -1,11 +1,11 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { Service } from '@prisma/client';
-import { SERVICE_REPOSITORY } from '../../../domain/interfaces/service.repository.interface.js';
 import type { IServiceRepository } from '../../../domain/interfaces/service.repository.interface.js';
 
 @Injectable()
 export class GetServiceUseCase {
-  constructor(@Inject(SERVICE_REPOSITORY) private serviceRepository: IServiceRepository) {}
+  constructor(@Inject(DiTokens.serviceRepository) private serviceRepository: IServiceRepository) {}
 
   async getServiceById(id: number): Promise<Service> {
     const service = await this.serviceRepository.findServiceById(id);

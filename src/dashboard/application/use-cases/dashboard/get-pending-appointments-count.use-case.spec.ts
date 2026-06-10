@@ -1,6 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { DASHBOARD_REPOSITORY } from '../../../domain/interfaces/dashboard.repository.interface.js';
 import { GetPendingAppointmentsCountUseCase } from './get-pending-appointments-count.use-case.js';
 
 describe('GetPendingAppointmentsCountUseCase', () => {
@@ -13,7 +13,7 @@ describe('GetPendingAppointmentsCountUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetPendingAppointmentsCountUseCase,
-        { provide: DASHBOARD_REPOSITORY, useValue: dashboardRepository },
+        { provide: DiTokens.dashboardRepository, useValue: dashboardRepository },
       ],
     }).compile();
 

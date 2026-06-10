@@ -1,3 +1,5 @@
+import type { PaymentMethod, PaymentStatus, Prisma } from '@prisma/client';
+
 export interface ExportFilters {
   dateFrom?: Date;
   dateTo?: Date;
@@ -8,9 +10,9 @@ export interface ExportFilters {
 export interface ExportRow {
   paymentId: number;
   paidAt: Date | null;
-  amount: unknown;
-  method: string;
-  status: string;
+  amount: Prisma.Decimal;
+  method: PaymentMethod;
+  status: PaymentStatus;
   clientName: string;
   serviceName: string;
   appointmentDate: Date;

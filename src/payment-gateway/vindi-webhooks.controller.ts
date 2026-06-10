@@ -1,39 +1,15 @@
-import {
-  Body,
-  Controller,
-  Headers,
-  HttpCode,
-  Logger,
-  Post,
-  Req,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Body, Controller, Headers, HttpCode, Post, Req } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
-import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { Request } from 'express';
-import { PrismaService } from '../shared/prisma/prisma.service.js';
-import type {
-  VindiWebhookBillData,
-  VindiWebhookChargeData,
-  VindiWebhookPayload,
-} from './domain/types/vindi.types.js';
-import { HandleVindiBillPaidUseCase } from './application/use-cases/webhook/handle-vindi-bill-paid.use-case.js';
-import { HandleVindiChargeRejectedUseCase } from './application/use-cases/webhook/handle-vindi-charge-rejected.use-case.js';
+import { ProcessVindiWebhookUseCase } from './application/use-cases/webhook/process-vindi-webhook.use-case.js';
+import type { VindiWebhookPayload } from './domain/types/vindi.types.js';
 
 @ApiExcludeController()
 @SkipThrottle()
 @Controller('webhooks/vindi')
 export class VindiWebhooksController {
-  private readonly logger = new Logger(VindiWebhooksController.name);
-
-  constructor(
-    private readonly handleBillPaid: HandleVindiBillPaidUseCase,
-    private readonly handleChargeRejected: HandleVindiChargeRejectedUseCase,
-    private readonly configService: ConfigService,
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly processVindiWebhook: ProcessVindiWebhookUseCase) {}
 
   @Post()
   @HttpCode(200)
@@ -42,75 +18,8 @@ export class VindiWebhooksController {
     @Req() req: Request,
     @Body() payload: VindiWebhookPayload,
   ): Promise<{ received: true }> {
-    this.verifyWebhookSignature(signature, req);
-
-    const eventType = payload?.event?.type;
-    this.logger.log(`Received Vindi webhook: ${eventType}`);
-
-    const eventId = this.getEventId(payload);
-    const inserted = await this.prisma.processedWebhookEvent.createMany({
-      data: { eventId, provider: 'vindi' },
-      skipDuplicates: true,
-    });
-
-    if (inserted.count === 0) {
-      this.logger.log(`Duplicate Vindi webhook skipped: ${eventId}`);
-      return { received: true };
-    }
-
-    try {
-      switch (eventType) {
-        case 'bill_paid': {
-          const data = payload.event.data as VindiWebhookBillData;
-          await this.handleBillPaid.handleBillPaid(data.bill.id);
-          break;
-        }
-        case 'charge_rejected': {
-          const data = payload.event.data as VindiWebhookChargeData;
-          const reason = data.charge.last_transaction?.gateway_message ?? 'Charge rejected';
-          await this.handleChargeRejected.handleChargeRejected(data.charge.bill.id, reason);
-          break;
-        }
-        case 'bill_canceled': {
-          const data = payload.event.data as VindiWebhookBillData;
-          await this.handleChargeRejected.handleChargeRejected(
-            data.bill.id,
-            'Bill cancelled by gateway',
-          );
-          break;
-        }
-        default:
-          this.logger.log(`Unhandled Vindi event type: ${eventType}`);
-      }
-    } catch (error) {
-      this.logger.error(`Error processing Vindi webhook ${eventType}`, error);
-      throw error;
-    }
-
+    const rawBody = (req as Request & { rawBody?: Buffer }).rawBody ?? JSON.stringify(req.body);
+    await this.processVindiWebhook.processVindiWebhook(rawBody, signature, payload);
     return { received: true };
-  }
-
-  private getEventId(payload: VindiWebhookPayload): string {
-    const rawEvent = payload.event as VindiWebhookPayload['event'] & { id?: string | number };
-    if (rawEvent.id !== undefined && rawEvent.id !== null) {
-      return String(rawEvent.id);
-    }
-
-    return createHmac('sha256', this.configService.getOrThrow<string>('VINDI_WEBHOOK_SECRET'))
-      .update(JSON.stringify(payload))
-      .digest('hex');
-  }
-
-  private verifyWebhookSignature(signature: string | undefined, req: Request): void {
-    const webhookSecret = this.configService.getOrThrow<string>('VINDI_WEBHOOK_SECRET');
-    const rawBody = (req as Request & { rawBody?: Buffer }).rawBody;
-    const bodyToHash = rawBody ?? JSON.stringify(req.body);
-    const expected = createHmac('sha256', webhookSecret).update(bodyToHash).digest('hex');
-    const received = Buffer.from(signature ?? '', 'utf-8');
-    const expectedBuf = Buffer.from(expected, 'utf-8');
-
-    if (received.length !== expectedBuf.length || !timingSafeEqual(received, expectedBuf)) {
-      throw new UnauthorizedException('Invalid webhook signature');
-    }
   }
 }

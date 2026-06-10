@@ -1,23 +1,16 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { CLIENT_PROFILE_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { IClientProfileRepository } from '../../../../auth/domain/interfaces/client.repository.interface.js';
-import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
-import type { DeleteAccountDto } from '../../../dto/profile/delete-account.dto.js';
-
-const CONFIRM_PHRASE = 'Apagar minha conta';
 
 @Injectable()
 export class DeleteClientAccountUseCase {
   constructor(
-    @Inject(CLIENT_PROFILE_REPOSITORY) private clientRepository: IClientProfileRepository,
-    @Inject(EMAIL_SERVICE) private emailService: IEmailService,
+    @Inject(DiTokens.clientProfileRepository) private clientRepository: IClientProfileRepository,
+    @Inject(DiTokens.emailService) private emailService: IEmailService,
   ) {}
 
-  async deleteClientAccount(clientId: number, dto: DeleteAccountDto) {
-    if (dto.confirmPhrase !== CONFIRM_PHRASE) {
-      throw new BadRequestException('Invalid confirmation phrase');
-    }
+  async deleteClientAccount(clientId: number) {
     const client = await this.clientRepository.findById(clientId);
 
     if (!client) {

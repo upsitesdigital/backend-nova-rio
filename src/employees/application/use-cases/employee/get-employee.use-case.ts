@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { EMPLOYEE_REPOSITORY } from '../../../domain/interfaces/employee.repository.interface.js';
 import type {
   EmployeeSafe,
   IEmployeeRepository,
@@ -7,7 +7,9 @@ import type {
 
 @Injectable()
 export class GetEmployeeUseCase {
-  constructor(@Inject(EMPLOYEE_REPOSITORY) private employeeRepository: IEmployeeRepository) {}
+  constructor(
+    @Inject(DiTokens.employeeRepository) private employeeRepository: IEmployeeRepository,
+  ) {}
 
   async getEmployeeById(id: number): Promise<EmployeeSafe> {
     const employee = await this.employeeRepository.findEmployeeById(id);

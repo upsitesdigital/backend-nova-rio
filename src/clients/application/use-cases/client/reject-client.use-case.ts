@@ -1,14 +1,15 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { CLIENT_MGMT_REPOSITORY } from '../../../domain/interfaces/client-management.repository.interface.js';
+import { UserStatus } from '@prisma/client';
 import type { IClientManagementRepository } from '../../../domain/interfaces/client-management.repository.interface.js';
-import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
 
 @Injectable()
 export class RejectClientUseCase {
   constructor(
-    @Inject(CLIENT_MGMT_REPOSITORY) private clientMgmtRepository: IClientManagementRepository,
-    @Inject(EMAIL_SERVICE) private emailService: IEmailService,
+    @Inject(DiTokens.clientManagementRepository)
+    private clientMgmtRepository: IClientManagementRepository,
+    @Inject(DiTokens.emailService) private emailService: IEmailService,
   ) {}
 
   async rejectClientById(id: number): Promise<void> {
@@ -18,7 +19,7 @@ export class RejectClientUseCase {
       throw new NotFoundException('Client not found');
     }
 
-    if (client.status !== 'PENDING') {
+    if (client.status !== UserStatus.PENDING) {
       throw new BadRequestException('Only pending clients can be rejected');
     }
 

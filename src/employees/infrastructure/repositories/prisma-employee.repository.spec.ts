@@ -168,21 +168,21 @@ describe('PrismaEmployeeRepository', () => {
     });
   });
 
-  it('findEmployeeById should call prisma.employee.findFirst with id', async () => {
+  it('findEmployeeById should call prisma.employee.findUnique with id', async () => {
     const employee = { id: 1, name: 'Maria Silva' };
-    prisma.employee.findFirst.mockResolvedValue(employee);
+    prisma.employee.findUnique.mockResolvedValue(employee);
 
     const result = await repository.findEmployeeById(1);
 
     expect(result).toEqual(employee);
-    expect(prisma.employee.findFirst).toHaveBeenCalledWith({
+    expect(prisma.employee.findUnique).toHaveBeenCalledWith({
       where: { id: 1 },
       select: EMPLOYEE_SAFE_SELECT,
     });
   });
 
   it('findEmployeeById should return null when not found', async () => {
-    prisma.employee.findFirst.mockResolvedValue(null);
+    prisma.employee.findUnique.mockResolvedValue(null);
 
     const result = await repository.findEmployeeById(999);
 

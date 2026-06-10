@@ -1,14 +1,12 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
-import { isWithinRadius } from '../../../../shared/geo/geo.util.js';
+import { CepUtil } from '../../../../shared/cep/cep.util.js';
+import { GeoUtil } from '../../../../shared/geo/geo.util.js';
 import {
-  GEOCODING_SERVICE,
   type GeocodedAddress,
   type IGeocodingService,
 } from '../../../domain/interfaces/geocoding.service.interface.js';
-import {
-  UNIT_REPOSITORY,
-  type IUnitRepository,
-} from '../../../domain/interfaces/unit.repository.interface.js';
+import { type IUnitRepository } from '../../../domain/interfaces/unit.repository.interface.js';
 
 export interface CoverageResult {
   covered: boolean;
@@ -26,12 +24,12 @@ export interface CoverageResult {
 @Injectable()
 export class ValidateServiceCoverageUseCase {
   constructor(
-    @Inject(UNIT_REPOSITORY) private unitRepository: IUnitRepository,
-    @Inject(GEOCODING_SERVICE) private geocodingService: IGeocodingService,
+    @Inject(DiTokens.unitRepository) private unitRepository: IUnitRepository,
+    @Inject(DiTokens.geocodingService) private geocodingService: IGeocodingService,
   ) {}
 
   async validateCoverageByCep(cep: string): Promise<CoverageResult> {
-    const cleanCep = cep.replace(/\D/g, '');
+    const cleanCep = CepUtil.normalize(cep);
     const geocoded = await this.geocodingService.geocodeByCep(cep);
     const addressPayload = this.buildAddress(geocoded);
     const { data: units } = await this.unitRepository.listUnits({ page: 1, limit: 100 });
@@ -39,7 +37,7 @@ export class ValidateServiceCoverageUseCase {
     // Fallback: if a unit address explicitly contains this CEP, consider it covered.
     // This prevents false negatives when external geocoding providers omit coordinates.
     for (const unit of units) {
-      const unitCep = this.extractCepFromText(unit.address ?? '');
+      const unitCep = CepUtil.extractFromText(unit.address ?? '');
       if (unitCep && unitCep === cleanCep) {
         return { covered: true, address: addressPayload, unitId: unit.id, unitName: unit.name };
       }
@@ -55,7 +53,11 @@ export class ValidateServiceCoverageUseCase {
       }
 
       const unitCenter = { latitude: unit.latitude, longitude: unit.longitude };
-      const covered = isWithinRadius(unitCenter, geocoded.coordinates, unit.serviceRadiusKm);
+      const covered = GeoUtil.isWithinRadius(
+        unitCenter,
+        geocoded.coordinates,
+        unit.serviceRadiusKm,
+      );
 
       if (covered) {
         return { covered: true, address: addressPayload, unitId: unit.id, unitName: unit.name };
@@ -73,11 +75,5 @@ export class ValidateServiceCoverageUseCase {
       city: geocoded.city,
       state: geocoded.state,
     };
-  }
-
-  private extractCepFromText(text: string): string | null {
-    const match = text.match(/\b\d{5}-?\d{3}\b/);
-    if (!match) return null;
-    return match[0].replace(/\D/g, '');
   }
 }

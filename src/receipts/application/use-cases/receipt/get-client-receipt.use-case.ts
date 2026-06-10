@@ -1,7 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { PAYMENT_REPOSITORY } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
 import type { IPaymentRepository } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
-import { RECEIPT_REPOSITORY } from '../../../domain/interfaces/receipt.repository.interface.js';
 import type {
   IReceiptRepository,
   ReceiptResponse,
@@ -10,8 +9,8 @@ import type {
 @Injectable()
 export class GetClientReceiptUseCase {
   constructor(
-    @Inject(RECEIPT_REPOSITORY) private receiptRepository: IReceiptRepository,
-    @Inject(PAYMENT_REPOSITORY) private paymentRepository: IPaymentRepository,
+    @Inject(DiTokens.receiptRepository) private receiptRepository: IReceiptRepository,
+    @Inject(DiTokens.paymentRepository) private paymentRepository: IPaymentRepository,
   ) {}
 
   async getReceiptByPaymentIdAndClientId(
