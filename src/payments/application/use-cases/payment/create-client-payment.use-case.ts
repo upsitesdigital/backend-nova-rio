@@ -77,6 +77,19 @@ export class CreateClientPaymentUseCase {
     const serviceFee = 0;
     const amount = subtotal - discount + serviceFee;
 
+    const paymentData: CreatePaymentData = {
+      amount,
+      subtotal,
+      serviceFee,
+      discount,
+      method: dto.method,
+      clientId,
+      appointmentId: dto.appointmentId,
+      ...(dto.cardId ? { cardId: dto.cardId } : {}),
+    };
+
+    const payment = await this.paymentRepository.createPayment(paymentData);
+
     const vindiCustomerId = await this.ensureVindiCustomerExists(clientId);
 
     const vindiBill = await this.paymentGatewayService.createGatewayBill({
@@ -87,24 +100,14 @@ export class CreateClientPaymentUseCase {
     });
 
     const gatewayResponseFields = vindiBill.charges[0]?.last_transaction?.gateway_response_fields;
-    const pixCode = gatewayResponseFields?.pix_code ?? null;
-    const pixQrCodeUrl = gatewayResponseFields?.qr_code_url ?? null;
+    const pixCode = gatewayResponseFields?.pix_code ?? undefined;
+    const pixQrCodeUrl = gatewayResponseFields?.qr_code_url ?? undefined;
 
-    const paymentData: CreatePaymentData = {
-      amount,
-      subtotal,
-      serviceFee,
-      discount,
-      method: dto.method,
+    return this.paymentRepository.updatePaymentGatewayDetails(payment.id, {
       gatewayTransactionId: String(vindiBill.id),
-      clientId,
-      appointmentId: dto.appointmentId,
-      ...(dto.cardId ? { cardId: dto.cardId } : {}),
       ...(pixCode ? { pixCode } : {}),
       ...(pixQrCodeUrl ? { pixQrCodeUrl } : {}),
-    };
-
-    return this.paymentRepository.createPayment(paymentData);
+    });
   }
 
   private async ensureVindiCustomerExists(clientId: number): Promise<number> {

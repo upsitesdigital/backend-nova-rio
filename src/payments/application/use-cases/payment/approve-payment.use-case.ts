@@ -31,6 +31,9 @@ export class ApprovePaymentUseCase {
     }
 
     const payment = await this.paymentRepository.approvePaymentById(id);
+    if (!payment) {
+      throw new BadRequestException('Only pending payments can be approved');
+    }
 
     this.emailService
       .sendPaymentApprovedEmail(
