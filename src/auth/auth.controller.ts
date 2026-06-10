@@ -17,6 +17,7 @@ import { ClientRegisterUseCase } from './application/use-cases/client/client-reg
 import { ForgotPasswordUseCase } from './application/use-cases/client/forgot-password.use-case.js';
 import { ResetPasswordUseCase } from './application/use-cases/client/reset-password.use-case.js';
 import { GetProfileUseCase } from './application/use-cases/auth/get-profile.use-case.js';
+import { LogoutUseCase } from './application/use-cases/auth/logout.use-case.js';
 import { RefreshTokenUseCase } from './application/use-cases/auth/refresh-token.use-case.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -37,6 +38,7 @@ export class AuthController {
     private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
     private readonly getProfileUseCase: GetProfileUseCase,
+    private readonly logoutUseCase: LogoutUseCase,
   ) {}
 
   @Post('client/register')
@@ -102,5 +104,16 @@ export class AuthController {
   @ApiNotFoundResponse({ description: 'User profile not found' })
   getProfile(@CurrentUser() user: AuthUser) {
     return this.getProfileUseCase.getProfile(user);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Logout (revokes refresh token)' })
+  @ApiOkResponse({ description: 'Logged out successfully' })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
+  logout(@CurrentUser() user: AuthUser) {
+    return this.logoutUseCase.logout(user);
   }
 }

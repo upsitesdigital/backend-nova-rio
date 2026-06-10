@@ -83,6 +83,11 @@ export interface IClientVerificationRepository {
   markVerificationCodeAsUsed(id: number): Promise<boolean>;
   updateEmail(id: number, email: string): Promise<void>;
   updatePassword(id: number, password: string): Promise<void>;
+  /**
+   * Atomically consumes the verification code, sets the new password hash and
+   * invalidates existing sessions by clearing `refreshToken`/`tokenFamily`,
+   * forcing re-login after a reset.
+   */
   completePasswordReset(
     clientId: number,
     verificationCodeId: number,
