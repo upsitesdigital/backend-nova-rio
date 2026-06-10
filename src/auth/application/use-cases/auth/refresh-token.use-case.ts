@@ -54,7 +54,17 @@ export class RefreshTokenUseCase {
     const tokens = await this.tokenService.generateTokens(payload);
 
     const hashedRefresh = await this.hashService.hash(tokens.refreshToken);
-    await repo.updateRefreshTokenWithFamily(payload.sub, hashedRefresh, tokenFamily);
+    const rotated = await repo.updateRefreshTokenWithFamily(
+      payload.sub,
+      hashedRefresh,
+      tokenFamily,
+      storedHash,
+    );
+
+    if (rotated === false) {
+      await repo.revokeTokenFamily(payload.sub);
+      throw new UnauthorizedException('Invalid refresh token');
+    }
 
     return tokens;
   }

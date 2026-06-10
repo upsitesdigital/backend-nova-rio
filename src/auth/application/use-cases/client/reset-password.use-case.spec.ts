@@ -13,6 +13,7 @@ describe('ResetPasswordUseCase', () => {
     findActiveVerificationCodes: Mock;
     completePasswordReset: Mock;
     deleteVerificationCodesByClientId: Mock;
+    reserveResetAttempt: Mock;
     getResetAttempts: Mock;
     incrementResetAttempts: Mock;
     clearResetAttempts: Mock;
@@ -34,6 +35,7 @@ describe('ResetPasswordUseCase', () => {
       findActiveVerificationCodes: vi.fn(),
       completePasswordReset: vi.fn(),
       deleteVerificationCodesByClientId: vi.fn(),
+      reserveResetAttempt: vi.fn().mockResolvedValue({ allowed: true, failedResetAttempts: 1 }),
       getResetAttempts: vi
         .fn()
         .mockResolvedValue({ failedResetAttempts: 0, resetLockedUntil: null }),
@@ -70,12 +72,12 @@ describe('ResetPasswordUseCase', () => {
       { id: 10, code: 'hashedCode', expiresAt: new Date(Date.now() + 60000) },
     ]);
     hashService.compare.mockResolvedValue(true);
-    clientRepository.completePasswordReset.mockResolvedValue(undefined);
+    clientRepository.completePasswordReset.mockResolvedValue(true);
 
     const result = await useCase.resetPassword(validDto);
 
     expect(result).toEqual({ message: 'Password reset successfully' });
-    expect(clientRepository.completePasswordReset).toHaveBeenCalledWith(1, 'hashedPassword');
+    expect(clientRepository.completePasswordReset).toHaveBeenCalledWith(1, 10, 'hashedPassword');
     expect(clientRepository.clearResetAttempts).toHaveBeenCalledWith(1);
   });
 
@@ -91,7 +93,8 @@ describe('ResetPasswordUseCase', () => {
     clientRepository.findActiveVerificationCodes.mockResolvedValue([]);
 
     await expect(useCase.resetPassword(validDto)).rejects.toThrow(BadRequestException);
-    expect(clientRepository.incrementResetAttempts).toHaveBeenCalledWith(1, 5, 900000);
+    expect(clientRepository.reserveResetAttempt).toHaveBeenCalledWith(1);
+    expect(clientRepository.incrementResetAttempts).not.toHaveBeenCalled();
   });
 
   it('should throw BadRequestException for wrong code', async () => {
@@ -102,33 +105,31 @@ describe('ResetPasswordUseCase', () => {
     hashService.compare.mockResolvedValue(false);
 
     await expect(useCase.resetPassword(validDto)).rejects.toThrow(BadRequestException);
-    expect(clientRepository.incrementResetAttempts).toHaveBeenCalled();
+    expect(clientRepository.reserveResetAttempt).toHaveBeenCalledWith(1);
+    expect(clientRepository.incrementResetAttempts).not.toHaveBeenCalled();
   });
 
-  it('should invalidate codes after max failed attempts', async () => {
+  it('should reject when the atomic reset-attempt reservation is denied', async () => {
     clientRepository.findByEmail.mockResolvedValue(client);
-    clientRepository.findActiveVerificationCodes.mockResolvedValue([
-      { id: 10, code: 'hashedCode', expiresAt: new Date(Date.now() + 60000) },
-    ]);
-    hashService.compare.mockResolvedValue(false);
-    clientRepository.getResetAttempts.mockResolvedValue({
+    clientRepository.reserveResetAttempt.mockResolvedValue({
+      allowed: false,
       failedResetAttempts: 5,
-      resetLockedUntil: null,
     });
 
     await expect(useCase.resetPassword(validDto)).rejects.toThrow('Invalid or expired code');
+    expect(clientRepository.findActiveVerificationCodes).not.toHaveBeenCalled();
   });
 
-  it('should delete codes when attempts reach threshold after increment', async () => {
+  it('should delete codes when reserved attempt reaches threshold', async () => {
     clientRepository.findByEmail.mockResolvedValue(client);
     clientRepository.findActiveVerificationCodes.mockResolvedValue([
       { id: 10, code: 'hashedCode', expiresAt: new Date(Date.now() + 60000) },
     ]);
     hashService.compare.mockResolvedValue(false);
-
-    clientRepository.getResetAttempts
-      .mockResolvedValueOnce({ failedResetAttempts: 4, resetLockedUntil: null }) // checkBruteForce
-      .mockResolvedValueOnce({ failedResetAttempts: 5, resetLockedUntil: null }); // after recordFailedAttempt
+    clientRepository.reserveResetAttempt.mockResolvedValue({
+      allowed: true,
+      failedResetAttempts: 5,
+    });
 
     await expect(useCase.resetPassword(validDto)).rejects.toThrow(BadRequestException);
 
@@ -144,7 +145,7 @@ describe('ResetPasswordUseCase', () => {
       { id: 10, code: 'hashedCode', expiresAt: new Date(Date.now() + 60000) },
     ]);
     hashService.compare.mockResolvedValue(true);
-    clientRepository.completePasswordReset.mockResolvedValue(undefined);
+    clientRepository.completePasswordReset.mockResolvedValue(true);
 
     await useCase.resetPassword(validDto);
 
@@ -154,17 +155,17 @@ describe('ResetPasswordUseCase', () => {
     );
   });
 
-  it('should clear lockout when window has expired', async () => {
+  it('should rely on reserveResetAttempt to clear expired lockout windows', async () => {
     clientRepository.findByEmail.mockResolvedValue(client);
-    clientRepository.getResetAttempts.mockResolvedValue({
-      failedResetAttempts: 5,
-      resetLockedUntil: new Date(Date.now() - 1000),
+    clientRepository.reserveResetAttempt.mockResolvedValue({
+      allowed: true,
+      failedResetAttempts: 1,
     });
     clientRepository.findActiveVerificationCodes.mockResolvedValue([
       { id: 10, code: 'hashedCode', expiresAt: new Date(Date.now() + 60000) },
     ]);
     hashService.compare.mockResolvedValue(true);
-    clientRepository.completePasswordReset.mockResolvedValue(undefined);
+    clientRepository.completePasswordReset.mockResolvedValue(true);
 
     const result = await useCase.resetPassword(validDto);
 

@@ -32,9 +32,10 @@ interface AuthenticableUser {
 
 interface AuthRepository {
   findByEmail(email: string): Promise<AuthenticableUser | null>;
+  reserveLoginAttempt(id: number): Promise<boolean>;
   incrementFailedLoginAttempts(id: number): Promise<void>;
   resetFailedLoginAttempts(id: number): Promise<void>;
-  updateRefreshTokenWithFamily(id: number, hash: string, family: string): Promise<void>;
+  updateRefreshTokenWithFamily(id: number, hash: string, family: string): Promise<boolean>;
 }
 
 const INVALID_CREDENTIALS = 'Invalid credentials';
@@ -101,9 +102,13 @@ export class LoginUseCase {
       throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
 
+    const attemptReserved = await repository.reserveLoginAttempt(user.id);
+    if (!attemptReserved) {
+      throw new UnauthorizedException(INVALID_CREDENTIALS);
+    }
+
     const valid = await this.hashService.compare(password, user.password);
     if (!valid) {
-      await repository.incrementFailedLoginAttempts(user.id);
       throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
 

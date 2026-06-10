@@ -50,19 +50,37 @@ export class PrismaAdminRepository implements IAdminRepository {
     return result?.refreshToken ?? null;
   }
 
-  async incrementFailedLoginAttempts(id: number): Promise<void> {
-    const admin = await this.prisma.adminUser.update({
-      where: { id },
-      data: { failedLoginAttempts: { increment: 1 } },
-      select: { failedLoginAttempts: true },
-    });
+  async reserveLoginAttempt(id: number): Promise<boolean> {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`
+        UPDATE admin_users
+        SET "failedLoginAttempts" = 0, "lockedUntil" = NULL
+        WHERE id = ${id}
+          AND "lockedUntil" IS NOT NULL
+          AND "lockedUntil" <= NOW()
+      `;
 
-    if (admin.failedLoginAttempts >= LOCKOUT_THRESHOLD) {
-      await this.prisma.adminUser.update({
-        where: { id },
-        data: { lockedUntil: new Date(Date.now() + LOCKOUT_DURATION_MS) },
-      });
-    }
+      const rows = await tx.$queryRaw<Array<{ failedLoginAttempts: number }>>`
+        UPDATE admin_users
+        SET
+          "failedLoginAttempts" = "failedLoginAttempts" + 1,
+          "lockedUntil" = CASE
+            WHEN "failedLoginAttempts" + 1 >= ${LOCKOUT_THRESHOLD}
+            THEN NOW() + (${LOCKOUT_DURATION_MS} * INTERVAL '1 millisecond')
+            ELSE "lockedUntil"
+          END
+        WHERE id = ${id}
+          AND ("lockedUntil" IS NULL OR "lockedUntil" <= NOW())
+          AND "failedLoginAttempts" < ${LOCKOUT_THRESHOLD}
+        RETURNING "failedLoginAttempts"
+      `;
+
+      return rows.length === 1;
+    });
+  }
+
+  async incrementFailedLoginAttempts(id: number): Promise<void> {
+    await this.reserveLoginAttempt(id);
   }
 
   async resetFailedLoginAttempts(id: number): Promise<void> {
@@ -76,11 +94,13 @@ export class PrismaAdminRepository implements IAdminRepository {
     id: number,
     refreshToken: string,
     tokenFamily: string,
-  ): Promise<void> {
-    await this.prisma.adminUser.update({
-      where: { id },
+    currentRefreshToken?: string,
+  ): Promise<boolean> {
+    const updated = await this.prisma.adminUser.updateMany({
+      where: { id, ...(currentRefreshToken ? { refreshToken: currentRefreshToken } : {}) },
       data: { refreshToken, tokenFamily },
     });
+    return updated.count === 1;
   }
 
   async getRefreshTokenAndFamily(

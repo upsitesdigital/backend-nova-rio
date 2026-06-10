@@ -105,6 +105,7 @@ describe('RefreshTokenUseCase', () => {
       1,
       'new_hashed',
       'family-uuid',
+      'old_hashed',
     );
   });
 
@@ -128,6 +129,7 @@ describe('RefreshTokenUseCase', () => {
       1,
       'new_hashed',
       'family-uuid',
+      'old_hashed',
     );
   });
 });

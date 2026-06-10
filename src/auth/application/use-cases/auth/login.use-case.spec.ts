@@ -11,6 +11,7 @@ function buildRepository() {
   return {
     findByEmail: vi.fn(),
     updateRefreshToken: vi.fn(),
+    reserveLoginAttempt: vi.fn().mockResolvedValue(true),
     incrementFailedLoginAttempts: vi.fn(),
     resetFailedLoginAttempts: vi.fn(),
     updateRefreshTokenWithFamily: vi.fn(),
@@ -125,13 +126,14 @@ describe('LoginUseCase', () => {
       expect(hashService.compare).not.toHaveBeenCalled();
     });
 
-    it('should increment failed attempts and throw on wrong password', async () => {
+    it('should reserve an attempt and throw on wrong password', async () => {
       clientRepository.findByEmail.mockResolvedValue(buildActiveClient());
       adminRepository.findByEmail.mockResolvedValue(null);
       hashService.compare.mockResolvedValue(false);
 
       await expect(useCase.authenticateUser(dto)).rejects.toThrow(UnauthorizedException);
-      expect(clientRepository.incrementFailedLoginAttempts).toHaveBeenCalledWith(1);
+      expect(clientRepository.reserveLoginAttempt).toHaveBeenCalledWith(1);
+      expect(clientRepository.incrementFailedLoginAttempts).not.toHaveBeenCalled();
     });
   });
 
@@ -171,13 +173,14 @@ describe('LoginUseCase', () => {
       await expect(useCase.authenticateUser(dto)).rejects.toThrow(UnauthorizedException);
     });
 
-    it('should increment failed attempts and throw on wrong admin password', async () => {
+    it('should reserve an attempt and throw on wrong admin password', async () => {
       clientRepository.findByEmail.mockResolvedValue(null);
       adminRepository.findByEmail.mockResolvedValue(buildActiveAdmin());
       hashService.compare.mockResolvedValue(false);
 
       await expect(useCase.authenticateUser(dto)).rejects.toThrow(UnauthorizedException);
-      expect(adminRepository.incrementFailedLoginAttempts).toHaveBeenCalledWith(10);
+      expect(adminRepository.reserveLoginAttempt).toHaveBeenCalledWith(10);
+      expect(adminRepository.incrementFailedLoginAttempts).not.toHaveBeenCalled();
     });
   });
 

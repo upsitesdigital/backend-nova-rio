@@ -55,7 +55,11 @@ export class VerifyEmailChangeUseCase {
       throw new BadRequestException('Invalid verification code');
     }
 
-    await this.clientRepository.markVerificationCodeAsUsed(matchedCodeId);
+    const consumed = await this.clientRepository.markVerificationCodeAsUsed(matchedCodeId);
+    if (consumed === false) {
+      throw new BadRequestException('Invalid verification code');
+    }
+
     await this.clientRepository.updateEmail(clientId, dto.newEmail);
 
     void this.emailService.sendEmailChangedEmail(client.email, client.name, dto.newEmail);
