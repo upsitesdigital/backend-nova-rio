@@ -1,22 +1,18 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { APPOINTMENT_REPOSITORY } from '../../../../appointments/domain/interfaces/appointment.repository.interface.js';
 import type { IAppointmentRepository } from '../../../../appointments/domain/interfaces/appointment.repository.interface.js';
-import { CLIENT_PROFILE_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
 import type { IClientProfileRepository } from '../../../../auth/domain/interfaces/client.repository.interface.js';
-import { CARD_REPOSITORY } from '../../../../cards/domain/interfaces/card.repository.interface.js';
 import type { ICardRepository } from '../../../../cards/domain/interfaces/card.repository.interface.js';
-import { PAYMENT_GATEWAY_SERVICE } from '../../../../payment-gateway/domain/interfaces/payment-gateway.service.interface.js';
 import type { IPaymentGatewayService } from '../../../../payment-gateway/domain/interfaces/payment-gateway.service.interface.js';
-import { PAYMENT_PRICING_SERVICE } from '../../../domain/services/payment-pricing.service.interface.js';
 import type { IPaymentPricingService } from '../../../domain/services/payment-pricing.service.interface.js';
-import { PAYMENT_REPOSITORY } from '../../../domain/interfaces/payment.repository.interface.js';
 import type {
   CreatePaymentData,
   IPaymentRepository,
   PaymentResponse,
 } from '../../../domain/interfaces/payment.repository.interface.js';
-import { mapPaymentMethodToVindi } from '../../mappers/payment-method.mapper.js';
+import { PaymentMethod } from '@prisma/client';
+import { PaymentMethodMapper } from '../../mappers/payment-method.mapper.js';
 import type { CreatePaymentDto } from '../../../dto/payment/create-payment.dto.js';
 
 @Injectable()
@@ -25,12 +21,12 @@ export class CreateClientPaymentUseCase {
   private readonly vindiProductId: number;
 
   constructor(
-    @Inject(PAYMENT_REPOSITORY) private paymentRepository: IPaymentRepository,
-    @Inject(APPOINTMENT_REPOSITORY) private appointmentRepository: IAppointmentRepository,
-    @Inject(CARD_REPOSITORY) private cardRepository: ICardRepository,
-    @Inject(PAYMENT_GATEWAY_SERVICE) private paymentGatewayService: IPaymentGatewayService,
-    @Inject(PAYMENT_PRICING_SERVICE) private pricingService: IPaymentPricingService,
-    @Inject(CLIENT_PROFILE_REPOSITORY) private clientRepository: IClientProfileRepository,
+    @Inject(DiTokens.paymentRepository) private paymentRepository: IPaymentRepository,
+    @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
+    @Inject(DiTokens.cardRepository) private cardRepository: ICardRepository,
+    @Inject(DiTokens.paymentGatewayService) private paymentGatewayService: IPaymentGatewayService,
+    @Inject(DiTokens.paymentPricingService) private pricingService: IPaymentPricingService,
+    @Inject(DiTokens.clientProfileRepository) private clientRepository: IClientProfileRepository,
     configService: ConfigService,
   ) {
     this.vindiProductId = Number(configService.getOrThrow<string>('VINDI_PRODUCT_ID'));
@@ -57,7 +53,10 @@ export class CreateClientPaymentUseCase {
       throw new BadRequestException('A payment already exists for this appointment');
     }
 
-    if ((dto.method === 'CREDIT_CARD' || dto.method === 'DEBIT_CARD') && !dto.cardId) {
+    if (
+      (dto.method === PaymentMethod.CREDIT_CARD || dto.method === PaymentMethod.DEBIT_CARD) &&
+      !dto.cardId
+    ) {
       throw new BadRequestException('Card is required for card payments');
     }
 
@@ -94,7 +93,7 @@ export class CreateClientPaymentUseCase {
 
     const vindiBill = await this.paymentGatewayService.createGatewayBill({
       gatewayCustomerId: vindiCustomerId,
-      paymentMethodCode: mapPaymentMethodToVindi(dto.method),
+      paymentMethodCode: PaymentMethodMapper.toVindi(dto.method),
       amount,
       productId: this.vindiProductId,
     });

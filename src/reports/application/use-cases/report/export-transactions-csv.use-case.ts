@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, StreamableFile } from '@nestjs/common';
-import { REPORT_REPOSITORY } from '../../../domain/interfaces/report.repository.interface.js';
 import type {
   ExportFilters,
   ExportRow,
@@ -9,7 +9,7 @@ import type { SalesSummaryQueryDto } from '../../../dto/report/sales-summary-que
 
 @Injectable()
 export class ExportTransactionsCsvUseCase {
-  constructor(@Inject(REPORT_REPOSITORY) private reportRepository: IReportRepository) {}
+  constructor(@Inject(DiTokens.reportRepository) private reportRepository: IReportRepository) {}
 
   async exportTransactionsCsv(query: SalesSummaryQueryDto): Promise<StreamableFile> {
     const filters: ExportFilters = {};

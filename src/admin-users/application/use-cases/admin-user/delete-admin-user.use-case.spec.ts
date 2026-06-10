@@ -1,7 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { ADMIN_USER_REPOSITORY } from '../../../domain/interfaces/admin-user.repository.interface.js';
 import { DeleteAdminUserUseCase } from './delete-admin-user.use-case.js';
 
 describe('DeleteAdminUserUseCase', () => {
@@ -17,7 +17,7 @@ describe('DeleteAdminUserUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteAdminUserUseCase,
-        { provide: ADMIN_USER_REPOSITORY, useValue: adminUserRepository },
+        { provide: DiTokens.adminUserRepository, useValue: adminUserRepository },
       ],
     }).compile();
 

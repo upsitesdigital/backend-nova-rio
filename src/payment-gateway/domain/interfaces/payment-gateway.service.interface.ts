@@ -1,7 +1,5 @@
 import type { VindiBill, VindiCustomer, VindiPaymentProfile } from '../types/vindi.types.js';
 
-export const PAYMENT_GATEWAY_SERVICE = Symbol('PAYMENT_GATEWAY_SERVICE');
-
 export interface CreateGatewayCustomerData {
   name: string;
   email: string;

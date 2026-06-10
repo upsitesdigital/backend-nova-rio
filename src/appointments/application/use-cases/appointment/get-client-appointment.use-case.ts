@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
 import type {
   AppointmentResponse,
   IAppointmentRepository,
@@ -8,7 +8,7 @@ import type {
 @Injectable()
 export class GetClientAppointmentUseCase {
   constructor(
-    @Inject(APPOINTMENT_REPOSITORY) private appointmentRepository: IAppointmentRepository,
+    @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
   ) {}
 
   async getAppointmentByIdAndClientId(id: number, clientId: number): Promise<AppointmentResponse> {

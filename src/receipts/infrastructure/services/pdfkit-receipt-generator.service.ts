@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { PaymentMethod } from '@prisma/client';
 import { createWriteStream, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import PDFDocument from 'pdfkit';
@@ -145,7 +146,7 @@ export class PdfkitReceiptGeneratorService implements IReceiptGenerator {
     doc.moveDown(0.3);
     doc.fontSize(10).font('Helvetica');
 
-    if (payment.method === 'PIX') {
+    if (payment.method === PaymentMethod.PIX) {
       doc.text('Metodo: PIX');
     } else if (payment.card) {
       doc.text(`Metodo: ${payment.card.brand} **** ${payment.card.lastFourDigits}`);

@@ -1,14 +1,12 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { Holiday } from '@prisma/client';
-import {
-  HOLIDAY_REPOSITORY,
-  type IHolidayRepository,
-} from '../../../domain/interfaces/holiday.repository.interface.js';
+import { type IHolidayRepository } from '../../../domain/interfaces/holiday.repository.interface.js';
 import type { UpdateHolidayDto } from '../../../dto/holiday/update-holiday.dto.js';
 
 @Injectable()
 export class UpdateHolidayUseCase {
-  constructor(@Inject(HOLIDAY_REPOSITORY) private holidayRepository: IHolidayRepository) {}
+  constructor(@Inject(DiTokens.holidayRepository) private holidayRepository: IHolidayRepository) {}
 
   async updateHolidayById(id: number, dto: UpdateHolidayDto): Promise<Holiday> {
     const existing = await this.holidayRepository.findHolidayById(id);

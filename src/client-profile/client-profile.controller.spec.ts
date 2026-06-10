@@ -1,6 +1,6 @@
+import { DiTokens } from '../shared/di/di-tokens.js';
 import { type Mock, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { CLIENT_AUTH_REPOSITORY } from '../auth/domain/interfaces/client.repository.interface.js';
 import { ClientProfileController } from './client-profile.controller.js';
 import { GetClientProfileUseCase } from './application/use-cases/profile/get-client-profile.use-case.js';
 import { UpdateClientProfileUseCase } from './application/use-cases/profile/update-client-profile.use-case.js';
@@ -42,7 +42,7 @@ describe('ClientProfileController', () => {
         { provide: RequestPasswordChangeUseCase, useValue: requestPasswordChangeUseCase },
         { provide: VerifyPasswordChangeUseCase, useValue: verifyPasswordChangeUseCase },
         { provide: DeleteClientAccountUseCase, useValue: deleteClientAccountUseCase },
-        { provide: CLIENT_AUTH_REPOSITORY, useValue: { findById: vi.fn() } },
+        { provide: DiTokens.clientAuthRepository, useValue: { findById: vi.fn() } },
       ],
     }).compile();
 
@@ -90,6 +90,6 @@ describe('ClientProfileController', () => {
   it('should call deleteClientAccount with user id', async () => {
     const dto = { confirmPhrase: 'Apagar minha conta' };
     await controller.deleteAccount(mockUser, dto);
-    expect(deleteClientAccountUseCase.deleteClientAccount).toHaveBeenCalledWith(1, dto);
+    expect(deleteClientAccountUseCase.deleteClientAccount).toHaveBeenCalledWith(1);
   });
 });

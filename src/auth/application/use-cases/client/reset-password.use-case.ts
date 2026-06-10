@@ -1,10 +1,9 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
-import { CLIENT_VERIFICATION_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
 import type { IClientVerificationRepository } from '../../../domain/interfaces/client.repository.interface.js';
-import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
 import type { IHashService } from '../../../domain/interfaces/hash.service.interface.js';
-import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
+import { VerificationType } from '../../../domain/constants/verification-type.constant.js';
 import type { ResetPasswordDto } from '../../../dto/reset-password.dto.js';
 
 const MAX_FAILED_ATTEMPTS = 5;
@@ -13,9 +12,10 @@ export class ResetPasswordUseCase {
   private readonly logger = new Logger(ResetPasswordUseCase.name);
 
   constructor(
-    @Inject(CLIENT_VERIFICATION_REPOSITORY) private clientRepository: IClientVerificationRepository,
-    @Inject(HASH_SERVICE) private hashService: IHashService,
-    @Inject(EMAIL_SERVICE) private emailService: IEmailService,
+    @Inject(DiTokens.clientVerificationRepository)
+    private clientRepository: IClientVerificationRepository,
+    @Inject(DiTokens.hashService) private hashService: IHashService,
+    @Inject(DiTokens.emailService) private emailService: IEmailService,
   ) {}
 
   async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
@@ -32,7 +32,7 @@ export class ResetPasswordUseCase {
 
     const activeCodes = await this.clientRepository.findActiveVerificationCodes(
       client.id,
-      'PASSWORD_CHANGE',
+      VerificationType.passwordChange,
     );
 
     if (activeCodes.length === 0) {
@@ -51,7 +51,10 @@ export class ResetPasswordUseCase {
 
     if (matchedCodeId === null) {
       if (attempt.failedResetAttempts >= MAX_FAILED_ATTEMPTS) {
-        await this.clientRepository.deleteVerificationCodesByClientId(client.id, 'PASSWORD_CHANGE');
+        await this.clientRepository.deleteVerificationCodesByClientId(
+          client.id,
+          VerificationType.passwordChange,
+        );
       }
 
       throw new BadRequestException('Invalid or expired code');

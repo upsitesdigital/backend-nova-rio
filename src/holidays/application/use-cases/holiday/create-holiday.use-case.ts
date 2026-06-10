@@ -1,14 +1,12 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import type { Holiday } from '@prisma/client';
-import {
-  HOLIDAY_REPOSITORY,
-  type IHolidayRepository,
-} from '../../../domain/interfaces/holiday.repository.interface.js';
+import { type IHolidayRepository } from '../../../domain/interfaces/holiday.repository.interface.js';
 import type { CreateHolidayDto } from '../../../dto/holiday/create-holiday.dto.js';
 
 @Injectable()
 export class CreateHolidayUseCase {
-  constructor(@Inject(HOLIDAY_REPOSITORY) private holidayRepository: IHolidayRepository) {}
+  constructor(@Inject(DiTokens.holidayRepository) private holidayRepository: IHolidayRepository) {}
 
   async createHoliday(dto: CreateHolidayDto): Promise<Holiday> {
     const date = new Date(dto.date);

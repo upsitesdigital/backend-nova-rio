@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
-import { EMPLOYEE_REPOSITORY } from '../../../domain/interfaces/employee.repository.interface.js';
 import type {
   EmployeeSafe,
   IEmployeeRepository,
@@ -8,7 +8,9 @@ import { CreateEmployeeDto } from '../../../dto/employee/create-employee.dto.js'
 
 @Injectable()
 export class CreateEmployeeUseCase {
-  constructor(@Inject(EMPLOYEE_REPOSITORY) private employeeRepository: IEmployeeRepository) {}
+  constructor(
+    @Inject(DiTokens.employeeRepository) private employeeRepository: IEmployeeRepository,
+  ) {}
 
   async createEmployee(dto: CreateEmployeeDto): Promise<EmployeeSafe> {
     const [existingByEmail, existingByCpf] = await Promise.all([

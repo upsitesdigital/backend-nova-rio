@@ -1,7 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { PAYMENT_REPOSITORY } from '../../../domain/interfaces/payment.repository.interface.js';
 import { GetPaymentUseCase } from './get-payment.use-case.js';
 
 describe('GetPaymentUseCase', () => {
@@ -12,7 +12,10 @@ describe('GetPaymentUseCase', () => {
     paymentRepository = { findPaymentById: vi.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [GetPaymentUseCase, { provide: PAYMENT_REPOSITORY, useValue: paymentRepository }],
+      providers: [
+        GetPaymentUseCase,
+        { provide: DiTokens.paymentRepository, useValue: paymentRepository },
+      ],
     }).compile();
 
     useCase = module.get<GetPaymentUseCase>(GetPaymentUseCase);

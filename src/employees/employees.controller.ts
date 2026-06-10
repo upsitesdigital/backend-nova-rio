@@ -24,6 +24,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { AdminRole } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
@@ -39,7 +40,7 @@ import { UpdateEmployeeDto } from './dto/employee/update-employee.dto.js';
 @ApiTags('Employees')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN_MASTER', 'ADMIN_BASIC')
+@Roles(AdminRole.ADMIN_MASTER, AdminRole.ADMIN_BASIC)
 @Controller('employees')
 export class EmployeesController {
   constructor(

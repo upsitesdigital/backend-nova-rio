@@ -1,7 +1,7 @@
+import { DiTokens } from '../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
 import type { AuthUser } from '../shared/types/auth-user.type.js';
-import { CLIENT_AUTH_REPOSITORY } from '../auth/domain/interfaces/client.repository.interface.js';
 import { ClientAppointmentsController } from './client-appointments.controller.js';
 import { CreateClientAppointmentUseCase } from './application/use-cases/appointment/create-client-appointment.use-case.js';
 import { ListClientAppointmentsUseCase } from './application/use-cases/appointment/list-client-appointments.use-case.js';
@@ -41,7 +41,7 @@ describe('ClientAppointmentsController', () => {
         },
         { provide: CancelClientAppointmentUseCase, useValue: cancelClientAppointmentUseCase },
         { provide: CreatePublicAppointmentUseCase, useValue: createPublicAppointmentUseCase },
-        { provide: CLIENT_AUTH_REPOSITORY, useValue: { findById: vi.fn() } },
+        { provide: DiTokens.clientAuthRepository, useValue: { findById: vi.fn() } },
       ],
     }).compile();
 

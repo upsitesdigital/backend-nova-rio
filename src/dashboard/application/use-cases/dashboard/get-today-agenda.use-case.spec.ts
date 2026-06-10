@@ -1,6 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { DASHBOARD_REPOSITORY } from '../../../domain/interfaces/dashboard.repository.interface.js';
 import { GetTodayAgendaUseCase } from './get-today-agenda.use-case.js';
 
 describe('GetTodayAgendaUseCase', () => {
@@ -16,7 +16,7 @@ describe('GetTodayAgendaUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetTodayAgendaUseCase,
-        { provide: DASHBOARD_REPOSITORY, useValue: dashboardRepository },
+        { provide: DiTokens.dashboardRepository, useValue: dashboardRepository },
       ],
     }).compile();
 

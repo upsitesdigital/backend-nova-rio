@@ -1,11 +1,13 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { AdminRole } from '@prisma/client';
-import { ADMIN_USER_REPOSITORY } from '../../../domain/interfaces/admin-user.repository.interface.js';
 import type { IAdminUserRepository } from '../../../domain/interfaces/admin-user.repository.interface.js';
 
 @Injectable()
 export class DeleteAdminUserUseCase {
-  constructor(@Inject(ADMIN_USER_REPOSITORY) private adminUserRepository: IAdminUserRepository) {}
+  constructor(
+    @Inject(DiTokens.adminUserRepository) private adminUserRepository: IAdminUserRepository,
+  ) {}
 
   async deactivateAdminUserById(id: number, callerId: number, callerRole: string): Promise<void> {
     if (id === callerId) {

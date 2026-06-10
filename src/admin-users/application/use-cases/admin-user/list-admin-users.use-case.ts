@@ -1,6 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
 import type { PaginatedResponse } from '../../../../shared/types/paginated-response.type.js';
-import { ADMIN_USER_REPOSITORY } from '../../../domain/interfaces/admin-user.repository.interface.js';
 import type {
   AdminUserSafe,
   IAdminUserRepository,
@@ -9,7 +9,9 @@ import { ListAdminUsersQueryDto } from '../../../dto/admin-user/list-admin-users
 
 @Injectable()
 export class ListAdminUsersUseCase {
-  constructor(@Inject(ADMIN_USER_REPOSITORY) private adminUserRepository: IAdminUserRepository) {}
+  constructor(
+    @Inject(DiTokens.adminUserRepository) private adminUserRepository: IAdminUserRepository,
+  ) {}
 
   async listAdminUsers(query: ListAdminUsersQueryDto): Promise<PaginatedResponse<AdminUserSafe>> {
     return this.adminUserRepository.listAdminUsers({

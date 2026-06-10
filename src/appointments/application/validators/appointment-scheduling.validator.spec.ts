@@ -1,7 +1,7 @@
+import { DiTokens } from '../../../shared/di/di-tokens.js';
 import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { HOLIDAY_REPOSITORY } from '../../../holidays/domain/interfaces/holiday.repository.interface.js';
 import { AppointmentSchedulingValidator } from './appointment-scheduling.validator.js';
 
 describe('AppointmentSchedulingValidator', () => {
@@ -14,7 +14,7 @@ describe('AppointmentSchedulingValidator', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AppointmentSchedulingValidator,
-        { provide: HOLIDAY_REPOSITORY, useValue: holidayRepository },
+        { provide: DiTokens.holidayRepository, useValue: holidayRepository },
       ],
     }).compile();
 

@@ -1,6 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
 import type { PaginatedResponse } from '../../../../shared/types/paginated-response.type.js';
-import { CLIENT_MGMT_REPOSITORY } from '../../../domain/interfaces/client-management.repository.interface.js';
 import type {
   ClientSafe,
   IClientManagementRepository,
@@ -10,7 +10,8 @@ import { ListClientsQueryDto } from '../../../dto/client/list-clients-query.dto.
 @Injectable()
 export class ListClientsUseCase {
   constructor(
-    @Inject(CLIENT_MGMT_REPOSITORY) private clientMgmtRepository: IClientManagementRepository,
+    @Inject(DiTokens.clientManagementRepository)
+    private clientMgmtRepository: IClientManagementRepository,
   ) {}
 
   async listClients(query: ListClientsQueryDto): Promise<PaginatedResponse<ClientSafe>> {

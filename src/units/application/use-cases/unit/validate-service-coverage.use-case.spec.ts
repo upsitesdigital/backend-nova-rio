@@ -1,7 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test } from '@nestjs/testing';
 import type { Unit } from '@prisma/client';
-import { GEOCODING_SERVICE } from '../../../domain/interfaces/geocoding.service.interface.js';
-import { UNIT_REPOSITORY } from '../../../domain/interfaces/unit.repository.interface.js';
 import { ValidateServiceCoverageUseCase } from './validate-service-coverage.use-case.js';
 
 const mockUnit: Unit = {
@@ -38,8 +37,8 @@ describe('ValidateServiceCoverageUseCase', () => {
     const module = await Test.createTestingModule({
       providers: [
         ValidateServiceCoverageUseCase,
-        { provide: UNIT_REPOSITORY, useValue: unitRepository },
-        { provide: GEOCODING_SERVICE, useValue: geocodingService },
+        { provide: DiTokens.unitRepository, useValue: unitRepository },
+        { provide: DiTokens.geocodingService, useValue: geocodingService },
       ],
     }).compile();
 

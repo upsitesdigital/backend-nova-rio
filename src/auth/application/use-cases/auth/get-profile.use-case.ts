@@ -1,19 +1,16 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { AuthUser } from '../../../../shared/types/auth-user.type.js';
-import {
-  ADMIN_PROFILE_REPOSITORY,
-  type IAdminProfileRepository,
-} from '../../../domain/interfaces/admin.repository.interface.js';
-import {
-  CLIENT_PROFILE_REPOSITORY,
-  type IClientProfileRepository,
-} from '../../../domain/interfaces/client.repository.interface.js';
+import { type IAdminProfileRepository } from '../../../domain/interfaces/admin.repository.interface.js';
+import { type IClientProfileRepository } from '../../../domain/interfaces/client.repository.interface.js';
 
 @Injectable()
 export class GetProfileUseCase {
   constructor(
-    @Inject(CLIENT_PROFILE_REPOSITORY) private clientProfileRepository: IClientProfileRepository,
-    @Inject(ADMIN_PROFILE_REPOSITORY) private adminProfileRepository: IAdminProfileRepository,
+    @Inject(DiTokens.clientProfileRepository)
+    private clientProfileRepository: IClientProfileRepository,
+    @Inject(DiTokens.adminProfileRepository)
+    private adminProfileRepository: IAdminProfileRepository,
   ) {}
 
   async getProfile(user: AuthUser) {

@@ -1,9 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { type Mock, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
-import { CLIENT_VERIFICATION_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
-import { HASH_SERVICE } from '../../../../auth/domain/interfaces/hash.service.interface.js';
-import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
 import { RequestPasswordChangeUseCase } from './request-password-change.use-case.js';
 
 describe('RequestPasswordChangeUseCase', () => {
@@ -28,9 +26,9 @@ describe('RequestPasswordChangeUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RequestPasswordChangeUseCase,
-        { provide: CLIENT_VERIFICATION_REPOSITORY, useValue: clientRepository },
-        { provide: HASH_SERVICE, useValue: hashService },
-        { provide: EMAIL_SERVICE, useValue: emailService },
+        { provide: DiTokens.clientVerificationRepository, useValue: clientRepository },
+        { provide: DiTokens.hashService, useValue: hashService },
+        { provide: DiTokens.emailService, useValue: emailService },
       ],
     }).compile();
 

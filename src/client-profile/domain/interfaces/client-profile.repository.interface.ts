@@ -1,7 +1,5 @@
 import type { ClientProfile } from '../../../auth/domain/interfaces/client.repository.interface.js';
 
-export const PROFILE_REPOSITORY = Symbol('PROFILE_REPOSITORY');
-
 export interface UpdateProfileData {
   name?: string;
   phone?: string;
@@ -11,5 +9,6 @@ export interface UpdateProfileData {
 }
 
 export interface IClientProfileRepository {
+  findClientProfileById(id: number): Promise<ClientProfile | null>;
   updateProfile(id: number, data: UpdateProfileData): Promise<ClientProfile>;
 }

@@ -1,6 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
 import {
-  DASHBOARD_REPOSITORY,
   type IDashboardRepository,
   type TodayAgendaResponse,
 } from '../../../domain/interfaces/dashboard.repository.interface.js';
@@ -9,7 +9,7 @@ import type { TodayAgendaQueryDto } from '../../../dto/dashboard/today-agenda-qu
 @Injectable()
 export class GetTodayAgendaUseCase {
   constructor(
-    @Inject(DASHBOARD_REPOSITORY)
+    @Inject(DiTokens.dashboardRepository)
     private dashboardRepository: IDashboardRepository,
   ) {}
 

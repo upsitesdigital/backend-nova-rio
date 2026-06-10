@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
+import { Prisma, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 import type {
@@ -8,18 +8,7 @@ import type {
   IAdminUserRepository,
   ListAdminUsersFilters,
 } from '../../domain/interfaces/admin-user.repository.interface.js';
-
-const ADMIN_USER_SAFE_SELECT = {
-  id: true,
-  uuid: true,
-  name: true,
-  email: true,
-  role: true,
-  status: true,
-  createdAt: true,
-  updatedAt: true,
-  createdById: true,
-} satisfies Prisma.AdminUserSelect;
+import { AdminUserSelect } from './admin-user.select.js';
 
 @Injectable()
 export class PrismaAdminUserRepository implements IAdminUserRepository {
@@ -28,21 +17,21 @@ export class PrismaAdminUserRepository implements IAdminUserRepository {
   async createAdminUser(data: CreateAdminUserData): Promise<AdminUserSafe> {
     return this.prisma.adminUser.create({
       data,
-      select: ADMIN_USER_SAFE_SELECT,
+      select: AdminUserSelect.safe,
     });
   }
 
   async findAdminUserByEmail(email: string): Promise<AdminUserSafe | null> {
     return this.prisma.adminUser.findUnique({
       where: { email },
-      select: ADMIN_USER_SAFE_SELECT,
+      select: AdminUserSelect.safe,
     });
   }
 
   async findAdminUserById(id: number): Promise<AdminUserSafe | null> {
     return this.prisma.adminUser.findFirst({
-      where: { id, status: 'ACTIVE' },
-      select: ADMIN_USER_SAFE_SELECT,
+      where: { id, status: UserStatus.ACTIVE },
+      select: AdminUserSelect.safe,
     });
   }
 
@@ -65,7 +54,7 @@ export class PrismaAdminUserRepository implements IAdminUserRepository {
     const [data, total] = await Promise.all([
       this.prisma.adminUser.findMany({
         where,
-        select: ADMIN_USER_SAFE_SELECT,
+        select: AdminUserSelect.safe,
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
@@ -79,7 +68,7 @@ export class PrismaAdminUserRepository implements IAdminUserRepository {
   async deactivateAdminUserById(id: number): Promise<void> {
     await this.prisma.adminUser.update({
       where: { id },
-      data: { status: 'INACTIVE' },
+      data: { status: UserStatus.INACTIVE },
     });
   }
 }

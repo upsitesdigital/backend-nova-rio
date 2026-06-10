@@ -1,7 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { PACKAGE_REPOSITORY } from '../../../domain/interfaces/package.repository.interface.js';
 import { DeletePackageUseCase } from './delete-package.use-case.js';
 
 describe('DeletePackageUseCase', () => {
@@ -17,7 +17,7 @@ describe('DeletePackageUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeletePackageUseCase,
-        { provide: PACKAGE_REPOSITORY, useValue: packageRepository },
+        { provide: DiTokens.packageRepository, useValue: packageRepository },
       ],
     }).compile();
 

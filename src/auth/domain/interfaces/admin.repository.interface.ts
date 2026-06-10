@@ -1,9 +1,5 @@
 import type { AdminUser } from '@prisma/client';
 
-export const ADMIN_REPOSITORY = Symbol('ADMIN_REPOSITORY');
-export const ADMIN_AUTH_REPOSITORY = Symbol('ADMIN_AUTH_REPOSITORY');
-export const ADMIN_PROFILE_REPOSITORY = Symbol('ADMIN_PROFILE_REPOSITORY');
-
 export type AdminData = Pick<
   AdminUser,
   | 'id'

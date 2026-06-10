@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
+import { AppointmentStatus, PaymentStatus, Prisma, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import type {
   ActiveClientsFilters,
@@ -14,6 +14,12 @@ import type {
   TransactionGroupItem,
   TransactionsFilters,
 } from '../../domain/interfaces/report.repository.interface.js';
+
+interface TransactionRawRow {
+  period: string;
+  total: number;
+  count: bigint;
+}
 
 @Injectable()
 export class PrismaReportRepository implements IReportRepository {
@@ -38,7 +44,7 @@ export class PrismaReportRepository implements IReportRepository {
 
   async getActiveClients(filters: ActiveClientsFilters): Promise<ActiveClientsResponse> {
     const clientWhere: Prisma.ClientWhereInput = {
-      status: 'ACTIVE',
+      status: UserStatus.ACTIVE,
       ...(filters.unitId ? { unitId: filters.unitId } : {}),
     };
 
@@ -46,7 +52,7 @@ export class PrismaReportRepository implements IReportRepository {
 
     const unitCounts = await this.prisma.client.groupBy({
       by: ['unitId'],
-      where: { status: 'ACTIVE', unitId: { not: null } },
+      where: { status: UserStatus.ACTIVE, unitId: { not: null } },
       _count: true,
     });
 
@@ -75,7 +81,7 @@ export class PrismaReportRepository implements IReportRepository {
 
   async getHoursByService(filters: HoursByServiceFilters): Promise<HoursByServiceItem[]> {
     const where: Prisma.AppointmentWhereInput = {
-      status: 'COMPLETED',
+      status: AppointmentStatus.COMPLETED,
       ...(filters.unitId ? { unitId: filters.unitId } : {}),
       ...(filters.dateFrom || filters.dateTo
         ? {
@@ -113,52 +119,73 @@ export class PrismaReportRepository implements IReportRepository {
   }
 
   async getTransactions(filters: TransactionsFilters): Promise<TransactionGroupItem[]> {
-    const trunc = filters.groupBy === 'day' ? 'day' : filters.groupBy === 'week' ? 'week' : 'month';
-    const conditions: string[] = [`status = 'APPROVED'`];
-    const params: unknown[] = [];
+    const conditions: Prisma.Sql[] = [
+      Prisma.sql`status = ${PaymentStatus.APPROVED}::"PaymentStatus"`,
+    ];
 
     if (filters.dateFrom) {
-      params.push(filters.dateFrom);
-      conditions.push(`"paidAt" >= $${params.length}`);
+      conditions.push(Prisma.sql`"paidAt" >= ${filters.dateFrom}`);
     }
     if (filters.dateTo) {
-      params.push(filters.dateTo);
-      conditions.push(`"paidAt" <= $${params.length}`);
+      conditions.push(Prisma.sql`"paidAt" <= ${filters.dateTo}`);
     }
     if (filters.unitId) {
-      params.push(filters.unitId);
       conditions.push(
-        `"appointmentId" IN (SELECT id FROM appointments WHERE "unitId" = $${params.length})`,
+        Prisma.sql`"appointmentId" IN (SELECT id FROM appointments WHERE "unitId" = ${filters.unitId})`,
       );
     }
     if (filters.serviceId) {
-      params.push(filters.serviceId);
       conditions.push(
-        `"appointmentId" IN (SELECT id FROM appointments WHERE "serviceId" = $${params.length})`,
+        Prisma.sql`"appointmentId" IN (SELECT id FROM appointments WHERE "serviceId" = ${filters.serviceId})`,
       );
     }
 
-    const whereClause = conditions.join(' AND ');
-
-    const rows = await this.prisma.$queryRawUnsafe<
-      Array<{ period: string; total: number; count: bigint }>
-    >(
-      `SELECT
-        TO_CHAR(DATE_TRUNC('${trunc}', COALESCE("paidAt", "createdAt")), 'YYYY-MM-DD') AS period,
-        SUM(amount)::float AS total,
-        COUNT(*)::bigint AS count
-      FROM payments
-      WHERE ${whereClause}
-      GROUP BY period
-      ORDER BY period ASC`,
-      ...params,
-    );
+    const whereClause = Prisma.join(conditions, ' AND ');
+    const rows = await this.queryTransactionGroups(filters.groupBy, whereClause);
 
     return rows.map((row) => ({
       period: row.period,
       total: row.total,
       count: Number(row.count),
     }));
+  }
+
+  private queryTransactionGroups(
+    groupBy: TransactionsFilters['groupBy'],
+    whereClause: Prisma.Sql,
+  ): Promise<TransactionRawRow[]> {
+    switch (groupBy) {
+      case 'day':
+        return this.prisma.$queryRaw<TransactionRawRow[]>`
+          SELECT
+            TO_CHAR(DATE_TRUNC('day', COALESCE("paidAt", "createdAt")), 'YYYY-MM-DD') AS period,
+            SUM(amount)::float AS total,
+            COUNT(*)::bigint AS count
+          FROM payments
+          WHERE ${whereClause}
+          GROUP BY period
+          ORDER BY period ASC`;
+      case 'week':
+        return this.prisma.$queryRaw<TransactionRawRow[]>`
+          SELECT
+            TO_CHAR(DATE_TRUNC('week', COALESCE("paidAt", "createdAt")), 'YYYY-MM-DD') AS period,
+            SUM(amount)::float AS total,
+            COUNT(*)::bigint AS count
+          FROM payments
+          WHERE ${whereClause}
+          GROUP BY period
+          ORDER BY period ASC`;
+      default:
+        return this.prisma.$queryRaw<TransactionRawRow[]>`
+          SELECT
+            TO_CHAR(DATE_TRUNC('month', COALESCE("paidAt", "createdAt")), 'YYYY-MM-DD') AS period,
+            SUM(amount)::float AS total,
+            COUNT(*)::bigint AS count
+          FROM payments
+          WHERE ${whereClause}
+          GROUP BY period
+          ORDER BY period ASC`;
+    }
   }
 
   async getExportRows(filters: ExportFilters): Promise<ExportRow[]> {
@@ -199,7 +226,7 @@ export class PrismaReportRepository implements IReportRepository {
     filters: Pick<SalesSummaryFilters, 'dateFrom' | 'dateTo' | 'unitId' | 'serviceId'>,
   ): Prisma.PaymentWhereInput {
     return {
-      status: 'APPROVED',
+      status: PaymentStatus.APPROVED,
       ...(filters.dateFrom || filters.dateTo
         ? {
             paidAt: {

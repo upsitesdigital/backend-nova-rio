@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
-import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
 import type {
   IAppointmentRepository,
   PaginatedAppointments,
@@ -7,8 +7,10 @@ import type {
 
 @Injectable()
 export class ListClientAppointmentsUseCase {
+  private readonly maxLimit = 100;
+
   constructor(
-    @Inject(APPOINTMENT_REPOSITORY) private appointmentRepository: IAppointmentRepository,
+    @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
   ) {}
 
   async listAppointmentsByClientId(
@@ -16,6 +18,7 @@ export class ListClientAppointmentsUseCase {
     page: number = 1,
     limit: number = 20,
   ): Promise<PaginatedAppointments> {
-    return this.appointmentRepository.listAppointmentsByClientId(clientId, page, limit);
+    const cappedLimit = Math.min(limit, this.maxLimit);
+    return this.appointmentRepository.listAppointmentsByClientId(clientId, page, cappedLimit);
   }
 }

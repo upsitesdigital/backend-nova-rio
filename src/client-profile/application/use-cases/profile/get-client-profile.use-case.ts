@@ -1,15 +1,15 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { CLIENT_PROFILE_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
-import type { IClientProfileRepository } from '../../../../auth/domain/interfaces/client.repository.interface.js';
+import type { IClientProfileRepository } from '../../../domain/interfaces/client-profile.repository.interface.js';
 
 @Injectable()
 export class GetClientProfileUseCase {
   constructor(
-    @Inject(CLIENT_PROFILE_REPOSITORY) private clientRepository: IClientProfileRepository,
+    @Inject(DiTokens.profileRepository) private profileRepository: IClientProfileRepository,
   ) {}
 
   async getClientProfile(clientId: number) {
-    const profile = await this.clientRepository.findProfileById(clientId);
+    const profile = await this.profileRepository.findClientProfileById(clientId);
 
     if (!profile) {
       throw new NotFoundException('Client not found');

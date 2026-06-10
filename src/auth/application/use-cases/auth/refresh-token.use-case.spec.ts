@@ -1,10 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { type Mock, vi } from 'vitest';
 import { UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ADMIN_AUTH_REPOSITORY } from '../../../domain/interfaces/admin.repository.interface.js';
-import { CLIENT_AUTH_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
-import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
-import { TOKEN_SERVICE } from '../../../domain/interfaces/token.service.interface.js';
 import { RefreshTokenUseCase } from './refresh-token.use-case.js';
 
 describe('RefreshTokenUseCase', () => {
@@ -45,10 +42,10 @@ describe('RefreshTokenUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RefreshTokenUseCase,
-        { provide: TOKEN_SERVICE, useValue: tokenService },
-        { provide: HASH_SERVICE, useValue: hashService },
-        { provide: CLIENT_AUTH_REPOSITORY, useValue: clientRepository },
-        { provide: ADMIN_AUTH_REPOSITORY, useValue: adminRepository },
+        { provide: DiTokens.tokenService, useValue: tokenService },
+        { provide: DiTokens.hashService, useValue: hashService },
+        { provide: DiTokens.clientAuthRepository, useValue: clientRepository },
+        { provide: DiTokens.adminAuthRepository, useValue: adminRepository },
       ],
     }).compile();
 

@@ -4,8 +4,6 @@ import type { HoursByServiceFilters, HoursByServiceItem } from './hours-by-servi
 import type { SalesSummaryFilters, SalesSummaryResponse } from './sales-summary.types.js';
 import type { TransactionGroupItem, TransactionsFilters } from './transactions.types.js';
 
-export const REPORT_REPOSITORY = Symbol('REPORT_REPOSITORY');
-
 export type {
   ActiveClientsFilters,
   ActiveClientsResponse,

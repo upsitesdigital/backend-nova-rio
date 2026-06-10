@@ -1,7 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { CLIENT_DASHBOARD_REPOSITORY } from '../../../domain/interfaces/client-dashboard.repository.interface.js';
 import type { RawClientDashboardData } from '../../../domain/interfaces/client-dashboard.types.js';
 import { GetClientDashboardSummaryUseCase } from './get-client-dashboard-summary.use-case.js';
 
@@ -17,7 +17,7 @@ describe('GetClientDashboardSummaryUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetClientDashboardSummaryUseCase,
-        { provide: CLIENT_DASHBOARD_REPOSITORY, useValue: dashboardRepository },
+        { provide: DiTokens.clientDashboardRepository, useValue: dashboardRepository },
       ],
     }).compile();
 

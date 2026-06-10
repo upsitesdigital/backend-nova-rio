@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { UserStatus } from '@prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service.js';
 
 export interface JwtPayload {
@@ -30,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         where: { id: payload.sub },
         select: { status: true },
       });
-      if (!client || client.status !== 'ACTIVE') {
+      if (!client || client.status !== UserStatus.ACTIVE) {
         throw new UnauthorizedException('Account is not active');
       }
     } else {
@@ -38,7 +39,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         where: { id: payload.sub },
         select: { status: true },
       });
-      if (!admin || admin.status !== 'ACTIVE') {
+      if (!admin || admin.status !== UserStatus.ACTIVE) {
         throw new UnauthorizedException('Account is not active');
       }
     }

@@ -1,7 +1,5 @@
 import type { Card } from '@prisma/client';
 
-export const CARD_REPOSITORY = Symbol('CARD_REPOSITORY');
-
 export type CardResponse = Pick<
   Card,
   'id' | 'lastFourDigits' | 'brand' | 'holderName' | 'expiryMonth' | 'expiryYear' | 'isDefault'

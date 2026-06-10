@@ -1,6 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
 import type { PaymentStatus } from '@prisma/client';
-import { PAYMENT_REPOSITORY } from '../../../domain/interfaces/payment.repository.interface.js';
 import type {
   IPaymentRepository,
   PaginatedPayments,
@@ -8,7 +8,7 @@ import type {
 
 @Injectable()
 export class ListClientPaymentsUseCase {
-  constructor(@Inject(PAYMENT_REPOSITORY) private paymentRepository: IPaymentRepository) {}
+  constructor(@Inject(DiTokens.paymentRepository) private paymentRepository: IPaymentRepository) {}
 
   async listPaymentsByClientId(
     clientId: number,

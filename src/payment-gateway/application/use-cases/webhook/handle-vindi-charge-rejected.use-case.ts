@@ -1,7 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
+import { PaymentStatus } from '@prisma/client';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
-import { PAYMENT_REPOSITORY } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
 import type { IPaymentRepository } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
 
 @Injectable()
@@ -9,8 +9,8 @@ export class HandleVindiChargeRejectedUseCase {
   private readonly logger = new Logger(HandleVindiChargeRejectedUseCase.name);
 
   constructor(
-    @Inject(PAYMENT_REPOSITORY) private paymentRepository: IPaymentRepository,
-    @Inject(EMAIL_SERVICE) private emailService: IEmailService,
+    @Inject(DiTokens.paymentRepository) private paymentRepository: IPaymentRepository,
+    @Inject(DiTokens.emailService) private emailService: IEmailService,
   ) {}
 
   async handleChargeRejected(billId: number, reason: string): Promise<void> {
@@ -21,7 +21,7 @@ export class HandleVindiChargeRejectedUseCase {
       return;
     }
 
-    if (payment.status !== 'PENDING') {
+    if (payment.status !== PaymentStatus.PENDING) {
       this.logger.log(`Payment ${payment.id} already ${payment.status}, skipping`);
       return;
     }

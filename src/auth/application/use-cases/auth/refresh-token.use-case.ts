@@ -1,15 +1,8 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import {
-  ADMIN_AUTH_REPOSITORY,
-  type IAdminAuthRepository,
-} from '../../../domain/interfaces/admin.repository.interface.js';
-import {
-  CLIENT_AUTH_REPOSITORY,
-  type IClientAuthRepository,
-} from '../../../domain/interfaces/client.repository.interface.js';
-import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
+import { type IAdminAuthRepository } from '../../../domain/interfaces/admin.repository.interface.js';
+import { type IClientAuthRepository } from '../../../domain/interfaces/client.repository.interface.js';
 import type { IHashService } from '../../../domain/interfaces/hash.service.interface.js';
-import { TOKEN_SERVICE } from '../../../domain/interfaces/token.service.interface.js';
 import type {
   ITokenService,
   TokenPair,
@@ -19,10 +12,10 @@ import { RefreshTokenDto } from '../../../dto/refresh-token.dto.js';
 @Injectable()
 export class RefreshTokenUseCase {
   constructor(
-    @Inject(TOKEN_SERVICE) private tokenService: ITokenService,
-    @Inject(HASH_SERVICE) private hashService: IHashService,
-    @Inject(CLIENT_AUTH_REPOSITORY) private clientAuthRepository: IClientAuthRepository,
-    @Inject(ADMIN_AUTH_REPOSITORY) private adminAuthRepository: IAdminAuthRepository,
+    @Inject(DiTokens.tokenService) private tokenService: ITokenService,
+    @Inject(DiTokens.hashService) private hashService: IHashService,
+    @Inject(DiTokens.clientAuthRepository) private clientAuthRepository: IClientAuthRepository,
+    @Inject(DiTokens.adminAuthRepository) private adminAuthRepository: IAdminAuthRepository,
   ) {}
 
   async refreshTokens(dto: RefreshTokenDto): Promise<TokenPair> {
