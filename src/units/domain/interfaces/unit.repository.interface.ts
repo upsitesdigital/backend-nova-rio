@@ -1,8 +1,6 @@
 import type { Unit } from '@prisma/client';
 import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 
-export const UNIT_REPOSITORY = Symbol('UNIT_REPOSITORY');
-
 export interface CreateUnitData {
   name: string;
   address?: string;

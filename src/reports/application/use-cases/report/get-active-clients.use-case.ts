@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
-import { REPORT_REPOSITORY } from '../../../domain/interfaces/report.repository.interface.js';
 import type {
   ActiveClientsFilters,
   ActiveClientsResponse,
@@ -9,7 +9,7 @@ import type { ActiveClientsQueryDto } from '../../../dto/report/active-clients-q
 
 @Injectable()
 export class GetActiveClientsUseCase {
-  constructor(@Inject(REPORT_REPOSITORY) private reportRepository: IReportRepository) {}
+  constructor(@Inject(DiTokens.reportRepository) private reportRepository: IReportRepository) {}
 
   async getActiveClients(query: ActiveClientsQueryDto): Promise<ActiveClientsResponse> {
     const filters: ActiveClientsFilters = {};

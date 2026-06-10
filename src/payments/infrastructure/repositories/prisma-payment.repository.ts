@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { PaymentStatus } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import type {
@@ -8,21 +9,22 @@ import type {
   PaginatedPayments,
   PaymentResponse,
 } from '../../domain/interfaces/payment.repository.interface.js';
-import type { PaymentStatus } from '@prisma/client';
 
-const PAYMENT_INCLUDE = {
-  client: { select: { id: true, name: true, email: true, cpfCnpj: true } },
-  appointment: {
-    select: {
-      id: true,
-      date: true,
-      startTime: true,
-      service: { select: { id: true, name: true } },
-      recurrenceType: true,
+class PaymentQueryConfig {
+  static readonly include = {
+    client: { select: { id: true, name: true, email: true, cpfCnpj: true } },
+    appointment: {
+      select: {
+        id: true,
+        date: true,
+        startTime: true,
+        service: { select: { id: true, name: true } },
+        recurrenceType: true,
+      },
     },
-  },
-  card: { select: { id: true, lastFourDigits: true, brand: true } },
-} as const;
+    card: { select: { id: true, lastFourDigits: true, brand: true } },
+  } as const;
+}
 
 @Injectable()
 export class PrismaPaymentRepository implements IPaymentRepository {
@@ -44,7 +46,7 @@ export class PrismaPaymentRepository implements IPaymentRepository {
           appointment: { connect: { id: data.appointmentId } },
           ...(data.cardId ? { card: { connect: { id: data.cardId } } } : {}),
         },
-        include: PAYMENT_INCLUDE,
+        include: PaymentQueryConfig.include,
       });
     } catch (error) {
       if (
@@ -69,7 +71,7 @@ export class PrismaPaymentRepository implements IPaymentRepository {
         pixCode: data.pixCode,
         pixQrCodeUrl: data.pixQrCodeUrl,
       },
-      include: PAYMENT_INCLUDE,
+      include: PaymentQueryConfig.include,
     });
   }
 
@@ -93,7 +95,7 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     const [data, total] = await Promise.all([
       this.prisma.payment.findMany({
         where,
-        include: PAYMENT_INCLUDE,
+        include: PaymentQueryConfig.include,
         orderBy: { createdAt: 'desc' },
         skip,
         take: filters.limit,
@@ -120,7 +122,7 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     const [data, total] = await Promise.all([
       this.prisma.payment.findMany({
         where,
-        include: PAYMENT_INCLUDE,
+        include: PaymentQueryConfig.include,
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
@@ -134,35 +136,35 @@ export class PrismaPaymentRepository implements IPaymentRepository {
   async findPaymentByAppointmentId(appointmentId: number): Promise<PaymentResponse | null> {
     return this.prisma.payment.findFirst({
       where: { appointmentId },
-      include: PAYMENT_INCLUDE,
+      include: PaymentQueryConfig.include,
     });
   }
 
   async findPaymentById(id: number): Promise<PaymentResponse | null> {
     return this.prisma.payment.findUnique({
       where: { id },
-      include: PAYMENT_INCLUDE,
+      include: PaymentQueryConfig.include,
     });
   }
 
   async findPaymentByIdAndClientId(id: number, clientId: number): Promise<PaymentResponse | null> {
     return this.prisma.payment.findFirst({
       where: { id, clientId },
-      include: PAYMENT_INCLUDE,
+      include: PaymentQueryConfig.include,
     });
   }
 
   async findPaymentByGatewayTransactionId(transactionId: string): Promise<PaymentResponse | null> {
     return this.prisma.payment.findFirst({
       where: { gatewayTransactionId: transactionId },
-      include: PAYMENT_INCLUDE,
+      include: PaymentQueryConfig.include,
     });
   }
 
   async approvePaymentById(id: number): Promise<PaymentResponse | null> {
     const updated = await this.prisma.payment.updateMany({
-      where: { id, status: 'PENDING' },
-      data: { status: 'APPROVED', paidAt: new Date() },
+      where: { id, status: PaymentStatus.PENDING },
+      data: { status: PaymentStatus.APPROVED, paidAt: new Date() },
     });
 
     if (updated.count !== 1) {
@@ -174,8 +176,8 @@ export class PrismaPaymentRepository implements IPaymentRepository {
 
   async cancelPaymentById(id: number, reason: string): Promise<PaymentResponse | null> {
     const updated = await this.prisma.payment.updateMany({
-      where: { id, status: 'PENDING' },
-      data: { status: 'CANCELLED', cancellationReason: reason },
+      where: { id, status: PaymentStatus.PENDING },
+      data: { status: PaymentStatus.CANCELLED, cancellationReason: reason },
     });
 
     if (updated.count !== 1) {
@@ -188,7 +190,7 @@ export class PrismaPaymentRepository implements IPaymentRepository {
   async deletePaymentById(id: number): Promise<void> {
     await this.prisma.payment.update({
       where: { id },
-      data: { status: 'CANCELLED', cancellationReason: 'Deleted by admin' },
+      data: { status: PaymentStatus.CANCELLED, cancellationReason: 'Deleted by admin' },
     });
   }
 }

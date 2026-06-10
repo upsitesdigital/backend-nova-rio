@@ -1,8 +1,6 @@
 import type { Package } from '@prisma/client';
 import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 
-export const PACKAGE_REPOSITORY = Symbol('PACKAGE_REPOSITORY');
-
 export interface CreatePackageData {
   name: string;
   description?: string;

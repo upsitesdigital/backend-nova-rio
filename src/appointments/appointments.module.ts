@@ -1,3 +1,4 @@
+import { DiTokens } from '../shared/di/di-tokens.js';
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
 import { HolidaysModule } from '../holidays/holidays.module.js';
@@ -16,7 +17,6 @@ import { ListClientAppointmentsUseCase } from './application/use-cases/appointme
 import { RescheduleAppointmentUseCase } from './application/use-cases/appointment/reschedule-appointment.use-case.js';
 import { RescheduleClientAppointmentUseCase } from './application/use-cases/appointment/reschedule-client-appointment.use-case.js';
 import { UpdateAppointmentUseCase } from './application/use-cases/appointment/update-appointment.use-case.js';
-import { APPOINTMENT_REPOSITORY } from './domain/interfaces/appointment.repository.interface.js';
 import { PrismaAppointmentRepository } from './infrastructure/repositories/prisma-appointment.repository.js';
 import { AdminAppointmentsController } from './admin-appointments.controller.js';
 import { ClientAppointmentsController } from './client-appointments.controller.js';
@@ -25,7 +25,7 @@ import { ClientAppointmentsController } from './client-appointments.controller.j
   imports: [AuthModule, HolidaysModule],
   controllers: [AdminAppointmentsController, ClientAppointmentsController],
   providers: [
-    { provide: APPOINTMENT_REPOSITORY, useClass: PrismaAppointmentRepository },
+    { provide: DiTokens.appointmentRepository, useClass: PrismaAppointmentRepository },
     AppointmentConflictValidator,
     AppointmentSchedulingValidator,
     CreateAppointmentUseCase,
@@ -36,12 +36,16 @@ import { ClientAppointmentsController } from './client-appointments.controller.j
     CancelAppointmentUseCase,
     CompleteAppointmentUseCase,
     CreateClientAppointmentUseCase,
+    {
+      provide: DiTokens.createClientAppointmentService,
+      useExisting: CreateClientAppointmentUseCase,
+    },
     CreatePublicAppointmentUseCase,
     ListClientAppointmentsUseCase,
     GetClientAppointmentUseCase,
     RescheduleClientAppointmentUseCase,
     CancelClientAppointmentUseCase,
   ],
-  exports: [APPOINTMENT_REPOSITORY],
+  exports: [DiTokens.appointmentRepository],
 })
 export class AppointmentsModule {}

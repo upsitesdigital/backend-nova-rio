@@ -1,10 +1,9 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
+import { AppointmentStatus } from '@prisma/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
-  CLIENT_DASHBOARD_REPOSITORY,
-  type IClientDashboardRepository,
-} from '../../../domain/interfaces/client-dashboard.repository.interface.js';
+import { type IClientDashboardRepository } from '../../../domain/interfaces/client-dashboard.repository.interface.js';
 import type {
   ClientDashboardSummary,
   RawDashboardAppointment,
@@ -15,7 +14,7 @@ import type {
 @Injectable()
 export class GetClientDashboardSummaryUseCase {
   constructor(
-    @Inject(CLIENT_DASHBOARD_REPOSITORY)
+    @Inject(DiTokens.clientDashboardRepository)
     private clientDashboardRepository: IClientDashboardRepository,
   ) {}
 
@@ -58,7 +57,7 @@ export class GetClientDashboardSummaryUseCase {
         label: apt.service.name,
         icon: apt.service.icon,
         status: apt.status,
-        canEdit: apt.status === 'SCHEDULED',
+        canEdit: apt.status === AppointmentStatus.SCHEDULED,
         recurrenceType: apt.recurrenceType,
         locationName: apt.unit?.name ?? null,
         locationZip: apt.locationZip ?? null,

@@ -1,45 +1,32 @@
-import { ConfigService } from '@nestjs/config';
-import { UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { createHmac } from 'node:crypto';
 import { type Mock, vi } from 'vitest';
-import { HandleVindiBillPaidUseCase } from './application/use-cases/webhook/handle-vindi-bill-paid.use-case.js';
-import { HandleVindiChargeRejectedUseCase } from './application/use-cases/webhook/handle-vindi-charge-rejected.use-case.js';
+import { ProcessVindiWebhookUseCase } from './application/use-cases/webhook/process-vindi-webhook.use-case.js';
 import { VindiWebhooksController } from './vindi-webhooks.controller.js';
-import { PrismaService } from '../shared/prisma/prisma.service.js';
+import type { VindiWebhookPayload } from './domain/types/vindi.types.js';
 
-const WEBHOOK_SECRET = 'test-webhook-secret';
-
-function signPayload(payload: unknown): string {
-  return createHmac('sha256', WEBHOOK_SECRET).update(JSON.stringify(payload)).digest('hex');
+function fakeReq(payload: unknown, rawBody?: Buffer) {
+  return { body: payload, rawBody } as never;
 }
 
-function fakeReq(payload: unknown) {
-  return { body: payload } as never;
-}
+const payload = {
+  event: {
+    type: 'bill_paid',
+    data: {
+      bill: { id: 100, status: 'paid', amount: '200.00', charges: [], customer: { id: 1 } },
+    },
+  },
+} as unknown as VindiWebhookPayload;
 
 describe('VindiWebhooksController', () => {
   let controller: VindiWebhooksController;
-  let handleBillPaid: { handleBillPaid: Mock };
-  let handleChargeRejected: { handleChargeRejected: Mock };
-  let prisma: { processedWebhookEvent: { createMany: Mock } };
+  let processVindiWebhook: { processVindiWebhook: Mock };
 
   beforeEach(async () => {
-    handleBillPaid = { handleBillPaid: vi.fn().mockResolvedValue(undefined) };
-    handleChargeRejected = { handleChargeRejected: vi.fn().mockResolvedValue(undefined) };
-    prisma = { processedWebhookEvent: { createMany: vi.fn().mockResolvedValue({ count: 1 }) } };
+    processVindiWebhook = { processVindiWebhook: vi.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [VindiWebhooksController],
-      providers: [
-        { provide: HandleVindiBillPaidUseCase, useValue: handleBillPaid },
-        { provide: HandleVindiChargeRejectedUseCase, useValue: handleChargeRejected },
-        {
-          provide: ConfigService,
-          useValue: { getOrThrow: vi.fn().mockReturnValue(WEBHOOK_SECRET) },
-        },
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [{ provide: ProcessVindiWebhookUseCase, useValue: processVindiWebhook }],
     }).compile();
 
     controller = module.get<VindiWebhooksController>(VindiWebhooksController);
@@ -49,113 +36,38 @@ describe('VindiWebhooksController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should reject request with invalid signature', async () => {
-    const payload = {
-      event: {
-        type: 'bill_paid',
-        data: {
-          bill: { id: 1, status: 'paid', amount: '100.00', charges: [], customer: { id: 1 } },
-        },
-      },
-    };
+  it('should delegate to the use-case with the raw body and signature', async () => {
+    const rawBody = Buffer.from('{"raw":true}');
 
-    await expect(
-      controller.receiveVindiWebhook('invalid-sig', fakeReq(payload), payload),
-    ).rejects.toThrow(UnauthorizedException);
-  });
+    const result = await controller.receiveVindiWebhook(
+      'sig-123',
+      fakeReq(payload, rawBody),
+      payload,
+    );
 
-  it('should handle bill_paid event with valid signature', async () => {
-    const payload = {
-      event: {
-        type: 'bill_paid',
-        data: {
-          bill: { id: 100, status: 'paid', amount: '200.00', charges: [], customer: { id: 1 } },
-        },
-      },
-    };
-    const signature = signPayload(payload);
-
-    const result = await controller.receiveVindiWebhook(signature, fakeReq(payload), payload);
-
-    expect(handleBillPaid.handleBillPaid).toHaveBeenCalledWith(100);
-    expect(result).toEqual({ received: true });
-  });
-
-  it('should handle charge_rejected event', async () => {
-    const payload = {
-      event: {
-        type: 'charge_rejected',
-        data: {
-          charge: {
-            id: 50,
-            status: 'rejected',
-            amount: '200.00',
-            bill: { id: 100 },
-            last_transaction: { gateway_message: 'Insufficient funds' },
-          },
-        },
-      },
-    };
-    const signature = signPayload(payload);
-
-    const result = await controller.receiveVindiWebhook(signature, fakeReq(payload), payload);
-
-    expect(handleChargeRejected.handleChargeRejected).toHaveBeenCalledWith(
-      100,
-      'Insufficient funds',
+    expect(processVindiWebhook.processVindiWebhook).toHaveBeenCalledWith(
+      rawBody,
+      'sig-123',
+      payload,
     );
     expect(result).toEqual({ received: true });
   });
 
-  it('should handle bill_canceled event', async () => {
-    const payload = {
-      event: {
-        type: 'bill_canceled',
-        data: {
-          bill: { id: 100, status: 'canceled', amount: '200.00', charges: [], customer: { id: 1 } },
-        },
-      },
-    };
-    const signature = signPayload(payload);
+  it('should fall back to stringified body when rawBody is absent', async () => {
+    await controller.receiveVindiWebhook('sig-123', fakeReq(payload), payload);
 
-    const result = await controller.receiveVindiWebhook(signature, fakeReq(payload), payload);
-
-    expect(handleChargeRejected.handleChargeRejected).toHaveBeenCalledWith(
-      100,
-      'Bill cancelled by gateway',
+    expect(processVindiWebhook.processVindiWebhook).toHaveBeenCalledWith(
+      JSON.stringify(payload),
+      'sig-123',
+      payload,
     );
-    expect(result).toEqual({ received: true });
   });
 
-  it('should return received:true even for unknown events', async () => {
-    const payload = {
-      event: {
-        type: 'unknown_event',
-        data: { bill: { id: 0, status: '', amount: '0', charges: [], customer: { id: 0 } } },
-      },
-    };
-    const signature = signPayload(payload);
-
-    const result = await controller.receiveVindiWebhook(signature, fakeReq(payload), payload);
-
-    expect(result).toEqual({ received: true });
-  });
-
-  it('should re-throw when handler throws', async () => {
-    handleBillPaid.handleBillPaid.mockRejectedValue(new Error('DB error'));
-
-    const payload = {
-      event: {
-        type: 'bill_paid',
-        data: {
-          bill: { id: 100, status: 'paid', amount: '200.00', charges: [], customer: { id: 1 } },
-        },
-      },
-    };
-    const signature = signPayload(payload);
+  it('should propagate errors from the use-case', async () => {
+    processVindiWebhook.processVindiWebhook.mockRejectedValue(new Error('boom'));
 
     await expect(
-      controller.receiveVindiWebhook(signature, fakeReq(payload), payload),
-    ).rejects.toThrow('DB error');
+      controller.receiveVindiWebhook('sig-123', fakeReq(payload), payload),
+    ).rejects.toThrow('boom');
   });
 });

@@ -1,7 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { ADMIN_USER_REPOSITORY } from '../../../domain/interfaces/admin-user.repository.interface.js';
 import { GetAdminUserUseCase } from './get-admin-user.use-case.js';
 
 describe('GetAdminUserUseCase', () => {
@@ -14,7 +14,7 @@ describe('GetAdminUserUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetAdminUserUseCase,
-        { provide: ADMIN_USER_REPOSITORY, useValue: adminUserRepository },
+        { provide: DiTokens.adminUserRepository, useValue: adminUserRepository },
       ],
     }).compile();
 

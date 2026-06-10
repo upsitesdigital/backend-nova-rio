@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
-import { REPORT_REPOSITORY } from '../../../domain/interfaces/report.repository.interface.js';
 import type {
   HoursByServiceFilters,
   HoursByServiceItem,
@@ -9,7 +9,7 @@ import type { HoursByServiceQueryDto } from '../../../dto/report/hours-by-servic
 
 @Injectable()
 export class GetHoursByServiceUseCase {
-  constructor(@Inject(REPORT_REPOSITORY) private reportRepository: IReportRepository) {}
+  constructor(@Inject(DiTokens.reportRepository) private reportRepository: IReportRepository) {}
 
   async getHoursByService(query: HoursByServiceQueryDto): Promise<HoursByServiceItem[]> {
     const filters: HoursByServiceFilters = {};

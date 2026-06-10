@@ -1,9 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
-import { RECEIPT_GENERATION_SERVICE } from '../../../../receipts/domain/interfaces/receipt-generation.service.interface.js';
-import { PAYMENT_REPOSITORY } from '../../../domain/interfaces/payment.repository.interface.js';
 import { ApprovePaymentUseCase } from './approve-payment.use-case.js';
 
 describe('ApprovePaymentUseCase', () => {
@@ -38,9 +36,9 @@ describe('ApprovePaymentUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ApprovePaymentUseCase,
-        { provide: PAYMENT_REPOSITORY, useValue: paymentRepository },
-        { provide: EMAIL_SERVICE, useValue: emailService },
-        { provide: RECEIPT_GENERATION_SERVICE, useValue: receiptGenerationService },
+        { provide: DiTokens.paymentRepository, useValue: paymentRepository },
+        { provide: DiTokens.emailService, useValue: emailService },
+        { provide: DiTokens.receiptGenerationService, useValue: receiptGenerationService },
       ],
     }).compile();
 

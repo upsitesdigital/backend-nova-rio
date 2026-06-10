@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
 import type {
   AppointmentResponse,
   ConflictCheckParams,
@@ -12,7 +12,7 @@ import { AppointmentSchedulingValidator } from '../../validators/appointment-sch
 @Injectable()
 export class UpdateAppointmentUseCase {
   constructor(
-    @Inject(APPOINTMENT_REPOSITORY) private appointmentRepository: IAppointmentRepository,
+    @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
     private schedulingValidator: AppointmentSchedulingValidator,
   ) {}
 

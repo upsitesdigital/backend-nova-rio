@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { CLIENT_MGMT_REPOSITORY } from '../../../domain/interfaces/client-management.repository.interface.js';
 import type {
   ClientSafe,
   IClientManagementRepository,
@@ -8,7 +8,8 @@ import type {
 @Injectable()
 export class GetClientUseCase {
   constructor(
-    @Inject(CLIENT_MGMT_REPOSITORY) private clientMgmtRepository: IClientManagementRepository,
+    @Inject(DiTokens.clientManagementRepository)
+    private clientMgmtRepository: IClientManagementRepository,
   ) {}
 
   async getClientById(id: number): Promise<ClientSafe> {

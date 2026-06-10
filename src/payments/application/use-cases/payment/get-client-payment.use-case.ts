@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { PAYMENT_REPOSITORY } from '../../../domain/interfaces/payment.repository.interface.js';
 import type {
   IPaymentRepository,
   PaymentResponse,
@@ -7,7 +7,7 @@ import type {
 
 @Injectable()
 export class GetClientPaymentUseCase {
-  constructor(@Inject(PAYMENT_REPOSITORY) private paymentRepository: IPaymentRepository) {}
+  constructor(@Inject(DiTokens.paymentRepository) private paymentRepository: IPaymentRepository) {}
 
   async getPaymentByIdAndClientId(id: number, clientId: number): Promise<PaymentResponse> {
     const payment = await this.paymentRepository.findPaymentByIdAndClientId(id, clientId);

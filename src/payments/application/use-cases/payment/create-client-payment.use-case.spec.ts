@@ -1,13 +1,8 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { APPOINTMENT_REPOSITORY } from '../../../../appointments/domain/interfaces/appointment.repository.interface.js';
-import { CLIENT_PROFILE_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
-import { CARD_REPOSITORY } from '../../../../cards/domain/interfaces/card.repository.interface.js';
-import { PAYMENT_GATEWAY_SERVICE } from '../../../../payment-gateway/domain/interfaces/payment-gateway.service.interface.js';
-import { PAYMENT_PRICING_SERVICE } from '../../../domain/services/payment-pricing.service.interface.js';
-import { PAYMENT_REPOSITORY } from '../../../domain/interfaces/payment.repository.interface.js';
 import { CreateClientPaymentUseCase } from './create-client-payment.use-case.js';
 
 describe('CreateClientPaymentUseCase', () => {
@@ -108,12 +103,12 @@ describe('CreateClientPaymentUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateClientPaymentUseCase,
-        { provide: PAYMENT_REPOSITORY, useValue: paymentRepository },
-        { provide: APPOINTMENT_REPOSITORY, useValue: appointmentRepository },
-        { provide: CARD_REPOSITORY, useValue: cardRepository },
-        { provide: PAYMENT_GATEWAY_SERVICE, useValue: paymentGatewayService },
-        { provide: PAYMENT_PRICING_SERVICE, useValue: pricingService },
-        { provide: CLIENT_PROFILE_REPOSITORY, useValue: clientRepository },
+        { provide: DiTokens.paymentRepository, useValue: paymentRepository },
+        { provide: DiTokens.appointmentRepository, useValue: appointmentRepository },
+        { provide: DiTokens.cardRepository, useValue: cardRepository },
+        { provide: DiTokens.paymentGatewayService, useValue: paymentGatewayService },
+        { provide: DiTokens.paymentPricingService, useValue: pricingService },
+        { provide: DiTokens.clientProfileRepository, useValue: clientRepository },
         {
           provide: ConfigService,
           useValue: {

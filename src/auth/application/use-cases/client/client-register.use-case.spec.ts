@@ -1,9 +1,8 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { type Mock, vi } from 'vitest';
 import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { CLIENT_AUTH_REPOSITORY } from '../../../domain/interfaces/client.repository.interface.js';
-import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
-import { HASH_SERVICE } from '../../../domain/interfaces/hash.service.interface.js';
+import { EmailAlreadyInUseError } from '../../../domain/errors/email-already-in-use.error.js';
 import { ClientRegisterUseCase } from './client-register.use-case.js';
 
 describe('ClientRegisterUseCase', () => {
@@ -30,9 +29,9 @@ describe('ClientRegisterUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ClientRegisterUseCase,
-        { provide: CLIENT_AUTH_REPOSITORY, useValue: clientRepository },
-        { provide: EMAIL_SERVICE, useValue: emailService },
-        { provide: HASH_SERVICE, useValue: hashService },
+        { provide: DiTokens.clientAuthRepository, useValue: clientRepository },
+        { provide: DiTokens.emailService, useValue: emailService },
+        { provide: DiTokens.hashService, useValue: hashService },
       ],
     }).compile();
 
@@ -84,7 +83,7 @@ describe('ClientRegisterUseCase', () => {
     expect(emailService.sendWelcomeEmail).toHaveBeenCalledWith(dto.email, dto.name);
   });
 
-  it('should throw ConflictException on Prisma P2002 unique constraint violation', async () => {
+  it('should throw ConflictException when repository signals email already in use', async () => {
     const dto = {
       name: 'Test',
       email: 'test@example.com',
@@ -95,9 +94,7 @@ describe('ClientRegisterUseCase', () => {
     clientRepository.findByEmail.mockResolvedValue(null);
     hashService.hash.mockResolvedValue('hashed_password');
 
-    const prismaError = new Error('Unique constraint failed');
-    Object.assign(prismaError, { code: 'P2002' });
-    clientRepository.create.mockRejectedValue(prismaError);
+    clientRepository.create.mockRejectedValue(new EmailAlreadyInUseError());
 
     await expect(useCase.registerClient(dto)).rejects.toThrow(ConflictException);
   });

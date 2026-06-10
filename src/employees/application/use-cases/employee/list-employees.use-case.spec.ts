@@ -1,6 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { EMPLOYEE_REPOSITORY } from '../../../domain/interfaces/employee.repository.interface.js';
 import { ListEmployeesUseCase } from './list-employees.use-case.js';
 
 describe('ListEmployeesUseCase', () => {
@@ -15,7 +15,7 @@ describe('ListEmployeesUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListEmployeesUseCase,
-        { provide: EMPLOYEE_REPOSITORY, useValue: employeeRepository },
+        { provide: DiTokens.employeeRepository, useValue: employeeRepository },
       ],
     }).compile();
 

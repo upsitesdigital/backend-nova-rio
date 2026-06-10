@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
+import { Prisma, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 import type {
@@ -7,23 +7,7 @@ import type {
   IClientManagementRepository,
   ListClientsFilters,
 } from '../../domain/interfaces/client-management.repository.interface.js';
-
-const CLIENT_SAFE_SELECT = {
-  id: true,
-  uuid: true,
-  name: true,
-  email: true,
-  phone: true,
-  avatarUrl: true,
-  company: true,
-  cpfCnpj: true,
-  address: true,
-  complement: true,
-  status: true,
-  createdAt: true,
-  updatedAt: true,
-  unit: { select: { id: true, name: true } },
-} satisfies Prisma.ClientSelect;
+import { ClientSelect } from './client.select.js';
 
 @Injectable()
 export class PrismaClientManagementRepository implements IClientManagementRepository {
@@ -49,7 +33,7 @@ export class PrismaClientManagementRepository implements IClientManagementReposi
     const [data, total] = await Promise.all([
       this.prisma.client.findMany({
         where,
-        select: CLIENT_SAFE_SELECT,
+        select: ClientSelect.safe,
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
@@ -61,24 +45,24 @@ export class PrismaClientManagementRepository implements IClientManagementReposi
   }
 
   async findClientById(id: number): Promise<ClientSafe | null> {
-    return this.prisma.client.findFirst({
+    return this.prisma.client.findUnique({
       where: { id },
-      select: CLIENT_SAFE_SELECT,
+      select: ClientSelect.safe,
     });
   }
 
   async approveClientById(id: number): Promise<boolean> {
     const updated = await this.prisma.client.updateMany({
-      where: { id, status: 'PENDING' },
-      data: { status: 'ACTIVE' },
+      where: { id, status: UserStatus.PENDING },
+      data: { status: UserStatus.ACTIVE },
     });
     return updated.count === 1;
   }
 
   async rejectClientById(id: number): Promise<boolean> {
     const updated = await this.prisma.client.updateMany({
-      where: { id, status: 'PENDING' },
-      data: { status: 'INACTIVE' },
+      where: { id, status: UserStatus.PENDING },
+      data: { status: UserStatus.INACTIVE },
     });
     return updated.count === 1;
   }

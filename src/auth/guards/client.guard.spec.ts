@@ -1,7 +1,7 @@
+import { DiTokens } from '../../shared/di/di-tokens.js';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { CLIENT_AUTH_REPOSITORY } from '../domain/interfaces/client.repository.interface.js';
 import { ClientGuard } from './client.guard.js';
 
 describe('ClientGuard', () => {
@@ -14,7 +14,10 @@ describe('ClientGuard', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ClientGuard, { provide: CLIENT_AUTH_REPOSITORY, useValue: clientRepository }],
+      providers: [
+        ClientGuard,
+        { provide: DiTokens.clientAuthRepository, useValue: clientRepository },
+      ],
     }).compile();
 
     guard = module.get<ClientGuard>(ClientGuard);

@@ -1,7 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { CARD_REPOSITORY } from '../../../domain/interfaces/card.repository.interface.js';
 import { SetDefaultCardUseCase } from './set-default-card.use-case.js';
 
 describe('SetDefaultCardUseCase', () => {
@@ -18,7 +18,10 @@ describe('SetDefaultCardUseCase', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [SetDefaultCardUseCase, { provide: CARD_REPOSITORY, useValue: cardRepository }],
+      providers: [
+        SetDefaultCardUseCase,
+        { provide: DiTokens.cardRepository, useValue: cardRepository },
+      ],
     }).compile();
 
     useCase = module.get<SetDefaultCardUseCase>(SetDefaultCardUseCase);

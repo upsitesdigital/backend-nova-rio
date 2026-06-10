@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { CARD_REPOSITORY } from '../../../domain/interfaces/card.repository.interface.js';
 import type {
   CardResponse,
   ICardRepository,
@@ -7,7 +7,7 @@ import type {
 
 @Injectable()
 export class SetDefaultCardUseCase {
-  constructor(@Inject(CARD_REPOSITORY) private cardRepository: ICardRepository) {}
+  constructor(@Inject(DiTokens.cardRepository) private cardRepository: ICardRepository) {}
 
   async setDefaultCardByIdAndClientId(id: number, clientId: number): Promise<CardResponse> {
     const card = await this.cardRepository.findCardByIdAndClientId(id, clientId);

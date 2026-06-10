@@ -1,7 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { PAYMENT_REPOSITORY } from '../../../domain/interfaces/payment.repository.interface.js';
 import { DeletePaymentUseCase } from './delete-payment.use-case.js';
 
 describe('DeletePaymentUseCase', () => {
@@ -17,7 +17,7 @@ describe('DeletePaymentUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeletePaymentUseCase,
-        { provide: PAYMENT_REPOSITORY, useValue: paymentRepository },
+        { provide: DiTokens.paymentRepository, useValue: paymentRepository },
       ],
     }).compile();
 

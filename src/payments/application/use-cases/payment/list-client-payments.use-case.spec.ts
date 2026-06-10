@@ -1,7 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentStatus } from '@prisma/client';
 import { type Mock, vi } from 'vitest';
-import { PAYMENT_REPOSITORY } from '../../../domain/interfaces/payment.repository.interface.js';
 import { ListClientPaymentsUseCase } from './list-client-payments.use-case.js';
 
 describe('ListClientPaymentsUseCase', () => {
@@ -14,7 +14,7 @@ describe('ListClientPaymentsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListClientPaymentsUseCase,
-        { provide: PAYMENT_REPOSITORY, useValue: paymentRepository },
+        { provide: DiTokens.paymentRepository, useValue: paymentRepository },
       ],
     }).compile();
 

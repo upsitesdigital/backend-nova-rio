@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
-import { REPORT_REPOSITORY } from '../../../domain/interfaces/report.repository.interface.js';
 import type {
   IReportRepository,
   TransactionGroupItem,
@@ -9,7 +9,7 @@ import type { TransactionsQueryDto } from '../../../dto/report/transactions-quer
 
 @Injectable()
 export class GetTransactionsUseCase {
-  constructor(@Inject(REPORT_REPOSITORY) private reportRepository: IReportRepository) {}
+  constructor(@Inject(DiTokens.reportRepository) private reportRepository: IReportRepository) {}
 
   async getTransactions(query: TransactionsQueryDto): Promise<TransactionGroupItem[]> {
     const filters: TransactionsFilters = {

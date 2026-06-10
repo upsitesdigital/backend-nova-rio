@@ -1,11 +1,8 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { type Mock, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { CLIENT_PROFILE_REPOSITORY } from '../../../../auth/domain/interfaces/client.repository.interface.js';
-import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
+import { NotFoundException } from '@nestjs/common';
 import { DeleteClientAccountUseCase } from './delete-client-account.use-case.js';
-
-const validDto = { confirmPhrase: 'Apagar minha conta' };
 
 describe('DeleteClientAccountUseCase', () => {
   let useCase: DeleteClientAccountUseCase;
@@ -22,8 +19,8 @@ describe('DeleteClientAccountUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteClientAccountUseCase,
-        { provide: CLIENT_PROFILE_REPOSITORY, useValue: clientRepository },
-        { provide: EMAIL_SERVICE, useValue: emailService },
+        { provide: DiTokens.clientProfileRepository, useValue: clientRepository },
+        { provide: DiTokens.emailService, useValue: emailService },
       ],
     }).compile();
 
@@ -38,22 +35,16 @@ describe('DeleteClientAccountUseCase', () => {
     const client = { id: 1, name: 'Test', email: 'test@example.com' };
     clientRepository.findById.mockResolvedValue(client);
 
-    const result = await useCase.deleteClientAccount(1, validDto);
+    const result = await useCase.deleteClientAccount(1);
 
     expect(result).toEqual({ message: 'Account deleted successfully' });
     expect(clientRepository.deactivateClient).toHaveBeenCalledWith(1);
     expect(emailService.sendAccountDeletedEmail).toHaveBeenCalledWith('test@example.com', 'Test');
   });
 
-  it('should throw BadRequestException when confirmation phrase is wrong', async () => {
-    await expect(useCase.deleteClientAccount(1, { confirmPhrase: 'wrong phrase' })).rejects.toThrow(
-      BadRequestException,
-    );
-  });
-
   it('should throw NotFoundException when client not found', async () => {
     clientRepository.findById.mockResolvedValue(null);
 
-    await expect(useCase.deleteClientAccount(999, validDto)).rejects.toThrow(NotFoundException);
+    await expect(useCase.deleteClientAccount(999)).rejects.toThrow(NotFoundException);
   });
 });

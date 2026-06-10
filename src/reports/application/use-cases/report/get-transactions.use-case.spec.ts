@@ -1,6 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { REPORT_REPOSITORY } from '../../../domain/interfaces/report.repository.interface.js';
 import { GetTransactionsUseCase } from './get-transactions.use-case.js';
 
 describe('GetTransactionsUseCase', () => {
@@ -13,7 +13,7 @@ describe('GetTransactionsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetTransactionsUseCase,
-        { provide: REPORT_REPOSITORY, useValue: reportRepository },
+        { provide: DiTokens.reportRepository, useValue: reportRepository },
       ],
     }).compile();
 

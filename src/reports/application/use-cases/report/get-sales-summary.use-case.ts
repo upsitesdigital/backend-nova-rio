@@ -1,5 +1,5 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable } from '@nestjs/common';
-import { REPORT_REPOSITORY } from '../../../domain/interfaces/report.repository.interface.js';
 import type {
   IReportRepository,
   SalesSummaryFilters,
@@ -9,7 +9,7 @@ import type { SalesSummaryQueryDto } from '../../../dto/report/sales-summary-que
 
 @Injectable()
 export class GetSalesSummaryUseCase {
-  constructor(@Inject(REPORT_REPOSITORY) private reportRepository: IReportRepository) {}
+  constructor(@Inject(DiTokens.reportRepository) private reportRepository: IReportRepository) {}
 
   async getSalesSummary(query: SalesSummaryQueryDto): Promise<SalesSummaryResponse> {
     const filters: SalesSummaryFilters = {};

@@ -1,10 +1,12 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { EMPLOYEE_REPOSITORY } from '../../../domain/interfaces/employee.repository.interface.js';
 import type { IEmployeeRepository } from '../../../domain/interfaces/employee.repository.interface.js';
 
 @Injectable()
 export class DeactivateEmployeeUseCase {
-  constructor(@Inject(EMPLOYEE_REPOSITORY) private employeeRepository: IEmployeeRepository) {}
+  constructor(
+    @Inject(DiTokens.employeeRepository) private employeeRepository: IEmployeeRepository,
+  ) {}
 
   async deactivateEmployeeById(id: number): Promise<void> {
     const existing = await this.employeeRepository.findEmployeeById(id);

@@ -1,11 +1,9 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { unlink } from 'node:fs/promises';
-import { PAYMENT_REPOSITORY } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
 import type { IPaymentRepository } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
-import { RECEIPT_GENERATOR } from '../../../domain/interfaces/receipt-generator.interface.js';
 import type { IReceiptGenerator } from '../../../domain/interfaces/receipt-generator.interface.js';
 import type { IReceiptGenerationService } from '../../../domain/interfaces/receipt-generation.service.interface.js';
-import { RECEIPT_REPOSITORY } from '../../../domain/interfaces/receipt.repository.interface.js';
 import type {
   IReceiptRepository,
   ReceiptResponse,
@@ -16,9 +14,9 @@ export class GenerateReceiptUseCase implements IReceiptGenerationService {
   private readonly logger = new Logger(GenerateReceiptUseCase.name);
 
   constructor(
-    @Inject(RECEIPT_REPOSITORY) private receiptRepository: IReceiptRepository,
-    @Inject(RECEIPT_GENERATOR) private receiptGenerator: IReceiptGenerator,
-    @Inject(PAYMENT_REPOSITORY) private paymentRepository: IPaymentRepository,
+    @Inject(DiTokens.receiptRepository) private receiptRepository: IReceiptRepository,
+    @Inject(DiTokens.receiptGenerator) private receiptGenerator: IReceiptGenerator,
+    @Inject(DiTokens.paymentRepository) private paymentRepository: IPaymentRepository,
   ) {}
 
   async generateReceiptForPayment(paymentId: number): Promise<ReceiptResponse> {

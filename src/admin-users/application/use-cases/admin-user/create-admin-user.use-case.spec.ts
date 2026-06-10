@@ -1,8 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { ConflictException, ForbiddenException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { HASH_SERVICE } from '../../../../auth/domain/interfaces/hash.service.interface.js';
-import { ADMIN_USER_REPOSITORY } from '../../../domain/interfaces/admin-user.repository.interface.js';
 import { CreateAdminUserUseCase } from './create-admin-user.use-case.js';
 
 describe('CreateAdminUserUseCase', () => {
@@ -20,8 +19,8 @@ describe('CreateAdminUserUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateAdminUserUseCase,
-        { provide: ADMIN_USER_REPOSITORY, useValue: adminUserRepository },
-        { provide: HASH_SERVICE, useValue: hashService },
+        { provide: DiTokens.adminUserRepository, useValue: adminUserRepository },
+        { provide: DiTokens.hashService, useValue: hashService },
       ],
     }).compile();
 

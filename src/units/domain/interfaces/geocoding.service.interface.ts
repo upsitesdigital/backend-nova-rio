@@ -1,7 +1,5 @@
 import type { Coordinates } from '../../../shared/geo/geo.util.js';
 
-export const GEOCODING_SERVICE = Symbol('GEOCODING_SERVICE');
-
 export interface GeocodedAddress {
   cep: string;
   street: string;

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { CepUtil } from '../../../shared/cep/cep.util.js';
 import type {
   GeocodedAddress,
   IGeocodingService,
@@ -24,7 +25,7 @@ export class BrasilApiGeocodingService implements IGeocodingService {
   private readonly logger = new Logger(BrasilApiGeocodingService.name);
 
   async geocodeByCep(cep: string): Promise<GeocodedAddress> {
-    const cleanCep = cep.replace(/\D/g, '');
+    const cleanCep = CepUtil.normalize(cep);
     const response = await fetch(`https://brasilapi.com.br/api/cep/v2/${cleanCep}`);
 
     if (!response.ok) {

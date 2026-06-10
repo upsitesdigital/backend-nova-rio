@@ -1,6 +1,6 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
 import { AppointmentSchedulingValidator } from '../../validators/appointment-scheduling.validator.js';
 import { CreateAppointmentUseCase } from './create-appointment.use-case.js';
 
@@ -16,7 +16,7 @@ describe('CreateAppointmentUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateAppointmentUseCase,
-        { provide: APPOINTMENT_REPOSITORY, useValue: appointmentRepository },
+        { provide: DiTokens.appointmentRepository, useValue: appointmentRepository },
         { provide: AppointmentSchedulingValidator, useValue: schedulingValidator },
       ],
     }).compile();

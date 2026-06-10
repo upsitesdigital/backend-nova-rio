@@ -1,7 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppointmentStatus } from '@prisma/client';
 import { type Mock, vi } from 'vitest';
-import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
 import { ListAppointmentsUseCase } from './list-appointments.use-case.js';
 
 describe('ListAppointmentsUseCase', () => {
@@ -14,7 +14,7 @@ describe('ListAppointmentsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListAppointmentsUseCase,
-        { provide: APPOINTMENT_REPOSITORY, useValue: appointmentRepository },
+        { provide: DiTokens.appointmentRepository, useValue: appointmentRepository },
       ],
     }).compile();
 

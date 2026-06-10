@@ -1,8 +1,7 @@
+import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
-import { EMAIL_SERVICE } from '../../../../email/domain/interfaces/email.service.interface.js';
-import { APPOINTMENT_REPOSITORY } from '../../../domain/interfaces/appointment.repository.interface.js';
 import { AppointmentSchedulingValidator } from '../../validators/appointment-scheduling.validator.js';
 import { RescheduleClientAppointmentUseCase } from './reschedule-client-appointment.use-case.js';
 
@@ -46,8 +45,8 @@ describe('RescheduleClientAppointmentUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RescheduleClientAppointmentUseCase,
-        { provide: APPOINTMENT_REPOSITORY, useValue: appointmentRepository },
-        { provide: EMAIL_SERVICE, useValue: emailService },
+        { provide: DiTokens.appointmentRepository, useValue: appointmentRepository },
+        { provide: DiTokens.emailService, useValue: emailService },
         { provide: AppointmentSchedulingValidator, useValue: schedulingValidator },
       ],
     }).compile();
