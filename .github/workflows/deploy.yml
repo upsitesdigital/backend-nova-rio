@@ -89,8 +89,8 @@ jobs:
             echo "Chave da VPS tratada como base64."
           else
             cat <<'EOF_KEY' > /tmp/deploy_key
-${{ secrets.VPS_SSH_KEY }}
-EOF_KEY
+            ${{ secrets.VPS_SSH_KEY }}
+            EOF_KEY
             echo "Chave da VPS usada no formato raw."
           fi
           chmod 600 /tmp/deploy_key
