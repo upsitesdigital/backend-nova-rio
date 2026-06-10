@@ -96,5 +96,13 @@
     "typescript-eslint": "^8.61.0",
     "unplugin-swc": "^1.5.9",
     "vitest": "^4.1.8"
+  },
+  "allowScripts": {
+    "@prisma/engines@7.8.0": true,
+    "@scarf/scarf@1.4.0": true,
+    "@swc/core@1.15.41": true,
+    "bcrypt@6.0.0": true,
+    "fsevents@2.3.3": true,
+    "prisma@7.8.0": true
   }
 }
