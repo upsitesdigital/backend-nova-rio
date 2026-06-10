@@ -1,12 +1,12 @@
 import { Body, Controller, Headers, HttpCode, Post, Req } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
-import { SkipThrottle } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { ProcessVindiWebhookUseCase } from './application/use-cases/webhook/process-vindi-webhook.use-case.js';
 import type { VindiWebhookPayload } from './domain/types/vindi.types.js';
 
 @ApiExcludeController()
-@SkipThrottle()
+@Throttle({ default: { limit: 60, ttl: 60000 } })
 @Controller('webhooks/vindi')
 export class VindiWebhooksController {
   constructor(private readonly processVindiWebhook: ProcessVindiWebhookUseCase) {}
