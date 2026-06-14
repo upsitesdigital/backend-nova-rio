@@ -26,7 +26,7 @@ export class CancelClientAppointmentUseCase {
 
     this.schedulingValidator.validateCancellationAdvance(existing.date, existing.startTime);
 
-    const cancelled = await this.appointmentRepository.cancelAppointmentById(id);
+    const cancelled = await this.appointmentRepository.cancelAppointmentById(id, clientId);
     if (cancelled === false) {
       throw new BadRequestException('Only scheduled appointments can be cancelled');
     }

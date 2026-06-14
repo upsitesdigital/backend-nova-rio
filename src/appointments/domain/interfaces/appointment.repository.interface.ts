@@ -98,12 +98,13 @@ export interface IAppointmentRepository {
     data: UpdateAppointmentData,
     conflictCheck?: ConflictCheckParams,
   ): Promise<AppointmentResponse>;
-  cancelAppointmentById(id: number): Promise<boolean>;
+  cancelAppointmentById(id: number, clientId?: number): Promise<boolean>;
   completeAppointmentById(id: number): Promise<AppointmentResponse | null>;
   rescheduleAppointment(
     id: number,
     data: UpdateAppointmentData,
     conflictCheck?: ConflictCheckParams,
     clientConflictCheck?: ClientConflictCheckParams,
+    clientId?: number,
   ): Promise<AppointmentResponse | null>;
 }
