@@ -89,24 +89,36 @@ export class CreateClientPaymentUseCase {
 
     const payment = await this.paymentRepository.createPayment(paymentData);
 
-    const vindiCustomerId = await this.ensureVindiCustomerExists(clientId);
+    try {
+      const vindiCustomerId = await this.ensureVindiCustomerExists(clientId);
 
-    const vindiBill = await this.paymentGatewayService.createGatewayBill({
-      gatewayCustomerId: vindiCustomerId,
-      paymentMethodCode: PaymentMethodMapper.toVindi(dto.method),
-      amount,
-      productId: this.vindiProductId,
-    });
+      const vindiBill = await this.paymentGatewayService.createGatewayBill({
+        gatewayCustomerId: vindiCustomerId,
+        paymentMethodCode: PaymentMethodMapper.toVindi(dto.method),
+        amount,
+        productId: this.vindiProductId,
+      });
 
-    const gatewayResponseFields = vindiBill.charges[0]?.last_transaction?.gateway_response_fields;
-    const pixCode = gatewayResponseFields?.pix_code ?? undefined;
-    const pixQrCodeUrl = gatewayResponseFields?.qr_code_url ?? undefined;
+      const gatewayResponseFields = vindiBill.charges[0]?.last_transaction?.gateway_response_fields;
+      const pixCode = gatewayResponseFields?.pix_code ?? undefined;
+      const pixQrCodeUrl = gatewayResponseFields?.qr_code_url ?? undefined;
 
-    return this.paymentRepository.updatePaymentGatewayDetails(payment.id, {
-      gatewayTransactionId: String(vindiBill.id),
-      ...(pixCode ? { pixCode } : {}),
-      ...(pixQrCodeUrl ? { pixQrCodeUrl } : {}),
-    });
+      return this.paymentRepository.updatePaymentGatewayDetails(payment.id, {
+        gatewayTransactionId: String(vindiBill.id),
+        ...(pixCode ? { pixCode } : {}),
+        ...(pixQrCodeUrl ? { pixQrCodeUrl } : {}),
+      });
+    } catch (error) {
+      const rolledBack = await this.paymentRepository.deletePendingPaymentReservation(payment.id);
+
+      if (!rolledBack) {
+        this.logger.warn(
+          `Reserved payment ${payment.id} could not be rolled back after gateway error`,
+        );
+      }
+
+      throw error;
+    }
   }
 
   private async ensureVindiCustomerExists(clientId: number): Promise<number> {
