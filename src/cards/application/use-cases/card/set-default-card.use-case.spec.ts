@@ -8,13 +8,13 @@ describe('SetDefaultCardUseCase', () => {
   let useCase: SetDefaultCardUseCase;
   let cardRepository: {
     findCardByIdAndClientId: Mock;
-    switchDefaultCardById: Mock;
+    switchDefaultCardByIdAndClientId: Mock;
   };
 
   beforeEach(async () => {
     cardRepository = {
       findCardByIdAndClientId: vi.fn(),
-      switchDefaultCardById: vi.fn(),
+      switchDefaultCardByIdAndClientId: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -44,19 +44,28 @@ describe('SetDefaultCardUseCase', () => {
     };
 
     cardRepository.findCardByIdAndClientId.mockResolvedValue(card);
-    cardRepository.switchDefaultCardById.mockResolvedValue(updated);
+    cardRepository.switchDefaultCardByIdAndClientId.mockResolvedValue(updated);
 
     const result = await useCase.setDefaultCardByIdAndClientId(1, 1);
 
     expect(result).toEqual(updated);
     expect(cardRepository.findCardByIdAndClientId).toHaveBeenCalledWith(1, 1);
-    expect(cardRepository.switchDefaultCardById).toHaveBeenCalledWith(1, 1);
+    expect(cardRepository.switchDefaultCardByIdAndClientId).toHaveBeenCalledWith(1, 1);
   });
 
   it('should throw NotFoundException if card not found', async () => {
     cardRepository.findCardByIdAndClientId.mockResolvedValue(null);
 
     await expect(useCase.setDefaultCardByIdAndClientId(999, 1)).rejects.toThrow(NotFoundException);
-    expect(cardRepository.switchDefaultCardById).not.toHaveBeenCalled();
+    expect(cardRepository.switchDefaultCardByIdAndClientId).not.toHaveBeenCalled();
+  });
+
+  it('should throw NotFoundException if card disappears before switching default', async () => {
+    const card = { id: 1, clientId: 1, brand: 'Visa', isDefault: false };
+
+    cardRepository.findCardByIdAndClientId.mockResolvedValue(card);
+    cardRepository.switchDefaultCardByIdAndClientId.mockResolvedValue(null);
+
+    await expect(useCase.setDefaultCardByIdAndClientId(1, 1)).rejects.toThrow(NotFoundException);
   });
 });
