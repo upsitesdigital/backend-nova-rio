@@ -1,7 +1,8 @@
 import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { createHash } from 'node:crypto';
 import type { IProcessedWebhookEventRepository } from '../../../domain/interfaces/processed-webhook-event.repository.interface.js';
-import type { IWebhookSignatureVerifier } from '../../../domain/interfaces/webhook-signature-verifier.interface.js';
+import type { IWebhookAuthenticator } from '../../../domain/interfaces/webhook-authenticator.interface.js';
 import { VindiWebhookEventType } from '../../../domain/types/vindi.types.js';
 import type {
   VindiWebhookBillData,
@@ -17,8 +18,8 @@ export class ProcessVindiWebhookUseCase {
   private readonly logger = new Logger(ProcessVindiWebhookUseCase.name);
 
   constructor(
-    @Inject(DiTokens.webhookSignatureVerifier)
-    private readonly signatureVerifier: IWebhookSignatureVerifier,
+    @Inject(DiTokens.webhookAuthenticator)
+    private readonly authenticator: IWebhookAuthenticator,
     @Inject(DiTokens.processedWebhookEventRepository)
     private readonly processedEventRepository: IProcessedWebhookEventRepository,
     private readonly handleBillPaid: HandleVindiBillPaidUseCase,
@@ -26,12 +27,11 @@ export class ProcessVindiWebhookUseCase {
   ) {}
 
   async processVindiWebhook(
-    rawBody: Buffer | string,
-    signature: string | undefined,
+    authorizationHeader: string | undefined,
     payload: VindiWebhookPayload,
   ): Promise<void> {
-    if (!this.signatureVerifier.verifySignature(rawBody, signature)) {
-      throw new UnauthorizedException('Invalid webhook signature');
+    if (!this.authenticator.authenticate(authorizationHeader)) {
+      throw new UnauthorizedException('Invalid webhook credentials');
     }
 
     const eventType = payload?.event?.type;
@@ -80,6 +80,6 @@ export class ProcessVindiWebhookUseCase {
       return String(rawEvent.id);
     }
 
-    return this.signatureVerifier.computePayloadHash(payload);
+    return createHash('sha256').update(JSON.stringify(payload)).digest('hex');
   }
 }

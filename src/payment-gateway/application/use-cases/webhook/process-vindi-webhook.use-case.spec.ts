@@ -54,16 +54,14 @@ function billCanceledPayload(billId: number): VindiWebhookPayload {
 
 describe('ProcessVindiWebhookUseCase', () => {
   let useCase: ProcessVindiWebhookUseCase;
-  let signatureVerifier: { verifySignature: Mock; computePayloadHash: Mock };
+  let authenticator: { authenticate: Mock };
   let processedEventRepository: { registerEventOnce: Mock };
   let handleBillPaid: { handleBillPaid: Mock };
   let handleChargeRejected: { handleChargeRejected: Mock };
+  const AUTH = 'Basic dXNlcjpwYXNz';
 
   beforeEach(async () => {
-    signatureVerifier = {
-      verifySignature: vi.fn().mockReturnValue(true),
-      computePayloadHash: vi.fn().mockReturnValue('hash'),
-    };
+    authenticator = { authenticate: vi.fn().mockReturnValue(true) };
     processedEventRepository = { registerEventOnce: vi.fn().mockResolvedValue(true) };
     handleBillPaid = { handleBillPaid: vi.fn().mockResolvedValue(undefined) };
     handleChargeRejected = { handleChargeRejected: vi.fn().mockResolvedValue(undefined) };
@@ -71,7 +69,7 @@ describe('ProcessVindiWebhookUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProcessVindiWebhookUseCase,
-        { provide: DiTokens.webhookSignatureVerifier, useValue: signatureVerifier },
+        { provide: DiTokens.webhookAuthenticator, useValue: authenticator },
         { provide: DiTokens.processedWebhookEventRepository, useValue: processedEventRepository },
         { provide: HandleVindiBillPaidUseCase, useValue: handleBillPaid },
         { provide: HandleVindiChargeRejectedUseCase, useValue: handleChargeRejected },
@@ -81,27 +79,23 @@ describe('ProcessVindiWebhookUseCase', () => {
     useCase = module.get<ProcessVindiWebhookUseCase>(ProcessVindiWebhookUseCase);
   });
 
-  it('should reject when the signature is invalid', async () => {
-    signatureVerifier.verifySignature.mockReturnValue(false);
+  it('should reject when the credentials are invalid', async () => {
+    authenticator.authenticate.mockReturnValue(false);
 
-    await expect(
-      useCase.processVindiWebhook('raw', 'bad-sig', billPaidPayload(100)),
-    ).rejects.toThrow(UnauthorizedException);
+    await expect(useCase.processVindiWebhook(AUTH, billPaidPayload(100))).rejects.toThrow(
+      UnauthorizedException,
+    );
     expect(processedEventRepository.registerEventOnce).not.toHaveBeenCalled();
   });
 
   it('should handle bill_paid with the bill id', async () => {
-    await useCase.processVindiWebhook('raw', 'sig', billPaidPayload(100));
+    await useCase.processVindiWebhook(AUTH, billPaidPayload(100));
 
     expect(handleBillPaid.handleBillPaid).toHaveBeenCalledWith(100);
   });
 
   it('should handle charge_rejected with the gateway message', async () => {
-    await useCase.processVindiWebhook(
-      'raw',
-      'sig',
-      chargeRejectedPayload(100, 'Insufficient funds'),
-    );
+    await useCase.processVindiWebhook(AUTH, chargeRejectedPayload(100, 'Insufficient funds'));
 
     expect(handleChargeRejected.handleChargeRejected).toHaveBeenCalledWith(
       100,
@@ -110,7 +104,7 @@ describe('ProcessVindiWebhookUseCase', () => {
   });
 
   it('should handle bill_canceled as a rejection', async () => {
-    await useCase.processVindiWebhook('raw', 'sig', billCanceledPayload(100));
+    await useCase.processVindiWebhook(AUTH, billCanceledPayload(100));
 
     expect(handleChargeRejected.handleChargeRejected).toHaveBeenCalledWith(
       100,
@@ -121,7 +115,7 @@ describe('ProcessVindiWebhookUseCase', () => {
   it('should skip routing for duplicate events', async () => {
     processedEventRepository.registerEventOnce.mockResolvedValue(false);
 
-    await useCase.processVindiWebhook('raw', 'sig', billPaidPayload(100));
+    await useCase.processVindiWebhook(AUTH, billPaidPayload(100));
 
     expect(handleBillPaid.handleBillPaid).not.toHaveBeenCalled();
   });
@@ -131,13 +125,13 @@ describe('ProcessVindiWebhookUseCase', () => {
       event: { type: 'unknown_event', data: {} },
     } as unknown as VindiWebhookPayload;
 
-    await expect(useCase.processVindiWebhook('raw', 'sig', unknown)).resolves.toBeUndefined();
+    await expect(useCase.processVindiWebhook(AUTH, unknown)).resolves.toBeUndefined();
   });
 
   it('should re-throw when a handler fails', async () => {
     handleBillPaid.handleBillPaid.mockRejectedValue(new Error('DB error'));
 
-    await expect(useCase.processVindiWebhook('raw', 'sig', billPaidPayload(100))).rejects.toThrow(
+    await expect(useCase.processVindiWebhook(AUTH, billPaidPayload(100))).rejects.toThrow(
       'DB error',
     );
   });
