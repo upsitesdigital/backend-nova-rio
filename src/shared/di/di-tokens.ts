@@ -56,7 +56,7 @@ export class DiTokens {
   // payment-gateway
   static readonly paymentGatewayService = Symbol('paymentGatewayService');
   static readonly processedWebhookEventRepository = Symbol('processedWebhookEventRepository');
-  static readonly webhookSignatureVerifier = Symbol('webhookSignatureVerifier');
+  static readonly webhookAuthenticator = Symbol('webhookAuthenticator');
 
   // cards
   static readonly cardRepository = Symbol('cardRepository');

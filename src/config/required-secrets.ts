@@ -8,11 +8,16 @@ export class RequiredSecrets {
     'RESEND_API_KEY',
     'RESEND_FROM_EMAIL',
     'VINDI_API_KEY',
-    'VINDI_WEBHOOK_SECRET',
+    'VINDI_WEBHOOK_USER',
+    'VINDI_WEBHOOK_PASSWORD',
     'CORS_ORIGIN',
   ] as const;
 
-  private static readonly strengthKeys = ['JWT_SECRET', 'JWT_REFRESH_SECRET'] as const;
+  private static readonly strengthKeys = [
+    'JWT_SECRET',
+    'JWT_REFRESH_SECRET',
+    'VINDI_WEBHOOK_PASSWORD',
+  ] as const;
 
   static validateStrength(get: (key: string) => string | undefined): void {
     for (const key of RequiredSecrets.strengthKeys) {

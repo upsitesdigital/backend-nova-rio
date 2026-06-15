@@ -1,7 +1,6 @@
-import { Body, Controller, Headers, HttpCode, Post, Req } from '@nestjs/common';
+import { Body, Controller, Headers, HttpCode, Post } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import type { Request } from 'express';
 import { ProcessVindiWebhookUseCase } from './application/use-cases/webhook/process-vindi-webhook.use-case.js';
 import type { VindiWebhookPayload } from './domain/types/vindi.types.js';
 
@@ -14,12 +13,10 @@ export class VindiWebhooksController {
   @Post()
   @HttpCode(200)
   async receiveVindiWebhook(
-    @Headers('x-vindi-signature') signature: string,
-    @Req() req: Request,
+    @Headers('authorization') authorization: string | undefined,
     @Body() payload: VindiWebhookPayload,
   ): Promise<{ received: true }> {
-    const rawBody = (req as Request & { rawBody?: Buffer }).rawBody ?? JSON.stringify(req.body);
-    await this.processVindiWebhook.processVindiWebhook(rawBody, signature, payload);
+    await this.processVindiWebhook.processVindiWebhook(authorization, payload);
     return { received: true };
   }
 }
