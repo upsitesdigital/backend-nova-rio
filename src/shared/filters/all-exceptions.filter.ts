@@ -102,9 +102,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     if (this.isPrismaError(exception)) {
+      // Do NOT log the Prisma stack/message: it embeds query arguments (CPF, email, etc.).
       this.logger.error(
-        `${origin} -> Prisma error ${this.prismaErrorCode(exception)}`,
-        exception.stack,
+        `${origin} -> Prisma error ${this.prismaErrorCode(exception)} ${this.prismaErrorTarget(exception)}`.trim(),
       );
       return;
     }
@@ -133,6 +133,20 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     return 'unknown';
+  }
+
+  private prismaErrorTarget(exception: unknown): string {
+    if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      const target = exception.meta?.target;
+      if (Array.isArray(target)) {
+        return `on (${target.join(', ')})`;
+      }
+      if (typeof target === 'string') {
+        return `on (${target})`;
+      }
+    }
+
+    return '';
   }
 
   private statusText(status: number): string {
