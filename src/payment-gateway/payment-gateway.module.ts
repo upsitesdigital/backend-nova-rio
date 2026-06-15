@@ -9,7 +9,7 @@ import { ProcessVindiWebhookUseCase } from './application/use-cases/webhook/proc
 import { VindiHttpClient } from './infrastructure/clients/vindi-http.client.js';
 import { PrismaProcessedWebhookEventRepository } from './infrastructure/repositories/prisma-processed-webhook-event.repository.js';
 import { VindiPaymentGatewayService } from './infrastructure/services/vindi-payment-gateway.service.js';
-import { VindiSignatureVerifier } from './infrastructure/services/vindi-signature-verifier.service.js';
+import { VindiBasicAuthenticator } from './infrastructure/services/vindi-basic-authenticator.service.js';
 import { VindiWebhooksController } from './vindi-webhooks.controller.js';
 
 @Global()
@@ -23,8 +23,8 @@ import { VindiWebhooksController } from './vindi-webhooks.controller.js';
       useClass: VindiPaymentGatewayService,
     },
     {
-      provide: DiTokens.webhookSignatureVerifier,
-      useClass: VindiSignatureVerifier,
+      provide: DiTokens.webhookAuthenticator,
+      useClass: VindiBasicAuthenticator,
     },
     {
       provide: DiTokens.processedWebhookEventRepository,

@@ -4,9 +4,7 @@ import { ProcessVindiWebhookUseCase } from './application/use-cases/webhook/proc
 import { VindiWebhooksController } from './vindi-webhooks.controller.js';
 import type { VindiWebhookPayload } from './domain/types/vindi.types.js';
 
-function fakeReq(payload: unknown, rawBody?: Buffer) {
-  return { body: payload, rawBody } as never;
-}
+const AUTH = 'Basic dXNlcjpwYXNz';
 
 const payload = {
   event: {
@@ -36,38 +34,16 @@ describe('VindiWebhooksController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should delegate to the use-case with the raw body and signature', async () => {
-    const rawBody = Buffer.from('{"raw":true}');
+  it('should delegate to the use-case with the authorization header', async () => {
+    const result = await controller.receiveVindiWebhook(AUTH, payload);
 
-    const result = await controller.receiveVindiWebhook(
-      'sig-123',
-      fakeReq(payload, rawBody),
-      payload,
-    );
-
-    expect(processVindiWebhook.processVindiWebhook).toHaveBeenCalledWith(
-      rawBody,
-      'sig-123',
-      payload,
-    );
+    expect(processVindiWebhook.processVindiWebhook).toHaveBeenCalledWith(AUTH, payload);
     expect(result).toEqual({ received: true });
-  });
-
-  it('should fall back to stringified body when rawBody is absent', async () => {
-    await controller.receiveVindiWebhook('sig-123', fakeReq(payload), payload);
-
-    expect(processVindiWebhook.processVindiWebhook).toHaveBeenCalledWith(
-      JSON.stringify(payload),
-      'sig-123',
-      payload,
-    );
   });
 
   it('should propagate errors from the use-case', async () => {
     processVindiWebhook.processVindiWebhook.mockRejectedValue(new Error('boom'));
 
-    await expect(
-      controller.receiveVindiWebhook('sig-123', fakeReq(payload), payload),
-    ).rejects.toThrow('boom');
+    await expect(controller.receiveVindiWebhook(AUTH, payload)).rejects.toThrow('boom');
   });
 });
