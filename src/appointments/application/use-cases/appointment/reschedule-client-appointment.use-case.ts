@@ -58,6 +58,7 @@ export class RescheduleClientAppointmentUseCase {
       { date: newDate, startTime: dto.startTime },
       conflictCheck,
       clientConflictCheck,
+      clientId,
     );
 
     if (rescheduled === null) {

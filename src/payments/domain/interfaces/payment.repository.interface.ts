@@ -71,6 +71,7 @@ export interface IPaymentRepository {
   findPaymentById(id: number): Promise<PaymentResponse | null>;
   findPaymentByIdAndClientId(id: number, clientId: number): Promise<PaymentResponse | null>;
   findPaymentByGatewayTransactionId(transactionId: string): Promise<PaymentResponse | null>;
+  deletePendingPaymentReservation(id: number): Promise<boolean>;
   approvePaymentById(id: number): Promise<PaymentResponse | null>;
   cancelPaymentById(id: number, reason: string): Promise<PaymentResponse | null>;
   deletePaymentById(id: number): Promise<void>;

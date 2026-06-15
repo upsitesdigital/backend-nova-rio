@@ -11,6 +11,7 @@ describe('CreateClientPaymentUseCase', () => {
     createPayment: Mock;
     updatePaymentGatewayDetails: Mock;
     findPaymentByAppointmentId: Mock;
+    deletePendingPaymentReservation: Mock;
   };
   let appointmentRepository: { findAppointmentByIdAndClientId: Mock };
   let cardRepository: { findCardByIdAndClientId: Mock };
@@ -85,6 +86,7 @@ describe('CreateClientPaymentUseCase', () => {
       createPayment: vi.fn(),
       updatePaymentGatewayDetails: vi.fn().mockResolvedValue(createdPayment),
       findPaymentByAppointmentId: vi.fn().mockResolvedValue(null),
+      deletePendingPaymentReservation: vi.fn().mockResolvedValue(true),
     };
     appointmentRepository = { findAppointmentByIdAndClientId: vi.fn() };
     cardRepository = { findCardByIdAndClientId: vi.fn() };
@@ -273,6 +275,20 @@ describe('CreateClientPaymentUseCase', () => {
         subtotal: 500,
         discount: 0,
       }),
+    );
+  });
+
+  it('should roll back reserved payment when gateway setup fails', async () => {
+    appointmentRepository.findAppointmentByIdAndClientId.mockResolvedValue(scheduledAppointment);
+    paymentRepository.createPayment.mockResolvedValue(createdPayment);
+    paymentGatewayService.createGatewayCustomer.mockRejectedValue(new Error('gateway down'));
+
+    await expect(
+      useCase.createClientPayment(1, { appointmentId: 1, method: 'PIX' }),
+    ).rejects.toThrow('gateway down');
+
+    expect(paymentRepository.deletePendingPaymentReservation).toHaveBeenCalledWith(
+      createdPayment.id,
     );
   });
 });

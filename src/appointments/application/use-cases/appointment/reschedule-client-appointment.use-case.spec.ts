@@ -100,6 +100,7 @@ describe('RescheduleClientAppointmentUseCase', () => {
       { date: expect.any(Date) as Date, startTime: '10:00' },
       undefined,
       expect.objectContaining({ clientId: 1, excludeId: 1 }),
+      1,
     );
     expect(emailService.sendAppointmentRescheduledEmail).toHaveBeenCalled();
   });

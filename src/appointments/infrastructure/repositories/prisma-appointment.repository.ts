@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { AppointmentStatus } from '@prisma/client';
-import type { Prisma } from '@prisma/client';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { AppointmentStatus, Prisma } from '@prisma/client';
 import { AppointmentConflictValidator } from '../../application/validators/appointment-conflict.validator.js';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import type {
@@ -43,26 +42,31 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
   ): Promise<AppointmentResponse> {
     const createData = this.buildCreateInput(data);
 
-    if (!conflictCheck && !clientConflictCheck) {
-      return this.prisma.appointment.create({
-        data: createData,
-        include: APPOINTMENT_INCLUDE,
+    try {
+      if (!conflictCheck && !clientConflictCheck) {
+        return await this.prisma.appointment.create({
+          data: createData,
+          include: APPOINTMENT_INCLUDE,
+        });
+      }
+
+      return await this.prisma.$transaction(async (tx) => {
+        if (conflictCheck) {
+          await this.lockAndCheckConflict(tx, conflictCheck);
+        }
+        if (clientConflictCheck) {
+          await this.lockAndCheckClientConflict(tx, clientConflictCheck);
+        }
+
+        return tx.appointment.create({
+          data: createData,
+          include: APPOINTMENT_INCLUDE,
+        });
       });
+    } catch (error) {
+      this.rethrowSchedulingConflict(error);
+      throw error;
     }
-
-    return this.prisma.$transaction(async (tx) => {
-      if (conflictCheck) {
-        await this.lockAndCheckConflict(tx, conflictCheck);
-      }
-      if (clientConflictCheck) {
-        await this.lockAndCheckClientConflict(tx, clientConflictCheck);
-      }
-
-      return tx.appointment.create({
-        data: createData,
-        include: APPOINTMENT_INCLUDE,
-      });
-    });
   }
 
   async listAppointments(filters: ListAppointmentsFilters): Promise<PaginatedAppointments> {
@@ -146,20 +150,29 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
       });
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      await this.lockAndCheckConflict(tx, conflictCheck);
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        await this.lockAndCheckConflict(tx, conflictCheck);
 
-      return tx.appointment.update({
-        where: { id },
-        data: updateData,
-        include: APPOINTMENT_INCLUDE,
+        return tx.appointment.update({
+          where: { id },
+          data: updateData,
+          include: APPOINTMENT_INCLUDE,
+        });
       });
-    });
+    } catch (error) {
+      this.rethrowSchedulingConflict(error);
+      throw error;
+    }
   }
 
-  async cancelAppointmentById(id: number): Promise<boolean> {
+  async cancelAppointmentById(id: number, clientId?: number): Promise<boolean> {
     const updated = await this.prisma.appointment.updateMany({
-      where: { id, status: AppointmentStatus.SCHEDULED },
+      where: {
+        id,
+        status: AppointmentStatus.SCHEDULED,
+        ...(clientId ? { clientId } : {}),
+      },
       data: { status: AppointmentStatus.CANCELLED },
     });
     return updated.count === 1;
@@ -183,31 +196,60 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
     data: UpdateAppointmentData,
     conflictCheck?: ConflictCheckParams,
     clientConflictCheck?: ClientConflictCheckParams,
+    clientId?: number,
   ): Promise<AppointmentResponse | null> {
     const updateData = this.buildUpdateInput(data);
 
-    return this.prisma.$transaction(async (tx) => {
-      if (conflictCheck) {
-        await this.lockAndCheckConflict(tx, conflictCheck);
-      }
-      if (clientConflictCheck) {
-        await this.lockAndCheckClientConflict(tx, clientConflictCheck);
-      }
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        if (conflictCheck) {
+          await this.lockAndCheckConflict(tx, conflictCheck);
+        }
+        if (clientConflictCheck) {
+          await this.lockAndCheckClientConflict(tx, clientConflictCheck);
+        }
 
-      const updated = await tx.appointment.updateMany({
-        where: { id, status: AppointmentStatus.SCHEDULED },
-        data: updateData,
+        const updated = await tx.appointment.updateMany({
+          where: {
+            id,
+            status: AppointmentStatus.SCHEDULED,
+            ...(clientId ? { clientId } : {}),
+          },
+          data: updateData,
+        });
+
+        if (updated.count !== 1) {
+          return null;
+        }
+
+        return tx.appointment.findUnique({
+          where: { id },
+          include: APPOINTMENT_INCLUDE,
+        });
       });
+    } catch (error) {
+      this.rethrowSchedulingConflict(error);
+      throw error;
+    }
+  }
 
-      if (updated.count !== 1) {
-        return null;
-      }
+  private rethrowSchedulingConflict(error: unknown): never | void {
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError)) {
+      return;
+    }
 
-      return tx.appointment.findUnique({
-        where: { id },
-        include: APPOINTMENT_INCLUDE,
-      });
-    });
+    if (error.code === 'P2002') {
+      throw new BadRequestException('Appointment time is no longer available');
+    }
+
+    if (
+      error.code === 'P2004' &&
+      typeof error.meta?.database_error === 'string' &&
+      error.meta.database_error.includes('appointments_') &&
+      error.meta.database_error.includes('_time_excl')
+    ) {
+      throw new BadRequestException('Appointment time is no longer available');
+    }
   }
 
   private async lockAndCheckConflict(

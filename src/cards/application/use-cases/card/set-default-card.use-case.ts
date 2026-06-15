@@ -16,6 +16,12 @@ export class SetDefaultCardUseCase {
       throw new NotFoundException('Card not found');
     }
 
-    return this.cardRepository.switchDefaultCardById(id, clientId);
+    const updated = await this.cardRepository.switchDefaultCardByIdAndClientId(id, clientId);
+
+    if (!updated) {
+      throw new NotFoundException('Card not found');
+    }
+
+    return updated;
   }
 }

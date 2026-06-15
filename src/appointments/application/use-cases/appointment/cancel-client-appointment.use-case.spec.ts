@@ -69,7 +69,7 @@ describe('CancelClientAppointmentUseCase', () => {
     await useCase.cancelAppointmentByIdAndClientId(1, 1);
 
     expect(schedulingValidator.validateCancellationAdvance).toHaveBeenCalled();
-    expect(appointmentRepository.cancelAppointmentById).toHaveBeenCalledWith(1);
+    expect(appointmentRepository.cancelAppointmentById).toHaveBeenCalledWith(1, 1);
     expect(emailService.sendAppointmentCancelledEmail).toHaveBeenCalled();
   });
 });

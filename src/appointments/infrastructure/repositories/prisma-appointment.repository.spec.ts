@@ -1,4 +1,6 @@
+import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Prisma } from '@prisma/client';
 import { type Mock, vi } from 'vitest';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import { AppointmentConflictValidator } from '../../application/validators/appointment-conflict.validator.js';
@@ -163,6 +165,15 @@ describe('PrismaAppointmentRepository', () => {
     });
   });
 
+  it('cancelAppointmentById should scope cancellation to the owner when clientId is provided', async () => {
+    await repository.cancelAppointmentById(1, 7);
+
+    expect(prisma.appointment.updateMany).toHaveBeenCalledWith({
+      where: { id: 1, status: 'SCHEDULED', clientId: 7 },
+      data: { status: 'CANCELLED' },
+    });
+  });
+
   it('completeAppointmentById should set status to COMPLETED', async () => {
     prisma.appointment.findUnique.mockResolvedValue(mockAppointment);
 
@@ -182,18 +193,61 @@ describe('PrismaAppointmentRepository', () => {
     });
     prisma.appointment.findUnique.mockResolvedValue(mockAppointment);
 
-    const result = await repository.rescheduleAppointment(1, {
-      date: new Date('2026-03-20'),
-      startTime: '10:00',
-    });
+    const result = await repository.rescheduleAppointment(
+      1,
+      {
+        date: new Date('2026-03-20'),
+        startTime: '10:00',
+      },
+      undefined,
+      undefined,
+      9,
+    );
 
     expect(result).toEqual(mockAppointment);
     expect(prisma.appointment.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 1, status: 'SCHEDULED' },
+        where: { id: 1, status: 'SCHEDULED', clientId: 9 },
         data: { date: expect.any(Date) as Date, startTime: '10:00' },
       }),
     );
     expect(prisma.appointment.create).not.toHaveBeenCalled();
+  });
+
+  it('createAppointment should translate unique slot conflicts into BadRequestException', async () => {
+    prisma.appointment.create.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('unique constraint', {
+        code: 'P2002',
+        clientVersion: 'test',
+        meta: { target: ['appointments_employee_scheduled_slot'] },
+      }),
+    );
+
+    await expect(
+      repository.createAppointment({
+        date: new Date('2026-03-15'),
+        startTime: '09:00',
+        duration: 120,
+        clientId: 1,
+        serviceId: 1,
+      }),
+    ).rejects.toThrow(new BadRequestException('Appointment time is no longer available'));
+  });
+
+  it('rescheduleAppointment should translate exclusion conflicts into BadRequestException', async () => {
+    prisma.$transaction.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('exclusion constraint', {
+        code: 'P2004',
+        clientVersion: 'test',
+        meta: { database_error: 'appointments_employee_scheduled_time_excl' },
+      }),
+    );
+
+    await expect(
+      repository.rescheduleAppointment(1, {
+        date: new Date('2026-03-20'),
+        startTime: '10:00',
+      }),
+    ).rejects.toThrow(new BadRequestException('Appointment time is no longer available'));
   });
 });
