@@ -13,6 +13,10 @@ export class RemoveCardUseCase {
       throw new NotFoundException('Card not found');
     }
 
-    await this.cardRepository.deleteCardById(id);
+    const removed = await this.cardRepository.deleteCardByIdAndClientId(id, clientId);
+
+    if (!removed) {
+      throw new NotFoundException('Card not found');
+    }
   }
 }

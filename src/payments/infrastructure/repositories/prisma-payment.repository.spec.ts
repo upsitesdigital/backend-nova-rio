@@ -36,6 +36,7 @@ describe('PrismaPaymentRepository', () => {
   let prisma: {
     payment: {
       create: ReturnType<typeof vi.fn>;
+      deleteMany: ReturnType<typeof vi.fn>;
       findMany: ReturnType<typeof vi.fn>;
       findUnique: ReturnType<typeof vi.fn>;
       findFirst: ReturnType<typeof vi.fn>;
@@ -49,6 +50,7 @@ describe('PrismaPaymentRepository', () => {
     prisma = {
       payment: {
         create: vi.fn().mockResolvedValue(mockPayment),
+        deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
         findMany: vi.fn().mockResolvedValue([mockPayment]),
         findUnique: vi.fn().mockResolvedValue(mockPayment),
         findFirst: vi.fn().mockResolvedValue(mockPayment),
@@ -189,6 +191,17 @@ describe('PrismaPaymentRepository', () => {
           data: { status: 'APPROVED', paidAt: expect.any(Date) as Date },
         }),
       );
+    });
+  });
+
+  describe('deletePendingPaymentReservation', () => {
+    it('should delete only pending reservations without gateway transaction id', async () => {
+      const result = await repository.deletePendingPaymentReservation(1);
+
+      expect(result).toBe(true);
+      expect(prisma.payment.deleteMany).toHaveBeenCalledWith({
+        where: { id: 1, status: 'PENDING', gatewayTransactionId: null },
+      });
     });
   });
 

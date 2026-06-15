@@ -161,6 +161,14 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     });
   }
 
+  async deletePendingPaymentReservation(id: number): Promise<boolean> {
+    const deleted = await this.prisma.payment.deleteMany({
+      where: { id, status: PaymentStatus.PENDING, gatewayTransactionId: null },
+    });
+
+    return deleted.count === 1;
+  }
+
   async approvePaymentById(id: number): Promise<PaymentResponse | null> {
     const updated = await this.prisma.payment.updateMany({
       where: { id, status: PaymentStatus.PENDING },

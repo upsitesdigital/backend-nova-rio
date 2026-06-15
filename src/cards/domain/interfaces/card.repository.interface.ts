@@ -21,6 +21,6 @@ export interface ICardRepository {
   createDefaultCard(data: CreateCardData): Promise<CardResponse>;
   findCardsByClientId(clientId: number): Promise<CardResponse[]>;
   findCardByIdAndClientId(id: number, clientId: number): Promise<CardResponse | null>;
-  deleteCardById(id: number): Promise<void>;
-  switchDefaultCardById(id: number, clientId: number): Promise<CardResponse>;
+  deleteCardByIdAndClientId(id: number, clientId: number): Promise<boolean>;
+  switchDefaultCardByIdAndClientId(id: number, clientId: number): Promise<CardResponse | null>;
 }
