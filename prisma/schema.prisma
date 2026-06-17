@@ -88,6 +88,22 @@ model AdminUser {
   @@map("admin_users")
 }
 
+model AdminVerificationCode {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid())
+  code      String
+  type      String   // EMAIL_CHANGE, PASSWORD_CHANGE
+  channel   String   // EMAIL
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  adminId Int
+
+  @@index([adminId, type])
+  @@map("admin_verification_codes")
+}
+
 // ============================================================
 // CLIENTS (Usuários do app/web)
 // ============================================================
@@ -191,6 +207,12 @@ model Unit {
   uuid            String   @unique @default(uuid())
   name            String   @unique
   address         String?
+  street          String?  @map("street")
+  number          String?  @map("number")
+  neighborhood    String?  @map("neighborhood")
+  city            String?  @map("city")
+  state           String?  @map("state")
+  cep             String?  @map("cep")
   latitude        Float?
   longitude       Float?
   serviceRadiusKm Float    @default(5) @map("service_radius_km")
