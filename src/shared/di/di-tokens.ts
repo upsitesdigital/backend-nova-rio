@@ -27,6 +27,9 @@ export class DiTokens {
   // client-profile
   static readonly profileRepository = Symbol('profileRepository');
 
+  // admin-profile
+  static readonly adminProfileSelfRepository = Symbol('adminProfileSelfRepository');
+
   // employees
   static readonly employeeRepository = Symbol('employeeRepository');
 
