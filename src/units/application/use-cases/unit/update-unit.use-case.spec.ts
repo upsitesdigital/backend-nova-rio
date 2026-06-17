@@ -7,6 +7,7 @@ import { UpdateUnitUseCase } from './update-unit.use-case.js';
 describe('UpdateUnitUseCase', () => {
   let useCase: UpdateUnitUseCase;
   let unitRepository: { findUnitById: Mock; findUnitByName: Mock; updateUnitById: Mock };
+  let geocodingService: { geocodeByCep: Mock };
 
   beforeEach(async () => {
     unitRepository = {
@@ -15,10 +16,15 @@ describe('UpdateUnitUseCase', () => {
       updateUnitById: vi.fn(),
     };
 
+    geocodingService = {
+      geocodeByCep: vi.fn().mockResolvedValue({ coordinates: null }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateUnitUseCase,
         { provide: DiTokens.unitRepository, useValue: unitRepository },
+        { provide: DiTokens.geocodingService, useValue: geocodingService },
       ],
     }).compile();
 
@@ -43,7 +49,10 @@ describe('UpdateUnitUseCase', () => {
     expect(result).toEqual(updated);
     expect(unitRepository.findUnitById).toHaveBeenCalledWith(1);
     expect(unitRepository.findUnitByName).toHaveBeenCalledWith('Unidade Norte');
-    expect(unitRepository.updateUnitById).toHaveBeenCalledWith(1, dto);
+    expect(unitRepository.updateUnitById).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ name: 'Unidade Norte' }),
+    );
   });
 
   it('should throw NotFoundException if unit not found', async () => {

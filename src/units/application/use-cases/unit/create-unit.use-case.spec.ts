@@ -7,6 +7,7 @@ import { CreateUnitUseCase } from './create-unit.use-case.js';
 describe('CreateUnitUseCase', () => {
   let useCase: CreateUnitUseCase;
   let unitRepository: { findUnitByName: Mock; createUnit: Mock };
+  let geocodingService: { geocodeByCep: Mock };
 
   beforeEach(async () => {
     unitRepository = {
@@ -14,10 +15,15 @@ describe('CreateUnitUseCase', () => {
       createUnit: vi.fn(),
     };
 
+    geocodingService = {
+      geocodeByCep: vi.fn().mockResolvedValue({ coordinates: null }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateUnitUseCase,
         { provide: DiTokens.unitRepository, useValue: unitRepository },
+        { provide: DiTokens.geocodingService, useValue: geocodingService },
       ],
     }).compile();
 
@@ -46,7 +52,9 @@ describe('CreateUnitUseCase', () => {
 
     expect(result).toEqual(created);
     expect(unitRepository.findUnitByName).toHaveBeenCalledWith('Unidade Centro');
-    expect(unitRepository.createUnit).toHaveBeenCalledWith(dto);
+    expect(unitRepository.createUnit).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Unidade Centro', latitude: null, longitude: null }),
+    );
   });
 
   it('should throw ConflictException when name already exists', async () => {
