@@ -7,6 +7,8 @@ import { GetReceiptUseCase } from './get-receipt.use-case.js';
 describe('GetReceiptUseCase', () => {
   let useCase: GetReceiptUseCase;
   let receiptRepository: { findReceiptByPaymentId: Mock };
+  let paymentRepository: { findPaymentById: Mock };
+  let receiptGenerationService: { generateReceiptForPayment: Mock };
 
   const mockReceipt = {
     id: 1,
@@ -18,11 +20,18 @@ describe('GetReceiptUseCase', () => {
 
   beforeEach(async () => {
     receiptRepository = { findReceiptByPaymentId: vi.fn() };
+    paymentRepository = { findPaymentById: vi.fn() };
+    receiptGenerationService = { generateReceiptForPayment: vi.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetReceiptUseCase,
         { provide: DiTokens.receiptRepository, useValue: receiptRepository },
+        { provide: DiTokens.paymentRepository, useValue: paymentRepository },
+        {
+          provide: DiTokens.receiptGenerationService,
+          useValue: receiptGenerationService,
+        },
       ],
     }).compile();
 
