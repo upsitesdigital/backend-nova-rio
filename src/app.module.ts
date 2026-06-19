@@ -7,6 +7,7 @@ import { AdminUsersModule } from './admin-users/admin-users.module.js';
 import { AppointmentsModule } from './appointments/appointments.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CardsModule } from './cards/cards.module.js';
+import { AdminProfileModule } from './admin-profile/admin-profile.module.js';
 import { ClientProfileModule } from './client-profile/client-profile.module.js';
 import { ClientsModule } from './clients/clients.module.js';
 import { DashboardModule } from './dashboard/dashboard.module.js';
@@ -33,6 +34,7 @@ import { UnitsModule } from './units/units.module.js';
     EmailModule,
     AuthModule,
     ClientProfileModule,
+    AdminProfileModule,
     AppointmentsModule,
     CardsModule,
     ServicesModule,

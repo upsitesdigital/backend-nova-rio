@@ -3,17 +3,29 @@ import type { PaginatedResponse } from '../../../shared/types/paginated-response
 
 export interface CreateUnitData {
   name: string;
-  address?: string;
-  latitude?: number;
-  longitude?: number;
+  address?: string | null;
+  street?: string | null;
+  number?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+  cep?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   serviceRadiusKm?: number;
 }
 
 export interface UpdateUnitData {
   name?: string;
-  address?: string;
-  latitude?: number;
-  longitude?: number;
+  address?: string | null;
+  street?: string | null;
+  number?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+  cep?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   serviceRadiusKm?: number;
 }
 

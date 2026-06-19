@@ -51,7 +51,13 @@ async function seedDefaultUnit() {
 
   const unitData = {
     name: unitName,
-    address: 'Avenida das Américas, Barra da Tijuca, Rio de Janeiro - RJ, 22640-102',
+    address: 'Avenida das Américas, 4666 - Barra da Tijuca, Rio de Janeiro - RJ, 22640-102',
+    street: 'Avenida das Américas',
+    number: '4666',
+    neighborhood: 'Barra da Tijuca',
+    city: 'Rio de Janeiro',
+    state: 'RJ',
+    cep: '22640-102',
     latitude: -23.001132,
     longitude: -43.3290548,
     serviceRadiusKm: 5,
