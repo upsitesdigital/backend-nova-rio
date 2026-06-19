@@ -8,6 +8,7 @@ describe('GetClientReceiptUseCase', () => {
   let useCase: GetClientReceiptUseCase;
   let receiptRepository: { findReceiptByPaymentId: Mock };
   let paymentRepository: { findPaymentByIdAndClientId: Mock };
+  let receiptGenerationService: { generateReceiptForPayment: Mock };
 
   const mockPayment = {
     id: 10,
@@ -32,16 +33,28 @@ describe('GetClientReceiptUseCase', () => {
     paymentId: 10,
     createdAt: new Date(),
   };
+  const mockGeneratedReceipt = {
+    id: 2,
+    uuid: 'generated-receipt-uuid',
+    fileUrl: 'receipts/generated-receipt.pdf',
+    paymentId: 10,
+    createdAt: new Date(),
+  };
 
   beforeEach(async () => {
     receiptRepository = { findReceiptByPaymentId: vi.fn() };
     paymentRepository = { findPaymentByIdAndClientId: vi.fn() };
+    receiptGenerationService = { generateReceiptForPayment: vi.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetClientReceiptUseCase,
         { provide: DiTokens.receiptRepository, useValue: receiptRepository },
         { provide: DiTokens.paymentRepository, useValue: paymentRepository },
+        {
+          provide: DiTokens.receiptGenerationService,
+          useValue: receiptGenerationService,
+        },
       ],
     }).compile();
 
@@ -70,12 +83,14 @@ describe('GetClientReceiptUseCase', () => {
     );
   });
 
-  it('should throw NotFoundException when receipt not found', async () => {
+  it('should generate receipt when not found and payment is approved', async () => {
     paymentRepository.findPaymentByIdAndClientId.mockResolvedValue(mockPayment);
     receiptRepository.findReceiptByPaymentId.mockResolvedValue(null);
+    receiptGenerationService.generateReceiptForPayment.mockResolvedValue(mockGeneratedReceipt);
 
-    await expect(useCase.getReceiptByPaymentIdAndClientId(10, 1)).rejects.toThrow(
-      NotFoundException,
-    );
+    const result = await useCase.getReceiptByPaymentIdAndClientId(10, 1);
+
+    expect(result).toEqual(mockGeneratedReceipt);
+    expect(receiptGenerationService.generateReceiptForPayment).toHaveBeenCalledWith(10);
   });
 });

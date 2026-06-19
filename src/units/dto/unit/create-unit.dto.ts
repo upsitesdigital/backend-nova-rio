@@ -7,24 +7,35 @@ export class CreateUnitDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiPropertyOptional({ example: 'Rua das Flores, 123 - Centro' })
+  @ApiPropertyOptional({ example: 'Avenida das Américas' })
   @IsString()
   @IsOptional()
-  address?: string;
+  street?: string;
 
-  @ApiPropertyOptional({ example: -22.9068 })
-  @IsNumber()
+  @ApiPropertyOptional({ example: '500' })
+  @IsString()
   @IsOptional()
-  @Min(-90)
-  @Max(90)
-  latitude?: number;
+  number?: string;
 
-  @ApiPropertyOptional({ example: -43.1729 })
-  @IsNumber()
+  @ApiPropertyOptional({ example: 'Barra da Tijuca' })
+  @IsString()
   @IsOptional()
-  @Min(-180)
-  @Max(180)
-  longitude?: number;
+  neighborhood?: string;
+
+  @ApiPropertyOptional({ example: 'Rio de Janeiro' })
+  @IsString()
+  @IsOptional()
+  city?: string;
+
+  @ApiPropertyOptional({ example: 'RJ' })
+  @IsString()
+  @IsOptional()
+  state?: string;
+
+  @ApiPropertyOptional({ example: '22640-102' })
+  @IsString()
+  @IsOptional()
+  cep?: string;
 
   @ApiPropertyOptional({ example: 5, description: 'Service radius in kilometers' })
   @IsNumber()
