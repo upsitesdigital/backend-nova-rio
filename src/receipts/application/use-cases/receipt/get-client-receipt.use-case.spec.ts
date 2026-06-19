@@ -33,6 +33,13 @@ describe('GetClientReceiptUseCase', () => {
     paymentId: 10,
     createdAt: new Date(),
   };
+  const mockGeneratedReceipt = {
+    id: 2,
+    uuid: 'generated-receipt-uuid',
+    fileUrl: 'receipts/generated-receipt.pdf',
+    paymentId: 10,
+    createdAt: new Date(),
+  };
 
   beforeEach(async () => {
     receiptRepository = { findReceiptByPaymentId: vi.fn() };
@@ -76,12 +83,14 @@ describe('GetClientReceiptUseCase', () => {
     );
   });
 
-  it('should throw NotFoundException when receipt not found', async () => {
+  it('should generate receipt when not found and payment is approved', async () => {
     paymentRepository.findPaymentByIdAndClientId.mockResolvedValue(mockPayment);
     receiptRepository.findReceiptByPaymentId.mockResolvedValue(null);
+    receiptGenerationService.generateReceiptForPayment.mockResolvedValue(mockGeneratedReceipt);
 
-    await expect(useCase.getReceiptByPaymentIdAndClientId(10, 1)).rejects.toThrow(
-      NotFoundException,
-    );
+    const result = await useCase.getReceiptByPaymentIdAndClientId(10, 1);
+
+    expect(result).toEqual(mockGeneratedReceipt);
+    expect(receiptGenerationService.generateReceiptForPayment).toHaveBeenCalledWith(10);
   });
 });
