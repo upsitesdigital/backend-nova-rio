@@ -9,6 +9,7 @@ export interface AppointmentResponse {
   duration: number;
   status: AppointmentStatus;
   recurrenceType: RecurrenceType;
+  weeklyFrequency: number;
   locationZip: string | null;
   locationAddress: string | null;
   notes: string | null;
@@ -28,6 +29,7 @@ export interface CreateAppointmentData {
   startTime: string;
   duration: number;
   recurrenceType?: RecurrenceType;
+  weeklyFrequency?: number;
   locationZip?: string;
   locationAddress?: string;
   notes?: string;
@@ -43,6 +45,7 @@ export interface UpdateAppointmentData {
   startTime?: string;
   duration?: number;
   recurrenceType?: RecurrenceType;
+  weeklyFrequency?: number;
   locationZip?: string;
   locationAddress?: string;
   notes?: string;
