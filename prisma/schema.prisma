@@ -289,6 +289,7 @@ model Appointment {
   duration       Int               // Duração em minutos
   status         AppointmentStatus @default(SCHEDULED)
   recurrenceType RecurrenceType    @default(SINGLE)
+  weeklyFrequency Int              @default(1) // Vezes por semana (1-7), aplicável quando WEEKLY
   locationZip    String?           // CEP do local
   locationAddress String?
   notes          String?

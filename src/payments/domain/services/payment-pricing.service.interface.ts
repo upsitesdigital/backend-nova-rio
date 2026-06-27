@@ -10,5 +10,6 @@ export interface IPaymentPricingService {
     serviceId: number,
     recurrenceType: RecurrenceType,
     packageId: number | null,
+    weeklyFrequency: number,
   ): Promise<PricingResult>;
 }
