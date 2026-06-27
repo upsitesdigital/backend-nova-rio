@@ -1,3 +1,4 @@
+import type { ServiceRecurrenceFrequency } from '@prisma/client';
 import type { ClientProfile } from '../../../auth/domain/interfaces/client.repository.interface.js';
 
 export interface UpdateProfileData {
@@ -6,6 +7,7 @@ export interface UpdateProfileData {
   company?: string;
   cpfCnpj?: string;
   address?: string;
+  preferredRecurrence?: ServiceRecurrenceFrequency;
 }
 
 export interface IClientProfileRepository {
