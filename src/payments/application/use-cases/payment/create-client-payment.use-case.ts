@@ -71,6 +71,7 @@ export class CreateClientPaymentUseCase {
       appointment.service.id,
       appointment.recurrenceType,
       appointment.package?.id ?? null,
+      appointment.weeklyFrequency,
     );
 
     const serviceFee = 0;
