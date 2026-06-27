@@ -51,6 +51,7 @@ describe('PrismaClientProfileRepository', () => {
         company: true,
         cpfCnpj: true,
         address: true,
+        preferredRecurrence: true,
         status: true,
         createdAt: true,
       },

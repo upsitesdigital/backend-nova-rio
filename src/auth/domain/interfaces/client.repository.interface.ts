@@ -33,6 +33,7 @@ export type ClientProfile = Pick<
   | 'company'
   | 'cpfCnpj'
   | 'address'
+  | 'preferredRecurrence'
   | 'status'
   | 'createdAt'
 >;
