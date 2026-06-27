@@ -1,10 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, Max, Min } from 'class-validator';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 
-export class SyncHolidaysDto {
-  @ApiProperty({ example: 2026, description: 'Year to sync holidays from BrasilAPI' })
-  @IsInt()
-  @Min(2020)
-  @Max(2100)
-  year: number;
-}
+export class SyncHolidaysDto extends createZodDto(
+  z.object({
+    year: z.number().int().min(2020).max(2100).meta({ example: 2026 }),
+  }),
+) {}
