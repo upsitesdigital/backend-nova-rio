@@ -1,10 +1,8 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 
-export class UpdateAdminProfileDto {
-  @ApiPropertyOptional({ example: 'Admin Master' })
-  @IsString()
-  @IsOptional()
-  @MaxLength(255)
-  name?: string;
-}
+export class UpdateAdminProfileDto extends createZodDto(
+  z.object({
+    name: z.string().max(255).meta({ example: 'Admin Master' }).optional(),
+  }),
+) {}
