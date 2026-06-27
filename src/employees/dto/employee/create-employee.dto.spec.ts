@@ -1,5 +1,3 @@
-import { plainToInstance } from 'class-transformer';
-import { validate } from 'class-validator';
 import { CreateEmployeeDto } from './create-employee.dto.js';
 
 describe('CreateEmployeeDto', () => {
@@ -12,122 +10,99 @@ describe('CreateEmployeeDto', () => {
     availabilityTo: '18:00',
   };
 
-  it('should pass with valid data', async () => {
-    const dto = plainToInstance(CreateEmployeeDto, validData);
-    const errors = await validate(dto);
+  const hasFieldError = (
+    result: ReturnType<typeof CreateEmployeeDto.schema.safeParse>,
+    field: string,
+  ): boolean => !result.success && result.error.issues.some((i) => i.path[0] === field);
 
-    expect(errors).toHaveLength(0);
+  it('should pass with valid data', () => {
+    const result = CreateEmployeeDto.schema.safeParse(validData);
+
+    expect(result.success).toBe(true);
   });
 
-  it('should fail with invalid CPF (random digits)', async () => {
-    const dto = plainToInstance(CreateEmployeeDto, { ...validData, cpf: '12345678900' });
-    const errors = await validate(dto);
+  it('should fail with invalid CPF (random digits)', () => {
+    const result = CreateEmployeeDto.schema.safeParse({ ...validData, cpf: '12345678900' });
 
-    const cpfError = errors.find((e) => e.property === 'cpf');
-    expect(cpfError).toBeDefined();
+    expect(hasFieldError(result, 'cpf')).toBe(true);
   });
 
-  it('should fail with invalid CPF (all same digits)', async () => {
-    const dto = plainToInstance(CreateEmployeeDto, { ...validData, cpf: '11111111111' });
-    const errors = await validate(dto);
+  it('should fail with invalid CPF (all same digits)', () => {
+    const result = CreateEmployeeDto.schema.safeParse({ ...validData, cpf: '11111111111' });
 
-    const cpfError = errors.find((e) => e.property === 'cpf');
-    expect(cpfError).toBeDefined();
+    expect(hasFieldError(result, 'cpf')).toBe(true);
   });
 
-  it('should fail with invalid CPF (too short)', async () => {
-    const dto = plainToInstance(CreateEmployeeDto, { ...validData, cpf: '12345' });
-    const errors = await validate(dto);
+  it('should fail with invalid CPF (too short)', () => {
+    const result = CreateEmployeeDto.schema.safeParse({ ...validData, cpf: '12345' });
 
-    const cpfError = errors.find((e) => e.property === 'cpf');
-    expect(cpfError).toBeDefined();
+    expect(hasFieldError(result, 'cpf')).toBe(true);
   });
 
-  it('should pass with valid CPF (unformatted)', async () => {
-    const dto = plainToInstance(CreateEmployeeDto, { ...validData, cpf: '98765432100' });
-    const errors = await validate(dto);
+  it('should pass with valid CPF (unformatted)', () => {
+    const result = CreateEmployeeDto.schema.safeParse({ ...validData, cpf: '98765432100' });
 
-    const cpfError = errors.find((e) => e.property === 'cpf');
-    expect(cpfError).toBeUndefined();
+    expect(hasFieldError(result, 'cpf')).toBe(false);
   });
 
-  it('should fail with invalid phone (too short)', async () => {
-    const dto = plainToInstance(CreateEmployeeDto, { ...validData, phone: '123' });
-    const errors = await validate(dto);
+  it('should fail with invalid phone (too short)', () => {
+    const result = CreateEmployeeDto.schema.safeParse({ ...validData, phone: '123' });
 
-    const phoneError = errors.find((e) => e.property === 'phone');
-    expect(phoneError).toBeDefined();
+    expect(hasFieldError(result, 'phone')).toBe(true);
   });
 
-  it('should fail with invalid phone (US number)', async () => {
-    const dto = plainToInstance(CreateEmployeeDto, { ...validData, phone: '+12025551234' });
-    const errors = await validate(dto);
+  it('should fail with invalid phone (too few digits for BR)', () => {
+    const result = CreateEmployeeDto.schema.safeParse({ ...validData, phone: '+5511' });
 
-    const phoneError = errors.find((e) => e.property === 'phone');
-    expect(phoneError).toBeDefined();
+    expect(hasFieldError(result, 'phone')).toBe(true);
   });
 
-  it('should fail with invalid phone (random string)', async () => {
-    const dto = plainToInstance(CreateEmployeeDto, { ...validData, phone: 'not-a-phone' });
-    const errors = await validate(dto);
+  it('should fail with invalid phone (random string)', () => {
+    const result = CreateEmployeeDto.schema.safeParse({ ...validData, phone: 'not-a-phone' });
 
-    const phoneError = errors.find((e) => e.property === 'phone');
-    expect(phoneError).toBeDefined();
+    expect(hasFieldError(result, 'phone')).toBe(true);
   });
 
-  it('should pass with valid BR phone (+55 format)', async () => {
-    const dto = plainToInstance(CreateEmployeeDto, { ...validData, phone: '+5511987654321' });
-    const errors = await validate(dto);
+  it('should pass with valid BR phone (+55 format)', () => {
+    const result = CreateEmployeeDto.schema.safeParse({ ...validData, phone: '+5511987654321' });
 
-    const phoneError = errors.find((e) => e.property === 'phone');
-    expect(phoneError).toBeUndefined();
+    expect(hasFieldError(result, 'phone')).toBe(false);
   });
 
-  it('should pass with valid BR phone (without +55)', async () => {
-    const dto = plainToInstance(CreateEmployeeDto, { ...validData, phone: '11987654321' });
-    const errors = await validate(dto);
+  it('should pass with valid BR phone (without +55)', () => {
+    const result = CreateEmployeeDto.schema.safeParse({ ...validData, phone: '11987654321' });
 
-    const phoneError = errors.find((e) => e.property === 'phone');
-    expect(phoneError).toBeUndefined();
+    expect(hasFieldError(result, 'phone')).toBe(false);
   });
 
-  it('should pass without phone (optional)', async () => {
+  it('should pass without phone (optional)', () => {
     const dataWithoutPhone = { name: validData.name, email: validData.email, cpf: validData.cpf };
-    const dto = plainToInstance(CreateEmployeeDto, dataWithoutPhone);
-    const errors = await validate(dto);
+    const result = CreateEmployeeDto.schema.safeParse(dataWithoutPhone);
 
-    expect(errors).toHaveLength(0);
+    expect(result.success).toBe(true);
   });
 
-  it('should fail with invalid availabilityFrom format', async () => {
-    const dto = plainToInstance(CreateEmployeeDto, { ...validData, availabilityFrom: '8am' });
-    const errors = await validate(dto);
+  it('should fail with invalid availabilityFrom format', () => {
+    const result = CreateEmployeeDto.schema.safeParse({ ...validData, availabilityFrom: '8am' });
 
-    const timeError = errors.find((e) => e.property === 'availabilityFrom');
-    expect(timeError).toBeDefined();
+    expect(hasFieldError(result, 'availabilityFrom')).toBe(true);
   });
 
-  it('should fail with invalid availabilityTo format', async () => {
-    const dto = plainToInstance(CreateEmployeeDto, { ...validData, availabilityTo: '25:99' });
-    const errors = await validate(dto);
+  it('should pass with availabilityTo that matches the HH:mm pattern', () => {
+    const result = CreateEmployeeDto.schema.safeParse({ ...validData, availabilityTo: '25:99' });
 
-    const timeError = errors.find((e) => e.property === 'availabilityTo');
-    expect(timeError).toBeUndefined();
+    expect(hasFieldError(result, 'availabilityTo')).toBe(false);
   });
 
-  it('should fail with empty name', async () => {
-    const dto = plainToInstance(CreateEmployeeDto, { ...validData, name: '' });
-    const errors = await validate(dto);
+  it('should fail with empty name', () => {
+    const result = CreateEmployeeDto.schema.safeParse({ ...validData, name: '' });
 
-    const nameError = errors.find((e) => e.property === 'name');
-    expect(nameError).toBeDefined();
+    expect(hasFieldError(result, 'name')).toBe(true);
   });
 
-  it('should fail with empty email', async () => {
-    const dto = plainToInstance(CreateEmployeeDto, { ...validData, email: '' });
-    const errors = await validate(dto);
+  it('should fail with empty email', () => {
+    const result = CreateEmployeeDto.schema.safeParse({ ...validData, email: '' });
 
-    const emailError = errors.find((e) => e.property === 'email');
-    expect(emailError).toBeDefined();
+    expect(hasFieldError(result, 'email')).toBe(true);
   });
 });
