@@ -1,27 +1,10 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsStrongPassword, Length, MaxLength } from 'class-validator';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { ZodPrimitives } from '../../../shared/validation/zod-primitives.js';
 
-export class VerifyPasswordChangeDto {
-  @ApiProperty({ example: '123456' })
-  @IsString()
-  @IsNotEmpty()
-  @Length(6, 6)
-  code: string;
-
-  @ApiProperty({ example: 'NewPass@2026!' })
-  @MaxLength(128)
-  @IsStrongPassword(
-    {
-      minLength: 8,
-      minLowercase: 1,
-      minUppercase: 1,
-      minNumbers: 1,
-      minSymbols: 1,
-    },
-    {
-      message:
-        'Password must be at least 8 characters with uppercase, lowercase, number and symbol',
-    },
-  )
-  newPassword: string;
-}
+export class VerifyPasswordChangeDto extends createZodDto(
+  z.object({
+    code: z.string().length(6).meta({ example: '123456' }),
+    newPassword: ZodPrimitives.strongPassword.meta({ example: 'NewPass@2026!' }),
+  }),
+) {}
