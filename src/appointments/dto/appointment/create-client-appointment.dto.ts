@@ -10,6 +10,7 @@ import {
   Matches,
   Max,
   MaxLength,
+  Min,
 } from 'class-validator';
 import { RecurrenceType } from '@prisma/client';
 
@@ -34,6 +35,16 @@ export class CreateClientAppointmentDto {
   @IsEnum(RecurrenceType)
   @IsOptional()
   recurrenceType?: RecurrenceType;
+
+  @ApiPropertyOptional({
+    example: 1,
+    description: 'Vezes por semana (1-7), aplicável quando WEEKLY',
+  })
+  @IsInt()
+  @Min(1)
+  @Max(7)
+  @IsOptional()
+  weeklyFrequency?: number;
 
   @ApiPropertyOptional({ example: '20040-020' })
   @IsString()

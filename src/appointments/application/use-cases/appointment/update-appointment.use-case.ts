@@ -27,6 +27,7 @@ export class UpdateAppointmentUseCase {
       startTime: dto.startTime,
       duration: dto.duration,
       recurrenceType: dto.recurrenceType,
+      weeklyFrequency: dto.weeklyFrequency,
       locationZip: dto.locationZip,
       locationAddress: dto.locationAddress,
       notes: dto.notes,

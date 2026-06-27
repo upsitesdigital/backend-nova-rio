@@ -14,12 +14,13 @@ export class PrismaPaymentPricingService implements IPaymentPricingService {
     serviceId: number,
     recurrenceType: RecurrenceType,
     packageId: number | null,
+    weeklyFrequency: number,
   ): Promise<PricingResult> {
     if (recurrenceType === 'PACKAGE' && packageId) {
       return this.calculatePackagePricing(packageId);
     }
 
-    return this.calculateServicePricing(serviceId, recurrenceType);
+    return this.calculateServicePricing(serviceId, recurrenceType, weeklyFrequency);
   }
 
   private async calculatePackagePricing(packageId: number): Promise<PricingResult> {
@@ -38,6 +39,7 @@ export class PrismaPaymentPricingService implements IPaymentPricingService {
   private async calculateServicePricing(
     serviceId: number,
     recurrenceType: RecurrenceType,
+    weeklyFrequency: number,
   ): Promise<PricingResult> {
     const service = await this.prisma.service.findUnique({
       where: { id: serviceId },
@@ -48,11 +50,12 @@ export class PrismaPaymentPricingService implements IPaymentPricingService {
       throw new BadRequestException('Service not found');
     }
 
-    const basePrice = Number(service.basePrice);
+    const sessionsPerWeek = recurrenceType === 'WEEKLY' ? weeklyFrequency : 1;
+    const subtotal = Number(service.basePrice) * sessionsPerWeek;
     const discountRate = this.resolveDiscountRate(recurrenceType);
-    const discount = basePrice * discountRate;
+    const discount = subtotal * discountRate;
 
-    return { subtotal: basePrice, discount };
+    return { subtotal, discount };
   }
 
   private resolveDiscountRate(recurrenceType: RecurrenceType): number {
