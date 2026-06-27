@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+import { IsEnum, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+import { ServiceRecurrenceFrequency } from '@prisma/client';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({ example: 'John Doe' })
@@ -33,4 +34,9 @@ export class UpdateProfileDto {
   @IsOptional()
   @MaxLength(500)
   address?: string;
+
+  @ApiPropertyOptional({ enum: ServiceRecurrenceFrequency, example: 'WEEKLY' })
+  @IsEnum(ServiceRecurrenceFrequency)
+  @IsOptional()
+  preferredRecurrence?: ServiceRecurrenceFrequency;
 }

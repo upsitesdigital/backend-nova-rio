@@ -53,6 +53,12 @@ enum RecurrenceType {
   MONTHLY      // Mensal
 }
 
+enum ServiceRecurrenceFrequency {
+  WEEKLY       // Semanal
+  BIWEEKLY     // Quinzenal
+  MONTHLY      // Mensal
+}
+
 enum PaymentOption {
   SINGLE
   PACKAGE
@@ -120,6 +126,10 @@ model Client {
   cpfCnpj     String?    @unique
   address     String?
   complement  String?
+
+  // Preferência de recorrência padrão do cliente (pré-seleciona no agendamento)
+  preferredRecurrence ServiceRecurrenceFrequency?
+
   refreshToken        String?
   failedLoginAttempts Int       @default(0)
   lockedUntil         DateTime?
@@ -242,6 +252,9 @@ model Service {
   allowSingle     Boolean @default(true)  // Avulso
   allowPackage    Boolean @default(false)  // Pacote
   allowRecurrence Boolean @default(false)  // Recorrência
+
+  // Frequências de recorrência habilitadas (válidas quando allowRecurrence)
+  recurrenceFrequencies ServiceRecurrenceFrequency[] @default([WEEKLY, BIWEEKLY, MONTHLY])
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())

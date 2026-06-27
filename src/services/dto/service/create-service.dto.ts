@@ -1,5 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+} from 'class-validator';
+import { ServiceRecurrenceFrequency } from '@prisma/client';
 
 export class CreateServiceDto {
   @ApiProperty({ example: 'Faxina Regular' })
@@ -36,4 +46,14 @@ export class CreateServiceDto {
   @IsBoolean()
   @IsOptional()
   allowRecurrence?: boolean;
+
+  @ApiPropertyOptional({
+    enum: ServiceRecurrenceFrequency,
+    isArray: true,
+    example: ['WEEKLY', 'MONTHLY'],
+  })
+  @IsArray()
+  @IsEnum(ServiceRecurrenceFrequency, { each: true })
+  @IsOptional()
+  recurrenceFrequencies?: ServiceRecurrenceFrequency[];
 }
