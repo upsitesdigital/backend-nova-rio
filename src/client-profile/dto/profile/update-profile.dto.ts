@@ -1,42 +1,15 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 import { ServiceRecurrenceFrequency } from '@prisma/client';
+import { ZodPrimitives } from '../../../shared/validation/zod-primitives.js';
 
-export class UpdateProfileDto {
-  @ApiPropertyOptional({ example: 'John Doe' })
-  @IsString()
-  @IsOptional()
-  @MaxLength(255)
-  name?: string;
-
-  @ApiPropertyOptional({ example: '+5521999999999' })
-  @IsString()
-  @IsOptional()
-  @MaxLength(20)
-  @Matches(/^\+?\d[\d\s()-]{7,19}$/, { message: 'Invalid phone number format' })
-  phone?: string;
-
-  @ApiPropertyOptional({ example: 'Acme Corp' })
-  @IsString()
-  @IsOptional()
-  @MaxLength(255)
-  company?: string;
-
-  @ApiPropertyOptional({ example: '12345678900' })
-  @IsString()
-  @IsOptional()
-  @MaxLength(20)
-  @Matches(/^\d{11}$|^\d{14}$/, { message: 'CPF must be 11 digits or CNPJ must be 14 digits' })
-  cpfCnpj?: string;
-
-  @ApiPropertyOptional({ example: 'Rua das Flores, 123' })
-  @IsString()
-  @IsOptional()
-  @MaxLength(500)
-  address?: string;
-
-  @ApiPropertyOptional({ enum: ServiceRecurrenceFrequency, example: 'WEEKLY' })
-  @IsEnum(ServiceRecurrenceFrequency)
-  @IsOptional()
-  preferredRecurrence?: ServiceRecurrenceFrequency;
-}
+export class UpdateProfileDto extends createZodDto(
+  z.object({
+    name: z.string().max(255).meta({ example: 'John Doe' }).optional(),
+    phone: ZodPrimitives.loosePhone.meta({ example: '+5521999999999' }).optional(),
+    company: z.string().max(255).meta({ example: 'Acme Corp' }).optional(),
+    cpfCnpj: ZodPrimitives.cpfCnpjDigits.meta({ example: '12345678900' }).optional(),
+    address: z.string().max(500).meta({ example: 'Rua das Flores, 123' }).optional(),
+    preferredRecurrence: z.enum(ServiceRecurrenceFrequency).meta({ example: 'WEEKLY' }).optional(),
+  }),
+) {}

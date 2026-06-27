@@ -1,44 +1,13 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 import { AdminRole } from '@prisma/client';
-import {
-  IsEmail,
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsStrongPassword,
-  MaxLength,
-} from 'class-validator';
+import { ZodPrimitives } from '../../../shared/validation/zod-primitives.js';
 
-export class CreateAdminUserDto {
-  @ApiProperty({ example: 'João Silva' })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(255)
-  name: string;
-
-  @ApiProperty({ example: 'joao@novario.com' })
-  @IsEmail()
-  email: string;
-
-  @ApiProperty({ example: 'Str0ngP@ss' })
-  @IsStrongPassword(
-    {
-      minLength: 8,
-      minLowercase: 1,
-      minUppercase: 1,
-      minNumbers: 1,
-      minSymbols: 1,
-    },
-    {
-      message:
-        'Password must be at least 8 characters with uppercase, lowercase, number and symbol',
-    },
-  )
-  password: string;
-
-  @ApiPropertyOptional({ enum: AdminRole, default: AdminRole.ADMIN_BASIC })
-  @IsEnum(AdminRole)
-  @IsOptional()
-  role?: AdminRole;
-}
+export class CreateAdminUserDto extends createZodDto(
+  z.object({
+    name: z.string().min(1).max(255).meta({ example: 'João Silva' }),
+    email: z.email().meta({ example: 'joao@novario.com' }),
+    password: ZodPrimitives.strongPassword.meta({ example: 'Str0ngP@ss' }),
+    role: z.enum(AdminRole).optional().meta({ example: AdminRole.ADMIN_BASIC }),
+  }),
+) {}

@@ -88,7 +88,7 @@ describe('ClientProfileController', () => {
   });
 
   it('should call deleteClientAccount with user id', async () => {
-    const dto = { confirmPhrase: 'Apagar minha conta' };
+    const dto = { confirmPhrase: 'Apagar minha conta' } as const;
     await controller.deleteAccount(mockUser, dto);
     expect(deleteClientAccountUseCase.deleteClientAccount).toHaveBeenCalledWith(1);
   });

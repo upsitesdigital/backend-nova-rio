@@ -1,10 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, Matches } from 'class-validator';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { ZodPrimitives } from '../../../shared/validation/zod-primitives.js';
 
-export class ValidateCoverageQueryDto {
-  @ApiProperty({ example: '20040-020', description: 'CEP to validate coverage for' })
-  @IsString()
-  @IsNotEmpty()
-  @Matches(/^\d{5}-?\d{3}$/, { message: 'CEP must be in XXXXX-XXX or XXXXXXXX format' })
-  cep: string;
-}
+export class ValidateCoverageQueryDto extends createZodDto(
+  z.object({
+    cep: ZodPrimitives.cep.meta({ example: '20040-020' }),
+  }),
+) {}

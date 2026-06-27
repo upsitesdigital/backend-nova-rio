@@ -1,4 +1,4 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreatePackageDto } from './create-package.dto.js';
+import { createZodDto } from 'nestjs-zod';
+import { PackageSchemas } from './create-package.schema.js';
 
-export class UpdatePackageDto extends PartialType(CreatePackageDto) {}
+export class UpdatePackageDto extends createZodDto(PackageSchemas.create.partial()) {}

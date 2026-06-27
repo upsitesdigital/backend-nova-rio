@@ -1,14 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, Length } from 'class-validator';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 
-export class VerifyEmailChangeDto {
-  @ApiProperty({ example: '123456' })
-  @IsString()
-  @IsNotEmpty()
-  @Length(6, 6)
-  code: string;
-
-  @ApiProperty({ example: 'newemail@example.com' })
-  @IsEmail()
-  newEmail: string;
-}
+export class VerifyEmailChangeDto extends createZodDto(
+  z.object({
+    code: z.string().length(6).meta({ example: '123456' }),
+    newEmail: z.email().meta({ example: 'newemail@example.com' }),
+  }),
+) {}
