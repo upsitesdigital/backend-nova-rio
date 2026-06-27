@@ -1,4 +1,4 @@
-import type { Service } from '@prisma/client';
+import type { Service, ServiceRecurrenceFrequency } from '@prisma/client';
 import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 
 export interface CreateServiceData {
@@ -9,6 +9,7 @@ export interface CreateServiceData {
   allowSingle?: boolean;
   allowPackage?: boolean;
   allowRecurrence?: boolean;
+  recurrenceFrequencies?: ServiceRecurrenceFrequency[];
 }
 
 export interface UpdateServiceData {
@@ -19,6 +20,7 @@ export interface UpdateServiceData {
   allowSingle?: boolean;
   allowPackage?: boolean;
   allowRecurrence?: boolean;
+  recurrenceFrequencies?: ServiceRecurrenceFrequency[];
 }
 
 export interface ListServicesFilters {
