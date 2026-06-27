@@ -1,8 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail } from 'class-validator';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 
-export class ForgotPasswordDto {
-  @ApiProperty({ example: 'john@example.com' })
-  @IsEmail()
-  email: string;
-}
+export class ForgotPasswordDto extends createZodDto(
+  z.object({
+    email: z.email().meta({ example: 'john@example.com' }),
+  }),
+) {}

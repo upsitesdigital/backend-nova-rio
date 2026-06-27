@@ -1,10 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty } from 'class-validator';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 import { CreateClientAppointmentDto } from './create-client-appointment.dto.js';
 
-export class CreatePublicAppointmentDto extends CreateClientAppointmentDto {
-  @ApiProperty({ example: 'client@example.com' })
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
-}
+export class CreatePublicAppointmentDto extends createZodDto(
+  CreateClientAppointmentDto.schema.extend({
+    email: z.email().meta({ example: 'client@example.com' }),
+  }),
+) {}

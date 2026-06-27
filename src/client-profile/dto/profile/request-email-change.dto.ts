@@ -1,8 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail } from 'class-validator';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 
-export class RequestEmailChangeDto {
-  @ApiProperty({ example: 'newemail@example.com' })
-  @IsEmail()
-  newEmail: string;
-}
+export class RequestEmailChangeDto extends createZodDto(
+  z.object({
+    newEmail: z.email().meta({ example: 'newemail@example.com' }),
+  }),
+) {}

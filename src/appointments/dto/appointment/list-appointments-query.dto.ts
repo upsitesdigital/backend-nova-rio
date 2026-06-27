@@ -1,41 +1,34 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
-import { IsDateString, IsEnum, IsInt, IsOptional, IsPositive } from 'class-validator';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 import { AppointmentStatus } from '@prisma/client';
-import { PaginationQueryDto } from '../../../shared/dto/pagination-query.dto.js';
+import { PaginationSchemas } from '../../../shared/dto/pagination-query.schema.js';
+import { ZodPrimitives } from '../../../shared/validation/zod-primitives.js';
 
-export class ListAppointmentsQueryDto extends PaginationQueryDto {
-  @ApiPropertyOptional({ example: '2026-03-15' })
-  @IsDateString()
-  @IsOptional()
-  date?: string;
-
-  @ApiPropertyOptional({ example: '2026-03-10' })
-  @IsDateString()
-  @IsOptional()
-  weekStart?: string;
-
-  @ApiPropertyOptional({ example: '2026-03-16' })
-  @IsDateString()
-  @IsOptional()
-  weekEnd?: string;
-
-  @ApiPropertyOptional({ example: 1 })
-  @Transform(({ value }) => (value ? parseInt(value as string, 10) : undefined))
-  @IsInt()
-  @IsPositive()
-  @IsOptional()
-  employeeId?: number;
-
-  @ApiPropertyOptional({ example: 1 })
-  @Transform(({ value }) => (value ? parseInt(value as string, 10) : undefined))
-  @IsInt()
-  @IsPositive()
-  @IsOptional()
-  unitId?: number;
-
-  @ApiPropertyOptional({ enum: AppointmentStatus, example: 'SCHEDULED' })
-  @IsEnum(AppointmentStatus)
-  @IsOptional()
-  status?: AppointmentStatus;
-}
+export class ListAppointmentsQueryDto extends createZodDto(
+  PaginationSchemas.query.extend({
+    date: z
+      .string()
+      .refine((value) => !Number.isNaN(Date.parse(value)), {
+        message: 'must be a valid date string',
+      })
+      .optional()
+      .meta({ example: '2026-03-15' }),
+    weekStart: z
+      .string()
+      .refine((value) => !Number.isNaN(Date.parse(value)), {
+        message: 'must be a valid date string',
+      })
+      .optional()
+      .meta({ example: '2026-03-10' }),
+    weekEnd: z
+      .string()
+      .refine((value) => !Number.isNaN(Date.parse(value)), {
+        message: 'must be a valid date string',
+      })
+      .optional()
+      .meta({ example: '2026-03-16' }),
+    employeeId: ZodPrimitives.positiveIntQuery.optional().meta({ example: 1 }),
+    unitId: ZodPrimitives.positiveIntQuery.optional().meta({ example: 1 }),
+    status: z.enum(AppointmentStatus).optional().meta({ example: 'SCHEDULED' }),
+  }),
+) {}

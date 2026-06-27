@@ -1,4 +1,4 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateHolidayDto } from './create-holiday.dto.js';
+import { createZodDto } from 'nestjs-zod';
+import { HolidaySchemas } from './create-holiday.schema.js';
 
-export class UpdateHolidayDto extends PartialType(CreateHolidayDto) {}
+export class UpdateHolidayDto extends createZodDto(HolidaySchemas.create.partial()) {}

@@ -1,11 +1,10 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 import { PaymentStatus } from '@prisma/client';
-import { IsEnum, IsOptional } from 'class-validator';
-import { PaginationQueryDto } from '../../../shared/dto/pagination-query.dto.js';
+import { PaginationSchemas } from '../../../shared/dto/pagination-query.schema.js';
 
-export class ListClientPaymentsQueryDto extends PaginationQueryDto {
-  @ApiPropertyOptional({ enum: PaymentStatus, example: 'PENDING' })
-  @IsEnum(PaymentStatus)
-  @IsOptional()
-  status?: PaymentStatus;
-}
+export class ListClientPaymentsQueryDto extends createZodDto(
+  PaginationSchemas.query.extend({
+    status: z.enum(PaymentStatus).optional().meta({ example: 'PENDING' }),
+  }),
+) {}

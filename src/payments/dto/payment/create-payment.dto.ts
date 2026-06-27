@@ -1,20 +1,11 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { createZodDto } from 'nestjs-zod';
 import { PaymentMethod } from '@prisma/client';
-import { IsEnum, IsInt, IsOptional, IsPositive } from 'class-validator';
+import { z } from 'zod';
 
-export class CreatePaymentDto {
-  @ApiProperty({ example: 1 })
-  @IsInt()
-  @IsPositive()
-  appointmentId!: number;
-
-  @ApiProperty({ enum: PaymentMethod, example: 'PIX' })
-  @IsEnum(PaymentMethod)
-  method!: PaymentMethod;
-
-  @ApiPropertyOptional({ example: 1 })
-  @IsInt()
-  @IsPositive()
-  @IsOptional()
-  cardId?: number;
-}
+export class CreatePaymentDto extends createZodDto(
+  z.object({
+    appointmentId: z.number().int().positive().meta({ example: 1 }),
+    method: z.enum(PaymentMethod).meta({ example: 'PIX' }),
+    cardId: z.number().int().positive().optional().meta({ example: 1 }),
+  }),
+) {}
