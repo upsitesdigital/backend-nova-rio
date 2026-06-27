@@ -1,34 +1,27 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
-import { Transform } from 'class-transformer';
-import { IsDateString, IsEnum, IsInt, IsOptional, IsPositive } from 'class-validator';
-import { PaginationQueryDto } from '../../../shared/dto/pagination-query.dto.js';
+import { ZodPrimitives } from '../../../shared/validation/zod-primitives.js';
+import { PaginationSchemas } from '../../../shared/dto/pagination-query.schema.js';
 
-export class ListPaymentsQueryDto extends PaginationQueryDto {
-  @ApiPropertyOptional({ enum: PaymentStatus, example: 'PENDING' })
-  @IsEnum(PaymentStatus)
-  @IsOptional()
-  status?: PaymentStatus;
-
-  @ApiPropertyOptional({ enum: PaymentMethod, example: 'PIX' })
-  @IsEnum(PaymentMethod)
-  @IsOptional()
-  method?: PaymentMethod;
-
-  @ApiPropertyOptional({ example: 1 })
-  @Transform(({ value }) => (value ? parseInt(value as string, 10) : undefined))
-  @IsInt()
-  @IsPositive()
-  @IsOptional()
-  clientId?: number;
-
-  @ApiPropertyOptional({ example: '2026-01-01' })
-  @IsDateString()
-  @IsOptional()
-  dateFrom?: string;
-
-  @ApiPropertyOptional({ example: '2026-12-31' })
-  @IsDateString()
-  @IsOptional()
-  dateTo?: string;
-}
+export class ListPaymentsQueryDto extends createZodDto(
+  PaginationSchemas.query.extend({
+    status: z.enum(PaymentStatus).optional().meta({ example: 'PENDING' }),
+    method: z.enum(PaymentMethod).optional().meta({ example: 'PIX' }),
+    clientId: ZodPrimitives.positiveIntQuery.optional().meta({ example: 1 }),
+    dateFrom: z
+      .string()
+      .refine((v) => !Number.isNaN(Date.parse(v)), {
+        message: 'must be a valid date string',
+      })
+      .optional()
+      .meta({ example: '2026-01-01' }),
+    dateTo: z
+      .string()
+      .refine((v) => !Number.isNaN(Date.parse(v)), {
+        message: 'must be a valid date string',
+      })
+      .optional()
+      .meta({ example: '2026-12-31' }),
+  }),
+) {}
