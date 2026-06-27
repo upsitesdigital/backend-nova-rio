@@ -1,19 +1,18 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
-import { IsBoolean, IsInt, IsOptional, IsPositive } from 'class-validator';
-import { PaginationQueryDto } from '../../../shared/dto/pagination-query.dto.js';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { PaginationSchemas } from '../../../shared/dto/pagination-query.schema.js';
+import { ZodPrimitives } from '../../../shared/validation/zod-primitives.js';
 
-export class ListPackagesQueryDto extends PaginationQueryDto {
-  @ApiPropertyOptional({ description: 'Filter by active status' })
-  @Transform(({ value }) => value === 'true' || value === true)
-  @IsBoolean()
-  @IsOptional()
-  active?: boolean;
-
-  @ApiPropertyOptional({ description: 'Filter by service ID' })
-  @Transform(({ value }) => (value ? parseInt(value as string, 10) : undefined))
-  @IsInt()
-  @IsPositive()
-  @IsOptional()
-  serviceId?: number;
-}
+export class ListPackagesQueryDto extends createZodDto(
+  PaginationSchemas.query.extend({
+    active: z
+      .preprocess(
+        (value) => (value === undefined ? undefined : value === 'true' || value === true),
+        z.boolean().optional(),
+      )
+      .meta({ description: 'Filter by active status' }),
+    serviceId: ZodPrimitives.positiveIntQuery
+      .optional()
+      .meta({ description: 'Filter by service ID' }),
+  }),
+) {}
