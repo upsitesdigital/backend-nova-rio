@@ -126,6 +126,10 @@ model Client {
   cpfCnpj     String?    @unique
   address     String?
   complement  String?
+
+  // Preferência de recorrência padrão do cliente (pré-seleciona no agendamento)
+  preferredRecurrence ServiceRecurrenceFrequency?
+
   refreshToken        String?
   failedLoginAttempts Int       @default(0)
   lockedUntil         DateTime?
