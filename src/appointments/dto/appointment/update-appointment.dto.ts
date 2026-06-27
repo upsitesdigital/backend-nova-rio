@@ -1,6 +1,6 @@
-import { OmitType, PartialType } from '@nestjs/swagger';
-import { CreateAppointmentDto } from './create-appointment.dto.js';
+import { createZodDto } from 'nestjs-zod';
+import { CreateAppointmentSchemas } from './create-appointment.schema.js';
 
-export class UpdateAppointmentDto extends PartialType(
-  OmitType(CreateAppointmentDto, ['clientId'] as const),
+export class UpdateAppointmentDto extends createZodDto(
+  CreateAppointmentSchemas.create.omit({ clientId: true }).partial(),
 ) {}

@@ -1,14 +1,15 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsNotEmpty, IsString, Matches } from 'class-validator';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+import { ZodPrimitives } from '../../../shared/validation/zod-primitives.js';
 
-export class RescheduleAppointmentDto {
-  @ApiProperty({ example: '2026-03-20' })
-  @IsDateString()
-  @IsNotEmpty()
-  date: string;
-
-  @ApiProperty({ example: '10:00' })
-  @IsString()
-  @Matches(/^\d{2}:\d{2}$/, { message: 'startTime must be in HH:mm format' })
-  startTime: string;
-}
+export class RescheduleAppointmentDto extends createZodDto(
+  z.object({
+    date: z
+      .string()
+      .refine((value) => !Number.isNaN(Date.parse(value)), {
+        message: 'must be a valid date string',
+      })
+      .meta({ example: '2026-03-20' }),
+    startTime: ZodPrimitives.time.meta({ example: '10:00' }),
+  }),
+) {}
