@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { ZodValidationPipe } from 'nestjs-zod';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -52,6 +53,7 @@ import { UnitsModule } from './units/units.module.js';
     UnitsModule,
   ],
   providers: [
+    { provide: APP_PIPE, useClass: ZodValidationPipe },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],

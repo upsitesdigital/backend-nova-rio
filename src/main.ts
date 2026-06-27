@@ -1,7 +1,8 @@
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { cleanupOpenApiDoc } from 'nestjs-zod';
 import compression from 'compression';
 import helmet from 'helmet';
 import { AppModule } from './app.module.js';
@@ -37,10 +38,6 @@ async function bootstrap() {
   });
   app.enableShutdownHooks();
 
-  app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
-  );
-
   if (configService.get('ENABLE_SWAGGER') === 'true') {
     const swaggerUser = configService.getOrThrow<string>('SWAGGER_USER');
     const swaggerPassword = configService.getOrThrow<string>('SWAGGER_PASSWORD');
@@ -66,7 +63,7 @@ async function bootstrap() {
       .addBearerAuth()
       .build();
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api/docs', app, document);
+    SwaggerModule.setup('api/docs', app, cleanupOpenApiDoc(document));
   }
 
   await app.listen(configService.get<number>('PORT', 3000));
