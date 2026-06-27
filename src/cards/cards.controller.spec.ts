@@ -4,6 +4,7 @@ import { type Mock, vi } from 'vitest';
 import type { AuthUser } from '../shared/types/auth-user.type.js';
 import { CardsController } from './cards.controller.js';
 import { AddCardUseCase } from './application/use-cases/card/add-card.use-case.js';
+import type { AddCardDto } from './dto/card/add-card.dto.js';
 import { ListCardsUseCase } from './application/use-cases/card/list-cards.use-case.js';
 import { RemoveCardUseCase } from './application/use-cases/card/remove-card.use-case.js';
 import { SetDefaultCardUseCase } from './application/use-cases/card/set-default-card.use-case.js';
@@ -49,7 +50,7 @@ describe('CardsController', () => {
       expiryMonth: 12,
       expiryYear: 2028,
       gatewayToken: 'tok_abc',
-    };
+    } as unknown as AddCardDto;
     await controller.addCard(clientUser, dto);
     expect(addCardUseCase.addCard).toHaveBeenCalledWith(1, dto);
   });

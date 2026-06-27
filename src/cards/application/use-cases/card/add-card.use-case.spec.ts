@@ -2,6 +2,7 @@ import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
 import { AddCardUseCase } from './add-card.use-case.js';
+import type { AddCardDto } from '../../../dto/card/add-card.dto.js';
 
 describe('AddCardUseCase', () => {
   let useCase: AddCardUseCase;
@@ -32,7 +33,7 @@ describe('AddCardUseCase', () => {
       expiryMonth: 12,
       expiryYear: 2028,
       gatewayToken: 'tok_abc',
-    };
+    } as unknown as AddCardDto;
     const created = {
       id: 1,
       lastFourDigits: '1111',
@@ -70,7 +71,7 @@ describe('AddCardUseCase', () => {
       expiryYear: 2028,
       gatewayToken: 'tok_abc',
       isDefault: true,
-    };
+    } as unknown as AddCardDto;
     const created = {
       id: 1,
       lastFourDigits: '0004',
