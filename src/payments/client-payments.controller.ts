@@ -48,10 +48,10 @@ export class ClientPaymentsController {
   @ApiForbiddenResponse({ description: 'Only clients can manage payments' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
   listClientPayments(@CurrentUser() user: AuthUser, @Query() query: ListClientPaymentsQueryDto) {
-    const clampedLimit = Math.min(query.limit ?? 20, 100);
+    const clampedLimit = Math.min(query.limit, 100);
     return this.listClientPaymentsUseCase.listPaymentsByClientId(
       user.id,
-      query.page ?? 1,
+      query.page,
       clampedLimit,
       query.status,
     );

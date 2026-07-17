@@ -15,8 +15,8 @@ export class PrismaClientManagementRepository implements IClientManagementReposi
 
   async listClients(filters: ListClientsFilters): Promise<PaginatedResponse<ClientSafe>> {
     const where: Prisma.ClientWhereInput = {};
-    const page = filters.page ?? 1;
-    const limit = filters.limit ?? 20;
+    const page = filters.page;
+    const limit = filters.limit;
 
     if (filters.status) {
       where.status = filters.status;
