@@ -24,8 +24,8 @@ export interface CreateAdminUserData {
 export interface ListAdminUsersFilters {
   status?: UserStatus;
   search?: string;
-  page?: number;
-  limit?: number;
+  page: number;
+  limit: number;
 }
 
 export interface IAdminUserRepository {

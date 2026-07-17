@@ -78,7 +78,7 @@ describe('PrismaEmployeeRepository', () => {
     prisma.employee.findMany.mockResolvedValue([]);
     prisma.employee.count.mockResolvedValue(0);
 
-    const result = await repository.listEmployees({});
+    const result = await repository.listEmployees({ page: 1, limit: 20 });
 
     expect(result).toEqual({ data: [], total: 0, page: 1, limit: 20 });
     expect(prisma.employee.findMany).toHaveBeenCalledWith({
@@ -94,7 +94,7 @@ describe('PrismaEmployeeRepository', () => {
     prisma.employee.findMany.mockResolvedValue([]);
     prisma.employee.count.mockResolvedValue(0);
 
-    await repository.listEmployees({ status: 'ACTIVE' });
+    await repository.listEmployees({ page: 1, limit: 20, status: 'ACTIVE' });
 
     expect(prisma.employee.findMany).toHaveBeenCalledWith({
       where: { status: 'ACTIVE' },
@@ -109,7 +109,7 @@ describe('PrismaEmployeeRepository', () => {
     prisma.employee.findMany.mockResolvedValue([]);
     prisma.employee.count.mockResolvedValue(0);
 
-    await repository.listEmployees({ search: 'maria' });
+    await repository.listEmployees({ page: 1, limit: 20, search: 'maria' });
 
     expect(prisma.employee.findMany).toHaveBeenCalledWith({
       where: {

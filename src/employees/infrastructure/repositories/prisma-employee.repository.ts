@@ -24,8 +24,8 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
 
   async listEmployees(filters: ListEmployeesFilters): Promise<PaginatedResponse<EmployeeSafe>> {
     const where: Prisma.EmployeeWhereInput = {};
-    const page = filters.page ?? 1;
-    const limit = filters.limit ?? 20;
+    const page = filters.page;
+    const limit = filters.limit;
 
     if (filters.status) {
       where.status = filters.status;

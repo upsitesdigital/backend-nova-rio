@@ -15,8 +15,8 @@ export class ListAppointmentsUseCase {
 
   async listAppointments(query: ListAppointmentsQueryDto): Promise<PaginatedAppointments> {
     const filters: ListAppointmentsFilters = {
-      page: query.page ?? 1,
-      limit: query.limit ?? 20,
+      page: query.page,
+      limit: query.limit,
     };
 
     if (query.date) {

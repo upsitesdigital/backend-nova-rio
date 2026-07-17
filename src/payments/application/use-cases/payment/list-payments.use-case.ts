@@ -13,8 +13,8 @@ export class ListPaymentsUseCase {
 
   async listPayments(query: ListPaymentsQueryDto): Promise<PaginatedPayments> {
     const filters: ListPaymentsFilters = {
-      page: query.page ?? 1,
-      limit: query.limit ?? 20,
+      page: query.page,
+      limit: query.limit,
     };
 
     if (query.status) filters.status = query.status;

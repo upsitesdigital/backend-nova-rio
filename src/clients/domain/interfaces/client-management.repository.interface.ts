@@ -21,8 +21,8 @@ export interface ClientSafe {
 export interface ListClientsFilters {
   status?: UserStatus;
   search?: string;
-  page?: number;
-  limit?: number;
+  page: number;
+  limit: number;
 }
 
 export interface IClientManagementRepository {

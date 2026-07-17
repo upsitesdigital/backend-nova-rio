@@ -37,7 +37,7 @@ describe('AdminPaymentsController', () => {
   });
 
   it('listPayments should call listPaymentsUseCase', async () => {
-    const query = { status: 'PENDING' as const };
+    const query = { status: 'PENDING' as const, page: 1, limit: 10 };
     await controller.listPayments(query);
     expect(listPaymentsUseCase.listPayments).toHaveBeenCalledWith(query);
   });
