@@ -1,6 +1,12 @@
 import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { randomUUID } from 'node:crypto';
-import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import type { IClientAuthRepository } from '../../../domain/interfaces/client.repository.interface.js';
 import type { IAdminAuthRepository } from '../../../domain/interfaces/admin.repository.interface.js';
 import type { IHashService } from '../../../domain/interfaces/hash.service.interface.js';
@@ -36,6 +42,7 @@ interface AuthRepository {
 }
 
 const INVALID_CREDENTIALS = 'Invalid credentials';
+const ACCOUNT_PENDING_APPROVAL = 'Account pending approval';
 const DUMMY_HASH = '$2b$10$D74tBEymfGwQWP.6q2k1De3e63SxMMh0XiOpUp1.n0/obZbkHMMqK';
 
 @Injectable()
@@ -94,11 +101,6 @@ export class LoginUseCase {
       throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
 
-    if (user.status !== UserStatus.ACTIVE) {
-      this.logger.warn(`Non-active ${userType}#${user.id} login attempt (status: ${user.status})`);
-      throw new UnauthorizedException(INVALID_CREDENTIALS);
-    }
-
     const attemptReserved = await repository.reserveLoginAttempt(user.id);
     if (!attemptReserved) {
       throw new UnauthorizedException(INVALID_CREDENTIALS);
@@ -110,6 +112,20 @@ export class LoginUseCase {
     }
 
     await repository.resetFailedLoginAttempts(user.id);
+
+    // Password verified. Only now is it safe to reveal account state without
+    // leaking existence/status to unauthenticated callers. A pending account
+    // returns 403 so the client can show the "awaiting approval" notice; any
+    // other non-active status stays a generic 401.
+    if (user.status === UserStatus.PENDING) {
+      this.logger.warn(`Pending ${userType}#${user.id} login attempt`);
+      throw new ForbiddenException(ACCOUNT_PENDING_APPROVAL);
+    }
+
+    if (user.status !== UserStatus.ACTIVE) {
+      this.logger.warn(`Non-active ${userType}#${user.id} login attempt (status: ${user.status})`);
+      throw new UnauthorizedException(INVALID_CREDENTIALS);
+    }
 
     const payload: TokenPayload = {
       sub: user.id,

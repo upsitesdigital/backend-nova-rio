@@ -1,6 +1,6 @@
 import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { type Mock, vi } from 'vitest';
-import { UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoginUseCase } from './login.use-case.js';
 
@@ -107,20 +107,30 @@ describe('LoginUseCase', () => {
       await expect(useCase.authenticateUser(dto)).rejects.toThrow(UnauthorizedException);
     });
 
-    it('should throw UnauthorizedException if client status is PENDING', async () => {
+    it('should throw ForbiddenException if client status is PENDING and password is valid', async () => {
       clientRepository.findByEmail.mockResolvedValue(buildActiveClient({ status: 'PENDING' }));
       adminRepository.findByEmail.mockResolvedValue(null);
+      hashService.compare.mockResolvedValue(true);
+
+      await expect(useCase.authenticateUser(dto)).rejects.toThrow(ForbiddenException);
+      expect(hashService.compare).toHaveBeenCalled();
+      expect(tokenService.generateTokens).not.toHaveBeenCalled();
+    });
+
+    it('should throw UnauthorizedException if client status is PENDING but password is wrong', async () => {
+      clientRepository.findByEmail.mockResolvedValue(buildActiveClient({ status: 'PENDING' }));
+      adminRepository.findByEmail.mockResolvedValue(null);
+      hashService.compare.mockResolvedValue(false);
 
       await expect(useCase.authenticateUser(dto)).rejects.toThrow(UnauthorizedException);
-      expect(hashService.compare).not.toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException if client status is INACTIVE', async () => {
       clientRepository.findByEmail.mockResolvedValue(buildActiveClient({ status: 'INACTIVE' }));
       adminRepository.findByEmail.mockResolvedValue(null);
+      hashService.compare.mockResolvedValue(true);
 
       await expect(useCase.authenticateUser(dto)).rejects.toThrow(UnauthorizedException);
-      expect(hashService.compare).not.toHaveBeenCalled();
     });
 
     it('should reserve an attempt and throw on wrong password', async () => {
@@ -166,8 +176,10 @@ describe('LoginUseCase', () => {
     it('should throw UnauthorizedException if admin is not active', async () => {
       clientRepository.findByEmail.mockResolvedValue(null);
       adminRepository.findByEmail.mockResolvedValue(buildActiveAdmin({ status: 'INACTIVE' }));
+      hashService.compare.mockResolvedValue(true);
 
       await expect(useCase.authenticateUser(dto)).rejects.toThrow(UnauthorizedException);
+      expect(tokenService.generateTokens).not.toHaveBeenCalled();
     });
 
     it('should reserve an attempt and throw on wrong admin password', async () => {
@@ -229,9 +241,10 @@ describe('LoginUseCase', () => {
       adminRepository.findByEmail.mockResolvedValue(
         buildActiveAdmin({ email: 'shared@example.com' }),
       );
+      hashService.compare.mockResolvedValue(true);
 
       await expect(useCase.authenticateUser(dto)).rejects.toThrow(UnauthorizedException);
-      expect(hashService.compare).not.toHaveBeenCalled();
+      expect(tokenService.generateTokens).not.toHaveBeenCalled();
     });
   });
 
