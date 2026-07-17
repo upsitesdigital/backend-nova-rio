@@ -29,7 +29,11 @@ describe('ListPaymentsUseCase', () => {
     const paginated = { data: [{ id: 1 }], total: 1, page: 1, limit: 20 };
     paymentRepository.listPayments.mockResolvedValue(paginated);
 
-    const result = await useCase.listPayments({ status: PaymentStatus.PENDING });
+    const result = await useCase.listPayments({
+      status: PaymentStatus.PENDING,
+      page: 1,
+      limit: 20,
+    });
 
     expect(result).toEqual(paginated);
     expect(paymentRepository.listPayments).toHaveBeenCalledWith(
@@ -40,7 +44,12 @@ describe('ListPaymentsUseCase', () => {
   it('should parse date filters', async () => {
     paymentRepository.listPayments.mockResolvedValue({ data: [], total: 0, page: 1, limit: 20 });
 
-    await useCase.listPayments({ dateFrom: '2026-01-01', dateTo: '2026-12-31' });
+    await useCase.listPayments({
+      dateFrom: '2026-01-01',
+      dateTo: '2026-12-31',
+      page: 1,
+      limit: 10,
+    });
 
     expect(paymentRepository.listPayments).toHaveBeenCalledWith(
       expect.objectContaining({

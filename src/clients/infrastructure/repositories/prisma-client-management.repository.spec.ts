@@ -58,7 +58,7 @@ describe('PrismaClientManagementRepository', () => {
     prisma.client.findMany.mockResolvedValue([]);
     prisma.client.count.mockResolvedValue(0);
 
-    const result = await repository.listClients({});
+    const result = await repository.listClients({ page: 1, limit: 20 });
 
     expect(result).toEqual({ data: [], total: 0, page: 1, limit: 20 });
     expect(prisma.client.findMany).toHaveBeenCalledWith({
@@ -74,7 +74,7 @@ describe('PrismaClientManagementRepository', () => {
     prisma.client.findMany.mockResolvedValue([]);
     prisma.client.count.mockResolvedValue(0);
 
-    await repository.listClients({ status: 'PENDING' });
+    await repository.listClients({ page: 1, limit: 20, status: 'PENDING' });
 
     expect(prisma.client.findMany).toHaveBeenCalledWith({
       where: { status: 'PENDING' },
@@ -89,7 +89,7 @@ describe('PrismaClientManagementRepository', () => {
     prisma.client.findMany.mockResolvedValue([]);
     prisma.client.count.mockResolvedValue(0);
 
-    await repository.listClients({ search: 'joao' });
+    await repository.listClients({ page: 1, limit: 20, search: 'joao' });
 
     expect(prisma.client.findMany).toHaveBeenCalledWith({
       where: {

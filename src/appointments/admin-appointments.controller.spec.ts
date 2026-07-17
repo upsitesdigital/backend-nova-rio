@@ -61,7 +61,7 @@ describe('AdminAppointmentsController', () => {
   });
 
   it('listAppointments should call listAppointmentsUseCase', async () => {
-    const query = { status: 'SCHEDULED' as const };
+    const query = { status: 'SCHEDULED' as const, page: 1, limit: 10 };
     await controller.listAppointments(query);
     expect(listAppointmentsUseCase.listAppointments).toHaveBeenCalledWith(query);
   });

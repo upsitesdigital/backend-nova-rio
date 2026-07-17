@@ -48,6 +48,7 @@ jobs:
             git reset --hard origin/develop
 
             echo "🐳 Subindo containers..."
-            docker compose -p nova-rio-prod --env-file .env.production -f docker-compose.production.yml up --build -d
+            docker compose -p nova-rio-prod --env-file .env.production -f docker-compose.production.yml build --no-cache
+            docker compose -p nova-rio-prod --env-file .env.production -f docker-compose.production.yml up -d
 
             echo "✅ Deploy concluído!"

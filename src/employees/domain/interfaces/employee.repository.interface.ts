@@ -49,8 +49,8 @@ export interface UpdateEmployeeData {
 export interface ListEmployeesFilters {
   status?: EmployeeStatus;
   search?: string;
-  page?: number;
-  limit?: number;
+  page: number;
+  limit: number;
 }
 
 export interface IEmployeeRepository {

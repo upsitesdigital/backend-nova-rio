@@ -52,7 +52,7 @@ describe('EmployeesController', () => {
   });
 
   it('listEmployees should call listEmployeesUseCase with query', async () => {
-    const query = { status: 'ACTIVE' as const };
+    const query = { status: 'ACTIVE' as const, page: 1, limit: 10 };
     const paginated = { data: [], total: 0, page: 1, limit: 20 };
     listEmployeesUseCase.listEmployees.mockResolvedValue(paginated);
 
@@ -63,7 +63,7 @@ describe('EmployeesController', () => {
   });
 
   it('listEmployees should call listEmployeesUseCase with search', async () => {
-    const query = { search: 'maria' };
+    const query = { search: 'maria', page: 1, limit: 10 };
     const paginated = { data: [], total: 0, page: 1, limit: 20 };
     listEmployeesUseCase.listEmployees.mockResolvedValue(paginated);
 

@@ -37,7 +37,7 @@ describe('ClientsController', () => {
   });
 
   it('listClients should call use case with query params', async () => {
-    const query = { status: 'PENDING' as const };
+    const query = { status: 'PENDING' as const, page: 1, limit: 10 };
     const paginated = { data: [], total: 0, page: 1, limit: 20 };
     listClientsUseCase.listClients.mockResolvedValue(paginated);
 
@@ -48,7 +48,7 @@ describe('ClientsController', () => {
   });
 
   it('listClients should call use case with search param', async () => {
-    const query = { search: 'joao' };
+    const query = { search: 'joao', page: 1, limit: 10 };
     const paginated = { data: [], total: 0, page: 1, limit: 20 };
     listClientsUseCase.listClients.mockResolvedValue(paginated);
 
