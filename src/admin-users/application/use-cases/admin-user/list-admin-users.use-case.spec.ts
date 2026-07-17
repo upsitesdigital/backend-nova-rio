@@ -25,17 +25,17 @@ describe('ListAdminUsersUseCase', () => {
   });
 
   it('should list admin users without filters', async () => {
-    const paginated = { data: [{ id: 1, name: 'Admin' }], total: 1, page: 1, limit: 20 };
+    const paginated = { data: [{ id: 1, name: 'Admin' }], total: 1, page: 1, limit: 10 };
     adminUserRepository.listAdminUsers.mockResolvedValue(paginated);
 
-    const result = await useCase.listAdminUsers({});
+    const result = await useCase.listAdminUsers({ page: 1, limit: 10 });
 
     expect(result).toEqual(paginated);
     expect(adminUserRepository.listAdminUsers).toHaveBeenCalledWith({
       status: undefined,
       search: undefined,
-      page: undefined,
-      limit: undefined,
+      page: 1,
+      limit: 10,
     });
   });
 
@@ -43,13 +43,13 @@ describe('ListAdminUsersUseCase', () => {
     const paginated = { data: [], total: 0, page: 1, limit: 20 };
     adminUserRepository.listAdminUsers.mockResolvedValue(paginated);
 
-    await useCase.listAdminUsers({ status: 'ACTIVE', search: 'maria' });
+    await useCase.listAdminUsers({ status: 'ACTIVE', search: 'maria', page: 1, limit: 10 });
 
     expect(adminUserRepository.listAdminUsers).toHaveBeenCalledWith({
       status: 'ACTIVE',
       search: 'maria',
-      page: undefined,
-      limit: undefined,
+      page: 1,
+      limit: 10,
     });
   });
 

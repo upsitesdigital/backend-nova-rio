@@ -59,7 +59,7 @@ describe('AdminUsersController', () => {
   });
 
   it('listAdminUsers should call use case with query params', async () => {
-    const query = { status: 'ACTIVE' as const };
+    const query = { status: 'ACTIVE' as const, page: 1, limit: 10 };
     const paginated = { data: [], total: 0, page: 1, limit: 20 };
     listAdminUsersUseCase.listAdminUsers.mockResolvedValue(paginated);
 

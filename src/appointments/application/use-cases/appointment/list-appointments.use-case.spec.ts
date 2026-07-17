@@ -29,7 +29,11 @@ describe('ListAppointmentsUseCase', () => {
     const paginated = { data: [{ id: 1 }], total: 1, page: 1, limit: 20 };
     appointmentRepository.listAppointments.mockResolvedValue(paginated);
 
-    const result = await useCase.listAppointments({ status: AppointmentStatus.SCHEDULED });
+    const result = await useCase.listAppointments({
+      status: AppointmentStatus.SCHEDULED,
+      page: 1,
+      limit: 20,
+    });
 
     expect(result).toEqual(paginated);
     expect(appointmentRepository.listAppointments).toHaveBeenCalledWith(

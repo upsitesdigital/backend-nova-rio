@@ -28,14 +28,14 @@ describe('ListClientsUseCase', () => {
     const paginated = { data: [{ id: 1, name: 'João' }], total: 1, page: 1, limit: 20 };
     clientMgmtRepository.listClients.mockResolvedValue(paginated);
 
-    const result = await useCase.listClients({});
+    const result = await useCase.listClients({ page: 1, limit: 10 });
 
     expect(result).toEqual(paginated);
     expect(clientMgmtRepository.listClients).toHaveBeenCalledWith({
       status: undefined,
       search: undefined,
-      page: undefined,
-      limit: undefined,
+      page: 1,
+      limit: 10,
     });
   });
 
@@ -43,13 +43,13 @@ describe('ListClientsUseCase', () => {
     const paginated = { data: [], total: 0, page: 1, limit: 20 };
     clientMgmtRepository.listClients.mockResolvedValue(paginated);
 
-    await useCase.listClients({ status: 'PENDING', search: 'maria' });
+    await useCase.listClients({ status: 'PENDING', search: 'maria', page: 1, limit: 10 });
 
     expect(clientMgmtRepository.listClients).toHaveBeenCalledWith({
       status: 'PENDING',
       search: 'maria',
-      page: undefined,
-      limit: undefined,
+      page: 1,
+      limit: 10,
     });
   });
 

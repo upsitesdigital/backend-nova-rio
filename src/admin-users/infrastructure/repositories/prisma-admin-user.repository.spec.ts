@@ -144,7 +144,7 @@ describe('PrismaAdminUserRepository', () => {
     prisma.adminUser.findMany.mockResolvedValue([]);
     prisma.adminUser.count.mockResolvedValue(0);
 
-    const result = await repository.listAdminUsers({});
+    const result = await repository.listAdminUsers({ page: 1, limit: 20 });
 
     expect(result).toEqual({ data: [], total: 0, page: 1, limit: 20 });
     expect(prisma.adminUser.findMany).toHaveBeenCalledWith({
