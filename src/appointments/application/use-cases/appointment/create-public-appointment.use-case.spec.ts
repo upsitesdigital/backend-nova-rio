@@ -4,15 +4,18 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
 import type { CreatePublicAppointmentDto } from '../../../dto/appointment/create-public-appointment.dto.js';
 import { CreatePublicAppointmentUseCase } from './create-public-appointment.use-case.js';
+import { PaymentTokenService } from '../../../../payments/infrastructure/services/payment-token.service.js';
 
 describe('CreatePublicAppointmentUseCase', () => {
   let useCase: CreatePublicAppointmentUseCase;
   let clientRepository: { findByEmail: Mock };
   let createClientAppointmentUseCase: { createClientAppointment: Mock };
+  let paymentTokenService: { issuePaymentToken: Mock; verifyPaymentToken: Mock };
 
   beforeEach(async () => {
     clientRepository = { findByEmail: vi.fn() };
     createClientAppointmentUseCase = { createClientAppointment: vi.fn() };
+    paymentTokenService = { issuePaymentToken: vi.fn(), verifyPaymentToken: vi.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -22,6 +25,7 @@ describe('CreatePublicAppointmentUseCase', () => {
           provide: DiTokens.createClientAppointmentService,
           useValue: createClientAppointmentUseCase,
         },
+        { provide: PaymentTokenService, useValue: paymentTokenService },
       ],
     }).compile();
 
@@ -45,10 +49,12 @@ describe('CreatePublicAppointmentUseCase', () => {
 
     clientRepository.findByEmail.mockResolvedValue(client);
     createClientAppointmentUseCase.createClientAppointment.mockResolvedValue(created);
+    paymentTokenService.issuePaymentToken.mockReturnValue('payment-token');
 
     const result = await useCase.createPublicAppointment(dto);
 
-    expect(result).toEqual(created);
+    expect(result).toEqual({ ...created, paymentToken: 'payment-token' });
+    expect(paymentTokenService.issuePaymentToken).toHaveBeenCalledWith(1);
     expect(clientRepository.findByEmail).toHaveBeenCalledWith('joao@test.com');
     expect(createClientAppointmentUseCase.createClientAppointment).toHaveBeenCalledWith(5, dto);
   });

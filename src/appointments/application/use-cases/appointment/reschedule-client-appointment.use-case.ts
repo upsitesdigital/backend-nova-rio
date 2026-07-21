@@ -36,26 +36,36 @@ export class RescheduleClientAppointmentUseCase {
 
     this.schedulingValidator.validateCancellationAdvance(existing.date, existing.startTime);
 
-    const newDate = new Date(dto.date);
+    // date/startTime are optional: when omitted the appointment keeps its current slot,
+    // so this endpoint also handles address/recurrence-only edits from the service drawer.
+    const isReschedule = dto.date !== undefined || dto.startTime !== undefined;
+    const newDate = dto.date ? new Date(dto.date) : existing.date;
+    const newStartTime = dto.startTime ?? existing.startTime;
 
     await this.schedulingValidator.validateSchedulingDate(newDate);
 
     const conflictCheck = AppointmentSchedulingValidator.buildRescheduleConflictCheck(
       existing,
       newDate,
-      dto.startTime,
+      newStartTime,
     );
 
     const clientConflictCheck = AppointmentSchedulingValidator.buildRescheduleClientConflictCheck(
       existing,
       clientId,
       newDate,
-      dto.startTime,
+      newStartTime,
     );
 
     const rescheduled = await this.appointmentRepository.rescheduleAppointment(
       id,
-      { date: newDate, startTime: dto.startTime },
+      {
+        date: newDate,
+        startTime: newStartTime,
+        recurrenceType: dto.recurrenceType,
+        locationZip: dto.locationZip,
+        locationAddress: dto.locationAddress,
+      },
       conflictCheck,
       clientConflictCheck,
       clientId,
@@ -65,15 +75,18 @@ export class RescheduleClientAppointmentUseCase {
       throw new BadRequestException('Only scheduled appointments can be rescheduled');
     }
 
-    this.emailService
-      .sendAppointmentRescheduledEmail(
-        existing.client.email,
-        existing.client.name,
-        dto.date,
-        dto.startTime,
-        existing.service.name,
-      )
-      .catch((err) => this.logger.error('Failed to send reschedule email', err));
+    // Only notify the client when the actual slot changed, not on address/recurrence edits.
+    if (isReschedule) {
+      this.emailService
+        .sendAppointmentRescheduledEmail(
+          existing.client.email,
+          existing.client.name,
+          newDate.toISOString().slice(0, 10),
+          newStartTime,
+          existing.service.name,
+        )
+        .catch((err) => this.logger.error('Failed to send reschedule email', err));
+    }
 
     return rescheduled;
   }

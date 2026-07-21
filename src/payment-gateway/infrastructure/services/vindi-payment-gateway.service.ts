@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import type {
   CreateGatewayBillData,
   CreateGatewayCustomerData,
@@ -19,12 +20,21 @@ import { VindiHttpClient } from '../clients/vindi-http.client.js';
 export class VindiPaymentGatewayService implements IPaymentGatewayService {
   constructor(private readonly vindiClient: VindiHttpClient) {}
 
+  private static toVindiPhoneNumber(phone: string): string | undefined {
+    const parsed = parsePhoneNumberFromString(phone, 'BR');
+    return parsed?.isValid() ? parsed.number : undefined;
+  }
+
   async createGatewayCustomer(data: CreateGatewayCustomerData): Promise<VindiCustomer> {
+    const phoneNumber = data.phone
+      ? VindiPaymentGatewayService.toVindiPhoneNumber(data.phone)
+      : undefined;
+
     const body: CreateVindiCustomerData = {
       name: data.name,
       email: data.email,
       ...(data.registryCode ? { registry_code: data.registryCode } : {}),
-      ...(data.phone ? { phones: [{ phone_type: 'mobile', number: data.phone }] } : {}),
+      ...(phoneNumber ? { phones: [{ phone_type: 'mobile', number: phoneNumber }] } : {}),
     };
 
     const response = await this.vindiClient.sendRequest<{ customer: VindiCustomer }>('/customers', {

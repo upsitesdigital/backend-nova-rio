@@ -4,8 +4,10 @@ import { AppointmentsModule } from '../appointments/appointments.module.js';
 import { AuthModule } from '../auth/auth.module.js';
 import { CardsModule } from '../cards/cards.module.js';
 import { ReceiptsModule } from '../receipts/receipts.module.js';
+import { PaymentTokenModule } from './payment-token.module.js';
 import { ApprovePaymentUseCase } from './application/use-cases/payment/approve-payment.use-case.js';
 import { CreateClientPaymentUseCase } from './application/use-cases/payment/create-client-payment.use-case.js';
+import { CreatePublicPaymentUseCase } from './application/use-cases/payment/create-public-payment.use-case.js';
 import { DeletePaymentUseCase } from './application/use-cases/payment/delete-payment.use-case.js';
 import { GetClientPaymentUseCase } from './application/use-cases/payment/get-client-payment.use-case.js';
 import { GetPaymentUseCase } from './application/use-cases/payment/get-payment.use-case.js';
@@ -17,7 +19,13 @@ import { AdminPaymentsController } from './admin-payments.controller.js';
 import { ClientPaymentsController } from './client-payments.controller.js';
 
 @Module({
-  imports: [AppointmentsModule, AuthModule, CardsModule, forwardRef(() => ReceiptsModule)],
+  imports: [
+    AppointmentsModule,
+    AuthModule,
+    CardsModule,
+    forwardRef(() => ReceiptsModule),
+    PaymentTokenModule,
+  ],
   controllers: [AdminPaymentsController, ClientPaymentsController],
   providers: [
     { provide: DiTokens.paymentRepository, useClass: PrismaPaymentRepository },
@@ -27,6 +35,7 @@ import { ClientPaymentsController } from './client-payments.controller.js';
     ApprovePaymentUseCase,
     DeletePaymentUseCase,
     CreateClientPaymentUseCase,
+    CreatePublicPaymentUseCase,
     ListClientPaymentsUseCase,
     GetClientPaymentUseCase,
   ],

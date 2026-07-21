@@ -2,6 +2,7 @@ import { DiTokens } from '../shared/di/di-tokens.js';
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
 import { HolidaysModule } from '../holidays/holidays.module.js';
+import { PaymentTokenModule } from '../payments/payment-token.module.js';
 import { AppointmentConflictValidator } from './application/validators/appointment-conflict.validator.js';
 import { AppointmentSchedulingValidator } from './application/validators/appointment-scheduling.validator.js';
 import { CancelAppointmentUseCase } from './application/use-cases/appointment/cancel-appointment.use-case.js';
@@ -22,7 +23,7 @@ import { AdminAppointmentsController } from './admin-appointments.controller.js'
 import { ClientAppointmentsController } from './client-appointments.controller.js';
 
 @Module({
-  imports: [AuthModule, HolidaysModule],
+  imports: [AuthModule, HolidaysModule, PaymentTokenModule],
   controllers: [AdminAppointmentsController, ClientAppointmentsController],
   providers: [
     { provide: DiTokens.appointmentRepository, useClass: PrismaAppointmentRepository },
