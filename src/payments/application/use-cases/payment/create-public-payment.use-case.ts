@@ -2,10 +2,8 @@ import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { IAppointmentRepository } from '../../../../appointments/domain/interfaces/appointment.repository.interface.js';
-import type {
-  IClientAuthRepository,
-  IClientProfileRepository,
-} from '../../../../auth/domain/interfaces/client.repository.interface.js';
+import type { IClientProfileRepository } from '../../../../auth/domain/interfaces/client.repository.interface.js';
+import { PaymentTokenService } from '../../../infrastructure/services/payment-token.service.js';
 import type { IPaymentGatewayService } from '../../../../payment-gateway/domain/interfaces/payment-gateway.service.interface.js';
 import type { IPaymentPricingService } from '../../../domain/services/payment-pricing.service.interface.js';
 import type {
@@ -29,35 +27,32 @@ export class CreatePublicPaymentUseCase {
     @Inject(DiTokens.paymentPricingService) private pricingService: IPaymentPricingService,
     @Inject(DiTokens.clientProfileRepository)
     private clientProfileRepository: IClientProfileRepository,
-    @Inject(DiTokens.clientAuthRepository) private clientAuthRepository: IClientAuthRepository,
+    private readonly paymentTokenService: PaymentTokenService,
     configService: ConfigService,
   ) {
     this.vindiProductId = Number(configService.getOrThrow<string>('VINDI_PRODUCT_ID'));
   }
 
   async createPublicPayment(dto: CreatePublicPaymentDto): Promise<PaymentResponse> {
-    const client = await this.clientAuthRepository.findByEmail(dto.email);
+    const appointmentId = this.paymentTokenService.verifyPaymentToken(dto.paymentToken);
 
-    if (!client) {
-      throw new NotFoundException('Client not found. Please create an account first.');
+    if (appointmentId === null) {
+      throw new NotFoundException('Appointment not found');
     }
 
-    const appointment = await this.appointmentRepository.findAppointmentByIdAndClientId(
-      dto.appointmentId,
-      client.id,
-    );
+    const appointment = await this.appointmentRepository.findAppointmentById(appointmentId);
 
     if (!appointment) {
       throw new NotFoundException('Appointment not found');
     }
 
+    const clientId = appointment.client.id;
+
     if (appointment.status !== 'SCHEDULED') {
       throw new BadRequestException('Only scheduled appointments can be paid');
     }
 
-    const existingPayment = await this.paymentRepository.findPaymentByAppointmentId(
-      dto.appointmentId,
-    );
+    const existingPayment = await this.paymentRepository.findPaymentByAppointmentId(appointmentId);
     if (existingPayment) {
       throw new BadRequestException('A payment already exists for this appointment');
     }
@@ -78,14 +73,14 @@ export class CreatePublicPaymentUseCase {
       serviceFee,
       discount,
       method: dto.method,
-      clientId: client.id,
-      appointmentId: dto.appointmentId,
+      clientId,
+      appointmentId,
     };
 
     const payment = await this.paymentRepository.createPayment(paymentData);
 
     try {
-      const vindiCustomerId = await this.ensureVindiCustomerExists(client.id);
+      const vindiCustomerId = await this.ensureVindiCustomerExists(clientId);
 
       let paymentProfileId: number | undefined;
 
