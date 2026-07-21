@@ -33,26 +33,28 @@ export class RescheduleAppointmentUseCase {
       throw new BadRequestException('Only scheduled appointments can be rescheduled');
     }
 
-    const newDate = new Date(dto.date);
+    const isReschedule = dto.date !== undefined || dto.startTime !== undefined;
+    const newDate = dto.date ? new Date(dto.date) : existing.date;
+    const newStartTime = dto.startTime ?? existing.startTime;
 
     await this.schedulingValidator.validateSchedulingDate(newDate);
 
     const conflictCheck = AppointmentSchedulingValidator.buildRescheduleConflictCheck(
       existing,
       newDate,
-      dto.startTime,
+      newStartTime,
     );
 
     const clientConflictCheck = AppointmentSchedulingValidator.buildRescheduleClientConflictCheck(
       existing,
       existing.client.id,
       newDate,
-      dto.startTime,
+      newStartTime,
     );
 
     const rescheduled = await this.appointmentRepository.rescheduleAppointment(
       id,
-      { date: newDate, startTime: dto.startTime },
+      { date: newDate, startTime: newStartTime },
       conflictCheck,
       clientConflictCheck,
     );
@@ -61,15 +63,17 @@ export class RescheduleAppointmentUseCase {
       throw new BadRequestException('Only scheduled appointments can be rescheduled');
     }
 
-    this.emailService
-      .sendAppointmentRescheduledEmail(
-        existing.client.email,
-        existing.client.name,
-        dto.date,
-        dto.startTime,
-        existing.service.name,
-      )
-      .catch((err) => this.logger.error('Failed to send reschedule email', err));
+    if (isReschedule) {
+      this.emailService
+        .sendAppointmentRescheduledEmail(
+          existing.client.email,
+          existing.client.name,
+          newDate.toISOString().slice(0, 10),
+          newStartTime,
+          existing.service.name,
+        )
+        .catch((err) => this.logger.error('Failed to send reschedule email', err));
+    }
 
     return rescheduled;
   }
