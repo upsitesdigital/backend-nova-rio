@@ -4,6 +4,7 @@ import { type IClientAuthRepository } from '../../../../auth/domain/interfaces/c
 import type { CreatePublicAppointmentDto } from '../../../dto/appointment/create-public-appointment.dto.js';
 import type { AppointmentResponse } from '../../../domain/interfaces/appointment.repository.interface.js';
 import { type ICreateClientAppointmentService } from '../../../domain/interfaces/create-client-appointment.service.interface.js';
+import { PaymentTokenService } from '../../../../payments/infrastructure/services/payment-token.service.js';
 
 @Injectable()
 export class CreatePublicAppointmentUseCase {
@@ -11,9 +12,12 @@ export class CreatePublicAppointmentUseCase {
     @Inject(DiTokens.clientAuthRepository) private clientRepository: IClientAuthRepository,
     @Inject(DiTokens.createClientAppointmentService)
     private createClientAppointmentService: ICreateClientAppointmentService,
+    private readonly paymentTokenService: PaymentTokenService,
   ) {}
 
-  async createPublicAppointment(dto: CreatePublicAppointmentDto): Promise<AppointmentResponse> {
+  async createPublicAppointment(
+    dto: CreatePublicAppointmentDto,
+  ): Promise<AppointmentResponse & { paymentToken: string }> {
     const client = await this.clientRepository.findByEmail(dto.email);
 
     if (!client) {
@@ -22,6 +26,14 @@ export class CreatePublicAppointmentUseCase {
       );
     }
 
-    return this.createClientAppointmentService.createClientAppointment(client.id, dto);
+    const appointment = await this.createClientAppointmentService.createClientAppointment(
+      client.id,
+      dto,
+    );
+
+    return {
+      ...appointment,
+      paymentToken: this.paymentTokenService.issuePaymentToken(appointment.id),
+    };
   }
 }

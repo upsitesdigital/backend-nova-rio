@@ -4,6 +4,7 @@ import { type Mock, vi } from 'vitest';
 import type { AuthUser } from '../shared/types/auth-user.type.js';
 import { ClientPaymentsController } from './client-payments.controller.js';
 import { CreateClientPaymentUseCase } from './application/use-cases/payment/create-client-payment.use-case.js';
+import { CreatePublicPaymentUseCase } from './application/use-cases/payment/create-public-payment.use-case.js';
 import { ListClientPaymentsUseCase } from './application/use-cases/payment/list-client-payments.use-case.js';
 import { GetClientPaymentUseCase } from './application/use-cases/payment/get-client-payment.use-case.js';
 import type { ListClientPaymentsQueryDto } from './dto/payment/list-client-payments-query.dto.js';
@@ -11,6 +12,7 @@ import type { ListClientPaymentsQueryDto } from './dto/payment/list-client-payme
 describe('ClientPaymentsController', () => {
   let controller: ClientPaymentsController;
   let createClientPaymentUseCase: { createClientPayment: Mock };
+  let createPublicPaymentUseCase: { createPublicPayment: Mock };
   let listClientPaymentsUseCase: { listPaymentsByClientId: Mock };
   let getClientPaymentUseCase: { getPaymentByIdAndClientId: Mock };
 
@@ -18,6 +20,7 @@ describe('ClientPaymentsController', () => {
 
   beforeEach(async () => {
     createClientPaymentUseCase = { createClientPayment: vi.fn() };
+    createPublicPaymentUseCase = { createPublicPayment: vi.fn() };
     listClientPaymentsUseCase = { listPaymentsByClientId: vi.fn() };
     getClientPaymentUseCase = { getPaymentByIdAndClientId: vi.fn() };
 
@@ -25,6 +28,7 @@ describe('ClientPaymentsController', () => {
       controllers: [ClientPaymentsController],
       providers: [
         { provide: CreateClientPaymentUseCase, useValue: createClientPaymentUseCase },
+        { provide: CreatePublicPaymentUseCase, useValue: createPublicPaymentUseCase },
         { provide: ListClientPaymentsUseCase, useValue: listClientPaymentsUseCase },
         { provide: GetClientPaymentUseCase, useValue: getClientPaymentUseCase },
         { provide: DiTokens.clientAuthRepository, useValue: { findById: vi.fn() } },
