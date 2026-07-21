@@ -6,6 +6,7 @@ import { CardsModule } from '../cards/cards.module.js';
 import { ReceiptsModule } from '../receipts/receipts.module.js';
 import { ApprovePaymentUseCase } from './application/use-cases/payment/approve-payment.use-case.js';
 import { CreateClientPaymentUseCase } from './application/use-cases/payment/create-client-payment.use-case.js';
+import { CreatePublicPaymentUseCase } from './application/use-cases/payment/create-public-payment.use-case.js';
 import { DeletePaymentUseCase } from './application/use-cases/payment/delete-payment.use-case.js';
 import { GetClientPaymentUseCase } from './application/use-cases/payment/get-client-payment.use-case.js';
 import { GetPaymentUseCase } from './application/use-cases/payment/get-payment.use-case.js';
@@ -27,6 +28,7 @@ import { ClientPaymentsController } from './client-payments.controller.js';
     ApprovePaymentUseCase,
     DeletePaymentUseCase,
     CreateClientPaymentUseCase,
+    CreatePublicPaymentUseCase,
     ListClientPaymentsUseCase,
     GetClientPaymentUseCase,
   ],
