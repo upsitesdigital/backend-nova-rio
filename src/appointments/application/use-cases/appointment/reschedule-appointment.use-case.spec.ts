@@ -26,6 +26,7 @@ describe('RescheduleAppointmentUseCase', () => {
     employee: { id: 1, name: 'Maria' },
     package: null,
     unit: null,
+    payment: { id: 1, status: 'APPROVED' },
   };
 
   beforeEach(async () => {
@@ -69,6 +70,18 @@ describe('RescheduleAppointmentUseCase', () => {
     await expect(
       useCase.rescheduleAppointmentById(1, { date: '2026-03-20', startTime: '10:00' }),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should throw BadRequestException when payment is not APPROVED', async () => {
+    appointmentRepository.findAppointmentById.mockResolvedValue({
+      ...existingAppointment,
+      payment: { id: 1, status: 'PENDING' },
+    });
+
+    await expect(
+      useCase.rescheduleAppointmentById(1, { date: '2026-03-20', startTime: '10:00' }),
+    ).rejects.toThrow(BadRequestException);
+    expect(appointmentRepository.rescheduleAppointment).not.toHaveBeenCalled();
   });
 
   it('should reschedule with conflictCheck and send email', async () => {

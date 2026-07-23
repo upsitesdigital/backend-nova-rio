@@ -50,7 +50,8 @@ export class PrismaPaymentPricingService implements IPaymentPricingService {
       throw new BadRequestException('Service not found');
     }
 
-    const sessionsPerWeek = recurrenceType === 'WEEKLY' ? weeklyFrequency : 1;
+    const sessionsPerWeek =
+      recurrenceType === 'WEEKLY' ? Math.max(1, Math.min(7, weeklyFrequency)) : 1;
     const subtotal = Number(service.basePrice) * sessionsPerWeek;
     const discountRate = this.resolveDiscountRate(recurrenceType);
     const discount = subtotal * discountRate;

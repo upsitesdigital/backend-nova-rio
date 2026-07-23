@@ -14,6 +14,8 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
 
+    // Fail closed: a route protected by RolesGuard must declare @Roles(). A missing
+    // decorator denies access instead of silently allowing any authenticated user.
     if (!requiredRoles || requiredRoles.length === 0) {
       return false;
     }

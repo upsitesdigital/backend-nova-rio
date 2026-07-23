@@ -29,6 +29,7 @@ describe('RescheduleClientAppointmentUseCase', () => {
     employee: null,
     package: null,
     unit: null,
+    payment: { id: 1, status: 'APPROVED' },
   };
 
   beforeEach(async () => {
@@ -83,6 +84,21 @@ describe('RescheduleClientAppointmentUseCase', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
+  it('should throw BadRequestException when payment is not APPROVED', async () => {
+    appointmentRepository.findAppointmentByIdAndClientId.mockResolvedValue({
+      ...existingAppointment,
+      payment: { id: 1, status: 'PENDING' },
+    });
+
+    await expect(
+      useCase.rescheduleAppointmentByIdAndClientId(1, 1, {
+        date: '2026-03-20',
+        startTime: '10:00',
+      }),
+    ).rejects.toThrow(BadRequestException);
+    expect(appointmentRepository.rescheduleAppointment).not.toHaveBeenCalled();
+  });
+
   it('should reschedule, validate 1h rule, and send email', async () => {
     appointmentRepository.findAppointmentByIdAndClientId.mockResolvedValue(existingAppointment);
     appointmentRepository.rescheduleAppointment.mockResolvedValue({ id: 1 });
@@ -94,6 +110,11 @@ describe('RescheduleClientAppointmentUseCase', () => {
 
     expect(result).toEqual({ id: 1 });
     expect(schedulingValidator.validateCancellationAdvance).toHaveBeenCalled();
+    // the new slot must also be validated to be at least 1h in the future
+    expect(schedulingValidator.validateCancellationAdvance).toHaveBeenCalledWith(
+      expect.any(Date),
+      '10:00',
+    );
     expect(schedulingValidator.validateSchedulingDate).toHaveBeenCalled();
     expect(appointmentRepository.rescheduleAppointment).toHaveBeenCalledWith(
       1,

@@ -6,12 +6,12 @@ import { DeletePaymentUseCase } from './delete-payment.use-case.js';
 
 describe('DeletePaymentUseCase', () => {
   let useCase: DeletePaymentUseCase;
-  let paymentRepository: { findPaymentById: Mock; deletePaymentById: Mock };
+  let paymentRepository: { findPaymentById: Mock; softDeletePaymentById: Mock };
 
   beforeEach(async () => {
     paymentRepository = {
       findPaymentById: vi.fn(),
-      deletePaymentById: vi.fn(),
+      softDeletePaymentById: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -36,10 +36,10 @@ describe('DeletePaymentUseCase', () => {
 
   it('should delete payment when found', async () => {
     paymentRepository.findPaymentById.mockResolvedValue({ id: 1 });
-    paymentRepository.deletePaymentById.mockResolvedValue(undefined);
+    paymentRepository.softDeletePaymentById.mockResolvedValue(undefined);
 
     await useCase.deletePaymentById(1);
 
-    expect(paymentRepository.deletePaymentById).toHaveBeenCalledWith(1);
+    expect(paymentRepository.softDeletePaymentById).toHaveBeenCalledWith(1);
   });
 });

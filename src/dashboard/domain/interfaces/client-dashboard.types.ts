@@ -25,6 +25,7 @@ export interface RawClientDashboardData {
     id: number;
     date: Date;
     startTime: string;
+    payment: { id: number; status: PaymentStatus } | null;
   } | null;
   appointmentsCount: number;
   recentAppointments: RawDashboardAppointment[];
@@ -38,6 +39,7 @@ export interface ClientDashboardSummary {
     date: string;
     dateTime: string;
     cancellationNote: string;
+    receiptPaymentId: number | null;
   } | null;
   appointmentsCount: number;
   appointmentsCountLabel: string;
@@ -59,6 +61,7 @@ export interface ServiceHistoryEntryPayment {
 export interface ServiceHistoryEntry {
   id: number;
   date: string;
+  isoDate: string;
   startTime: string;
   label: string;
   icon: string | null;

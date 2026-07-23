@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AppointmentStatus, type Prisma, UserStatus } from '@prisma/client';
+import { AppointmentStatus, PaymentStatus, type Prisma, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import type {
   AgendaItem,
@@ -24,7 +24,10 @@ export class PrismaDashboardRepository implements IDashboardRepository {
   }
 
   async getPendingAppointmentsCount(filters: DashboardFilters): Promise<number> {
-    const where: Prisma.AppointmentWhereInput = { status: AppointmentStatus.SCHEDULED };
+    const where: Prisma.AppointmentWhereInput = {
+      status: AppointmentStatus.SCHEDULED,
+      payment: { status: PaymentStatus.APPROVED },
+    };
     if (filters.unitId) where.unitId = filters.unitId;
     return this.prisma.appointment.count({ where });
   }
@@ -79,6 +82,7 @@ export class PrismaDashboardRepository implements IDashboardRepository {
     const where: Prisma.AppointmentWhereInput = {
       date: { gte: today, lt: tomorrow },
       status: AppointmentStatus.SCHEDULED,
+      payment: { status: PaymentStatus.APPROVED },
     };
 
     if (filters.unitId) where.unitId = filters.unitId;

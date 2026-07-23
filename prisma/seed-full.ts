@@ -12,7 +12,7 @@
  */
 
 import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
+import { HolidayType, PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
 
@@ -940,18 +940,18 @@ async function seedAppointmentsAndPayments() {
 
 async function seedHolidays() {
   const holidays = [
-    { date: date('2026-01-01'), name: 'Ano Novo', type: 'national' },
-    { date: date('2026-02-16'), name: 'Carnaval', type: 'national' },
-    { date: date('2026-02-17'), name: 'Carnaval', type: 'national' },
-    { date: date('2026-04-03'), name: 'Sexta-feira Santa', type: 'national' },
-    { date: date('2026-04-21'), name: 'Tiradentes', type: 'national' },
-    { date: date('2026-05-01'), name: 'Dia do Trabalho', type: 'national' },
-    { date: date('2026-06-04'), name: 'Corpus Christi', type: 'national' },
-    { date: date('2026-09-07'), name: 'Independência do Brasil', type: 'national' },
-    { date: date('2026-10-12'), name: 'Nossa Senhora Aparecida', type: 'national' },
-    { date: date('2026-11-02'), name: 'Finados', type: 'national' },
-    { date: date('2026-11-15'), name: 'Proclamação da República', type: 'national' },
-    { date: date('2026-12-25'), name: 'Natal', type: 'national' },
+    { date: date('2026-01-01'), name: 'Ano Novo', type: HolidayType.NATIONAL },
+    { date: date('2026-02-16'), name: 'Carnaval', type: HolidayType.NATIONAL },
+    { date: date('2026-02-17'), name: 'Carnaval', type: HolidayType.NATIONAL },
+    { date: date('2026-04-03'), name: 'Sexta-feira Santa', type: HolidayType.NATIONAL },
+    { date: date('2026-04-21'), name: 'Tiradentes', type: HolidayType.NATIONAL },
+    { date: date('2026-05-01'), name: 'Dia do Trabalho', type: HolidayType.NATIONAL },
+    { date: date('2026-06-04'), name: 'Corpus Christi', type: HolidayType.NATIONAL },
+    { date: date('2026-09-07'), name: 'Independência do Brasil', type: HolidayType.NATIONAL },
+    { date: date('2026-10-12'), name: 'Nossa Senhora Aparecida', type: HolidayType.NATIONAL },
+    { date: date('2026-11-02'), name: 'Finados', type: HolidayType.NATIONAL },
+    { date: date('2026-11-15'), name: 'Proclamação da República', type: HolidayType.NATIONAL },
+    { date: date('2026-12-25'), name: 'Natal', type: HolidayType.NATIONAL },
   ];
 
   for (const h of holidays) {

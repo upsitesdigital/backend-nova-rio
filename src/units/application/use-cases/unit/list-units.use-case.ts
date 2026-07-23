@@ -11,8 +11,8 @@ export class ListUnitsUseCase {
 
   async listUnits(query: ListUnitsQueryDto): Promise<PaginatedResponse<Unit>> {
     return this.unitRepository.listUnits({
-      page: query.page!,
-      limit: query.limit!,
+      page: query.page,
+      limit: query.limit,
     });
   }
 }

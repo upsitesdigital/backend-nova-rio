@@ -13,6 +13,6 @@ export class DeletePaymentUseCase {
       throw new NotFoundException('Payment not found');
     }
 
-    await this.paymentRepository.deletePaymentById(id);
+    await this.paymentRepository.softDeletePaymentById(id);
   }
 }

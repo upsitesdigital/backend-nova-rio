@@ -47,7 +47,7 @@ describe('PrismaHolidayRepository', () => {
 
   it('createHoliday should call prisma.holiday.create', async () => {
     const data = { date: new Date('2026-01-01'), name: 'Ano Novo' };
-    const created = { id: 1, uuid: 'uuid-1', ...data, type: 'national', isBlocked: true };
+    const created = { id: 1, uuid: 'uuid-1', ...data, type: 'NATIONAL' as const, isBlocked: true };
 
     prisma.holiday.create.mockResolvedValue(created);
 
@@ -146,7 +146,7 @@ describe('PrismaHolidayRepository', () => {
     const data = {
       date: new Date('2026-01-01'),
       name: 'Ano Novo',
-      type: 'national',
+      type: 'NATIONAL' as const,
       isBlocked: true,
     };
     const upserted = { id: 1, uuid: 'uuid-1', ...data };
@@ -164,8 +164,18 @@ describe('PrismaHolidayRepository', () => {
 
   it('bulkUpsertHolidays should create missing rows and update all rows', async () => {
     const holidays = [
-      { date: new Date('2026-01-01'), name: 'Ano Novo', type: 'national', isBlocked: true },
-      { date: new Date('2026-04-21'), name: 'Tiradentes', type: 'national', isBlocked: true },
+      {
+        date: new Date('2026-01-01'),
+        name: 'Ano Novo',
+        type: 'NATIONAL' as const,
+        isBlocked: true,
+      },
+      {
+        date: new Date('2026-04-21'),
+        name: 'Tiradentes',
+        type: 'NATIONAL' as const,
+        isBlocked: true,
+      },
     ];
 
     await repository.bulkUpsertHolidays(holidays);

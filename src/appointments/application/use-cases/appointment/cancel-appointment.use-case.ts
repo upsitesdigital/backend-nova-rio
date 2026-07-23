@@ -1,6 +1,6 @@
 import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { AppointmentStatus } from '@prisma/client';
+import { AppointmentStatus, PaymentStatus } from '@prisma/client';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
 import type { IAppointmentRepository } from '../../../domain/interfaces/appointment.repository.interface.js';
 
@@ -20,6 +20,10 @@ export class CancelAppointmentUseCase {
 
     if (existing.status !== AppointmentStatus.SCHEDULED) {
       throw new BadRequestException('Only scheduled appointments can be cancelled');
+    }
+
+    if (existing.payment?.status !== PaymentStatus.APPROVED) {
+      throw new BadRequestException('Only appointments with an approved payment can be cancelled');
     }
 
     const cancelled = await this.appointmentRepository.cancelAppointmentById(id);

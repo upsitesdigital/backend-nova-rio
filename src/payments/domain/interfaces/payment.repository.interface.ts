@@ -74,5 +74,5 @@ export interface IPaymentRepository {
   deletePendingPaymentReservation(id: number): Promise<boolean>;
   approvePaymentById(id: number): Promise<PaymentResponse | null>;
   cancelPaymentById(id: number, reason: string): Promise<PaymentResponse | null>;
-  deletePaymentById(id: number): Promise<void>;
+  softDeletePaymentById(id: number): Promise<void>;
 }

@@ -1,6 +1,9 @@
 import { DiTokens } from '../shared/di/di-tokens.js';
 import { Module } from '@nestjs/common';
+import { AppointmentsModule } from '../appointments/appointments.module.js';
 import { AuthModule } from '../auth/auth.module.js';
+import { CardsModule } from '../cards/cards.module.js';
+import { PaymentsModule } from '../payments/payments.module.js';
 import { ClientProfileController } from './client-profile.controller.js';
 import { DeleteClientAccountUseCase } from './application/use-cases/profile/delete-client-account.use-case.js';
 import { GetClientProfileUseCase } from './application/use-cases/profile/get-client-profile.use-case.js';
@@ -12,7 +15,7 @@ import { VerifyPasswordChangeUseCase } from './application/use-cases/profile/ver
 import { PrismaClientProfileRepository } from './infrastructure/repositories/prisma-client-profile.repository.js';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AppointmentsModule, AuthModule, CardsModule, PaymentsModule],
   controllers: [ClientProfileController],
   providers: [
     { provide: DiTokens.profileRepository, useClass: PrismaClientProfileRepository },

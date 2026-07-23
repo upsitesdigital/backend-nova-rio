@@ -24,7 +24,7 @@ export class SyncHolidaysUseCase {
       ...nationalHolidays.map((h) => ({
         date: new Date(h.date),
         name: h.name,
-        type: 'national',
+        type: 'NATIONAL' as const,
         isBlocked: true,
       })),
       ...RioHolidays.stateMunicipal.map((h) => ({
@@ -54,13 +54,13 @@ export class SyncHolidaysUseCase {
         {
           date: segundaCarnaval,
           name: 'Segunda-feira de Carnaval',
-          type: 'facultativo',
+          type: 'FACULTATIVO' as const,
           isBlocked: false,
         },
         {
           date: quartaCinzas,
           name: 'Quarta-feira de Cinzas',
-          type: 'facultativo',
+          type: 'FACULTATIVO' as const,
           isBlocked: false,
         },
       );

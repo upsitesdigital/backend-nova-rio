@@ -40,8 +40,19 @@ describe('CompleteAppointmentUseCase', () => {
     await expect(useCase.completeAppointmentById(1)).rejects.toThrow(BadRequestException);
   });
 
+  it('should throw BadRequestException when payment is not APPROVED', async () => {
+    appointmentRepository.findAppointmentById.mockResolvedValue({
+      id: 1,
+      status: 'SCHEDULED',
+      payment: { id: 1, status: 'PENDING' },
+    });
+
+    await expect(useCase.completeAppointmentById(1)).rejects.toThrow(BadRequestException);
+    expect(appointmentRepository.completeAppointmentById).not.toHaveBeenCalled();
+  });
+
   it('should complete appointment', async () => {
-    const appointment = { id: 1, status: 'SCHEDULED' };
+    const appointment = { id: 1, status: 'SCHEDULED', payment: { id: 1, status: 'APPROVED' } };
     const completed = { ...appointment, status: 'COMPLETED' };
     appointmentRepository.findAppointmentById.mockResolvedValue(appointment);
     appointmentRepository.completeAppointmentById.mockResolvedValue(completed);

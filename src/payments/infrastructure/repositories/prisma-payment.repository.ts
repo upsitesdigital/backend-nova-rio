@@ -9,22 +9,7 @@ import type {
   PaginatedPayments,
   PaymentResponse,
 } from '../../domain/interfaces/payment.repository.interface.js';
-
-class PaymentQueryConfig {
-  static readonly include = {
-    client: { select: { id: true, name: true, email: true, cpfCnpj: true } },
-    appointment: {
-      select: {
-        id: true,
-        date: true,
-        startTime: true,
-        service: { select: { id: true, name: true } },
-        recurrenceType: true,
-      },
-    },
-    card: { select: { id: true, lastFourDigits: true, brand: true } },
-  } as const;
-}
+import { PaymentQueryConfig } from './payment-query.config.js';
 
 @Injectable()
 export class PrismaPaymentRepository implements IPaymentRepository {
@@ -195,7 +180,7 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     return this.findPaymentById(id);
   }
 
-  async deletePaymentById(id: number): Promise<void> {
+  async softDeletePaymentById(id: number): Promise<void> {
     await this.prisma.payment.update({
       where: { id },
       data: { status: PaymentStatus.CANCELLED, cancellationReason: 'Deleted by admin' },

@@ -19,6 +19,7 @@ describe('CancelClientAppointmentUseCase', () => {
     status: 'SCHEDULED',
     client: { id: 1, name: 'João', email: 'joao@test.com' },
     service: { id: 1, name: 'Faxina Regular' },
+    payment: { id: 1, status: 'APPROVED' },
   };
 
   beforeEach(async () => {
@@ -60,6 +61,18 @@ describe('CancelClientAppointmentUseCase', () => {
     await expect(useCase.cancelAppointmentByIdAndClientId(1, 1)).rejects.toThrow(
       BadRequestException,
     );
+  });
+
+  it('should throw BadRequestException when payment is not APPROVED', async () => {
+    appointmentRepository.findAppointmentByIdAndClientId.mockResolvedValue({
+      ...existingAppointment,
+      payment: { id: 1, status: 'PENDING' },
+    });
+
+    await expect(useCase.cancelAppointmentByIdAndClientId(1, 1)).rejects.toThrow(
+      BadRequestException,
+    );
+    expect(appointmentRepository.cancelAppointmentById).not.toHaveBeenCalled();
   });
 
   it('should cancel, validate 1h rule, and send email', async () => {
