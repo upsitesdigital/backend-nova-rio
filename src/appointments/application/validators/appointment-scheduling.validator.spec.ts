@@ -25,42 +25,67 @@ describe('AppointmentSchedulingValidator', () => {
     expect(validator).toBeDefined();
   });
 
-  describe('validateSchedulingDate', () => {
-    it('should throw on Saturday', async () => {
-      const saturday = new Date('2026-03-14'); // Saturday
+  // Dates are computed relative to "now" so the past-date guard never makes the
+  // suite drift-dependent. 0=Sun … 6=Sat.
+  function futureDateOnWeekday(targetDow: number): Date {
+    const d = new Date();
+    d.setUTCHours(0, 0, 0, 0);
+    d.setUTCDate(d.getUTCDate() + 14);
+    while (d.getUTCDay() !== targetDow) {
+      d.setUTCDate(d.getUTCDate() + 1);
+    }
+    return d;
+  }
 
-      await expect(validator.validateSchedulingDate(saturday)).rejects.toThrow(BadRequestException);
+  describe('validateSchedulingDate', () => {
+    it('should throw on a past date (D-1)', async () => {
+      const now = new Date();
+      const yesterday = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1),
+      );
+
+      await expect(validator.validateSchedulingDate(yesterday)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should throw on Saturday', async () => {
+      await expect(validator.validateSchedulingDate(futureDateOnWeekday(6))).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw on Sunday', async () => {
-      const sunday = new Date('2026-03-15'); // Sunday
-
-      await expect(validator.validateSchedulingDate(sunday)).rejects.toThrow(BadRequestException);
+      await expect(validator.validateSchedulingDate(futureDateOnWeekday(0))).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw on blocked holiday', async () => {
-      const date = new Date('2026-03-16'); // Monday
+      const monday = futureDateOnWeekday(1);
       holidayRepository.findBlockedHolidayByDate.mockResolvedValue({
-        date: new Date('2026-03-16'),
+        date: monday,
         name: 'Holiday',
         isBlocked: true,
       });
 
-      await expect(validator.validateSchedulingDate(date)).rejects.toThrow(BadRequestException);
+      await expect(validator.validateSchedulingDate(monday)).rejects.toThrow(BadRequestException);
     });
 
-    it('should pass on valid weekday', async () => {
-      const monday = new Date('2026-03-16'); // Monday
+    it('should pass on a valid future weekday', async () => {
       holidayRepository.findBlockedHolidayByDate.mockResolvedValue(null);
 
-      await expect(validator.validateSchedulingDate(monday)).resolves.toBeUndefined();
+      await expect(
+        validator.validateSchedulingDate(futureDateOnWeekday(1)),
+      ).resolves.toBeUndefined();
     });
 
     it('should pass on non-blocked holiday', async () => {
-      const date = new Date('2026-03-16');
       holidayRepository.findBlockedHolidayByDate.mockResolvedValue(null);
 
-      await expect(validator.validateSchedulingDate(date)).resolves.toBeUndefined();
+      await expect(
+        validator.validateSchedulingDate(futureDateOnWeekday(3)),
+      ).resolves.toBeUndefined();
     });
   });
 
