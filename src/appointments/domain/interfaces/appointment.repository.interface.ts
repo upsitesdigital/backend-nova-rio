@@ -1,4 +1,4 @@
-import type { AppointmentStatus, RecurrenceType } from '@prisma/client';
+import type { AppointmentStatus, PaymentStatus, RecurrenceType } from '@prisma/client';
 import type { PaginatedResponse } from '../../../shared/types/paginated-response.type.js';
 
 export interface AppointmentResponse {
@@ -20,6 +20,7 @@ export interface AppointmentResponse {
   employee: { id: number; name: string } | null;
   package: { id: number; name: string } | null;
   unit: { id: number; name: string } | null;
+  payment: { id: number; status: PaymentStatus } | null;
 }
 
 export type PaginatedAppointments = PaginatedResponse<AppointmentResponse>;

@@ -1,6 +1,6 @@
 import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { AppointmentStatus } from '@prisma/client';
+import { AppointmentStatus, PaymentStatus } from '@prisma/client';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
 import type {
   AppointmentResponse,
@@ -31,6 +31,12 @@ export class RescheduleAppointmentUseCase {
 
     if (existing.status !== AppointmentStatus.SCHEDULED) {
       throw new BadRequestException('Only scheduled appointments can be rescheduled');
+    }
+
+    if (existing.payment?.status !== PaymentStatus.APPROVED) {
+      throw new BadRequestException(
+        'Only appointments with an approved payment can be rescheduled',
+      );
     }
 
     const isReschedule = dto.date !== undefined || dto.startTime !== undefined;
