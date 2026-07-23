@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { AppointmentStatus } from '@prisma/client';
+import { AppointmentStatus, PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service.js';
 import type { IClientDashboardRepository } from '../../domain/interfaces/client-dashboard.repository.interface.js';
 import type {
@@ -24,26 +24,35 @@ export class PrismaClientDashboardRepository implements IClientDashboardReposito
     }
 
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // Appointment.date is @db.Date (UTC midnight); build the boundary in UTC so
+    // today's appointments are not dropped on servers with a non-UTC timezone.
+    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
     const nextAppointment = await this.prisma.appointment.findFirst({
       where: {
         clientId,
         status: AppointmentStatus.SCHEDULED,
         date: { gte: today },
+        payment: { status: PaymentStatus.APPROVED },
       },
-      select: { id: true, date: true, startTime: true },
+      select: {
+        id: true,
+        date: true,
+        startTime: true,
+        payment: { select: { id: true, status: true } },
+      },
       orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
     });
 
     const twoMonthsAgo = new Date(today);
-    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+    twoMonthsAgo.setUTCMonth(twoMonthsAgo.getUTCMonth() - 2);
 
     const appointmentsCount = await this.prisma.appointment.count({
       where: {
         clientId,
         createdAt: { gte: twoMonthsAgo },
         status: { in: [AppointmentStatus.SCHEDULED, AppointmentStatus.COMPLETED] },
+        payment: { status: PaymentStatus.APPROVED },
       },
     });
 
