@@ -4,7 +4,7 @@ import { type Mock, vi } from 'vitest';
 import type { AuthUser } from '../shared/types/auth-user.type.js';
 import { ClientPaymentsController } from './client-payments.controller.js';
 import { CreateClientPaymentUseCase } from './application/use-cases/payment/create-client-payment.use-case.js';
-import { CreatePublicPaymentUseCase } from './application/use-cases/payment/create-public-payment.use-case.js';
+import { CreatePublicCheckoutUseCase } from './application/use-cases/payment/create-public-checkout.use-case.js';
 import { ListClientPaymentsUseCase } from './application/use-cases/payment/list-client-payments.use-case.js';
 import { GetClientPaymentUseCase } from './application/use-cases/payment/get-client-payment.use-case.js';
 import type { ListClientPaymentsQueryDto } from './dto/payment/list-client-payments-query.dto.js';
@@ -12,7 +12,7 @@ import type { ListClientPaymentsQueryDto } from './dto/payment/list-client-payme
 describe('ClientPaymentsController', () => {
   let controller: ClientPaymentsController;
   let createClientPaymentUseCase: { createClientPayment: Mock };
-  let createPublicPaymentUseCase: { createPublicPayment: Mock };
+  let createPublicCheckoutUseCase: { createPublicCheckout: Mock };
   let listClientPaymentsUseCase: { listPaymentsByClientId: Mock };
   let getClientPaymentUseCase: { getPaymentByIdAndClientId: Mock };
 
@@ -20,7 +20,7 @@ describe('ClientPaymentsController', () => {
 
   beforeEach(async () => {
     createClientPaymentUseCase = { createClientPayment: vi.fn() };
-    createPublicPaymentUseCase = { createPublicPayment: vi.fn() };
+    createPublicCheckoutUseCase = { createPublicCheckout: vi.fn() };
     listClientPaymentsUseCase = { listPaymentsByClientId: vi.fn() };
     getClientPaymentUseCase = { getPaymentByIdAndClientId: vi.fn() };
 
@@ -28,7 +28,7 @@ describe('ClientPaymentsController', () => {
       controllers: [ClientPaymentsController],
       providers: [
         { provide: CreateClientPaymentUseCase, useValue: createClientPaymentUseCase },
-        { provide: CreatePublicPaymentUseCase, useValue: createPublicPaymentUseCase },
+        { provide: CreatePublicCheckoutUseCase, useValue: createPublicCheckoutUseCase },
         { provide: ListClientPaymentsUseCase, useValue: listClientPaymentsUseCase },
         { provide: GetClientPaymentUseCase, useValue: getClientPaymentUseCase },
         { provide: DiTokens.clientAuthRepository, useValue: { findById: vi.fn() } },
@@ -46,6 +46,19 @@ describe('ClientPaymentsController', () => {
     const dto = { appointmentId: 1, method: 'PIX' as const };
     await controller.createClientPayment(clientUser, dto);
     expect(createClientPaymentUseCase.createClientPayment).toHaveBeenCalledWith(1, dto);
+  });
+
+  it('createPublicCheckout should delegate to the checkout use case', async () => {
+    const dto = {
+      email: 'client@test.com',
+      date: '2026-03-15',
+      startTime: '09:00',
+      duration: 120,
+      serviceId: 1,
+      method: 'CREDIT_CARD' as const,
+    };
+    await controller.createPublicCheckout(dto);
+    expect(createPublicCheckoutUseCase.createPublicCheckout).toHaveBeenCalledWith(dto);
   });
 
   it('listClientPayments should call use case with user.id and pagination', async () => {
