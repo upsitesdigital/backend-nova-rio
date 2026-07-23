@@ -12,7 +12,6 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -31,12 +30,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import type { AuthUser } from '../shared/types/auth-user.type.js';
 import { CancelClientAppointmentUseCase } from './application/use-cases/appointment/cancel-client-appointment.use-case.js';
 import { CreateClientAppointmentUseCase } from './application/use-cases/appointment/create-client-appointment.use-case.js';
-import { CreatePublicAppointmentUseCase } from './application/use-cases/appointment/create-public-appointment.use-case.js';
 import { GetClientAppointmentUseCase } from './application/use-cases/appointment/get-client-appointment.use-case.js';
 import { ListClientAppointmentsUseCase } from './application/use-cases/appointment/list-client-appointments.use-case.js';
 import { RescheduleClientAppointmentUseCase } from './application/use-cases/appointment/reschedule-client-appointment.use-case.js';
 import { CreateClientAppointmentDto } from './dto/appointment/create-client-appointment.dto.js';
-import { CreatePublicAppointmentDto } from './dto/appointment/create-public-appointment.dto.js';
 import { RescheduleAppointmentDto } from './dto/appointment/reschedule-appointment.dto.js';
 
 @ApiTags('Appointments')
@@ -44,21 +41,11 @@ import { RescheduleAppointmentDto } from './dto/appointment/reschedule-appointme
 export class ClientAppointmentsController {
   constructor(
     private createClientAppointmentUseCase: CreateClientAppointmentUseCase,
-    private createPublicAppointmentUseCase: CreatePublicAppointmentUseCase,
     private listClientAppointmentsUseCase: ListClientAppointmentsUseCase,
     private getClientAppointmentUseCase: GetClientAppointmentUseCase,
     private rescheduleClientAppointmentUseCase: RescheduleClientAppointmentUseCase,
     private cancelClientAppointmentUseCase: CancelClientAppointmentUseCase,
   ) {}
-
-  @Post('public')
-  @Throttle({ default: { ttl: 60_000, limit: 3 } })
-  @ApiOperation({ summary: 'Create an appointment by email (no auth required)' })
-  @ApiCreatedResponse({ description: 'Appointment created successfully' })
-  @ApiBadRequestResponse({ description: 'Validation failed or scheduling conflict' })
-  createPublicAppointment(@Body() dto: CreatePublicAppointmentDto) {
-    return this.createPublicAppointmentUseCase.createPublicAppointment(dto);
-  }
 
   @Post()
   @ApiBearerAuth()
