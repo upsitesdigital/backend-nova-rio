@@ -6,12 +6,14 @@ import { CreateAdminUserUseCase } from './application/use-cases/admin-user/creat
 import { DeleteAdminUserUseCase } from './application/use-cases/admin-user/delete-admin-user.use-case.js';
 import { GetAdminUserUseCase } from './application/use-cases/admin-user/get-admin-user.use-case.js';
 import { ListAdminUsersUseCase } from './application/use-cases/admin-user/list-admin-users.use-case.js';
+import { UpdateAdminUserUseCase } from './application/use-cases/admin-user/update-admin-user.use-case.js';
 
 describe('AdminUsersController', () => {
   let controller: AdminUsersController;
   let createAdminUserUseCase: { createAdminUser: Mock };
   let listAdminUsersUseCase: { listAdminUsers: Mock };
   let getAdminUserUseCase: { getAdminUserById: Mock };
+  let updateAdminUserUseCase: { updateAdminUser: Mock };
   let deleteAdminUserUseCase: { deactivateAdminUserById: Mock };
 
   const masterUser: AuthUser = {
@@ -31,6 +33,7 @@ describe('AdminUsersController', () => {
     createAdminUserUseCase = { createAdminUser: vi.fn() };
     listAdminUsersUseCase = { listAdminUsers: vi.fn() };
     getAdminUserUseCase = { getAdminUserById: vi.fn() };
+    updateAdminUserUseCase = { updateAdminUser: vi.fn() };
     deleteAdminUserUseCase = { deactivateAdminUserById: vi.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -39,6 +42,7 @@ describe('AdminUsersController', () => {
         { provide: CreateAdminUserUseCase, useValue: createAdminUserUseCase },
         { provide: ListAdminUsersUseCase, useValue: listAdminUsersUseCase },
         { provide: GetAdminUserUseCase, useValue: getAdminUserUseCase },
+        { provide: UpdateAdminUserUseCase, useValue: updateAdminUserUseCase },
         { provide: DeleteAdminUserUseCase, useValue: deleteAdminUserUseCase },
       ],
     }).compile();
@@ -73,6 +77,14 @@ describe('AdminUsersController', () => {
     await controller.getAdminUserById(1);
 
     expect(getAdminUserUseCase.getAdminUserById).toHaveBeenCalledWith(1);
+  });
+
+  it('updateAdminUser should call use case with id, dto, and callerRole', async () => {
+    const dto = { name: 'Maria Silva' };
+
+    await controller.updateAdminUser(2, dto, masterUser);
+
+    expect(updateAdminUserUseCase.updateAdminUser).toHaveBeenCalledWith(2, dto, 'ADMIN_MASTER');
   });
 
   it('deactivateAdminUser should call use case with id, callerId, and callerRole', async () => {
