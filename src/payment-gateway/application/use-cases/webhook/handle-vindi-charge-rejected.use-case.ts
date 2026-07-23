@@ -1,6 +1,7 @@
 import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PaymentStatus } from '@prisma/client';
+import type { IAppointmentRepository } from '../../../../appointments/domain/interfaces/appointment.repository.interface.js';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
 import type { IPaymentRepository } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
 
@@ -10,6 +11,7 @@ export class HandleVindiChargeRejectedUseCase {
 
   constructor(
     @Inject(DiTokens.paymentRepository) private paymentRepository: IPaymentRepository,
+    @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
     @Inject(DiTokens.emailService) private emailService: IEmailService,
   ) {}
 
@@ -30,6 +32,16 @@ export class HandleVindiChargeRejectedUseCase {
     if (!cancelled) {
       this.logger.log(`Payment ${payment.id} changed before webhook cancellation, skipping`);
       return;
+    }
+
+    // Release the slot: a rejected payment must not leave a live appointment.
+    const appointmentCancelled = await this.appointmentRepository.cancelAppointmentById(
+      cancelled.appointment.id,
+    );
+    if (!appointmentCancelled) {
+      this.logger.warn(
+        `Appointment ${cancelled.appointment.id} could not be cancelled after payment ${payment.id} rejection`,
+      );
     }
 
     this.emailService
