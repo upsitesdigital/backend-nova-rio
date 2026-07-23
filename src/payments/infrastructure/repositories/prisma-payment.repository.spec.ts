@@ -218,9 +218,9 @@ describe('PrismaPaymentRepository', () => {
     });
   });
 
-  describe('deletePaymentById', () => {
+  describe('softDeletePaymentById', () => {
     it('should soft-delete payment by setting status to CANCELLED', async () => {
-      await repository.deletePaymentById(1);
+      await repository.softDeletePaymentById(1);
 
       expect(prisma.payment.update).toHaveBeenCalledWith({
         where: { id: 1 },
