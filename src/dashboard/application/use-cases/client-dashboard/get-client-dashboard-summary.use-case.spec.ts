@@ -35,6 +35,7 @@ describe('GetClientDashboardSummaryUseCase', () => {
         id: 1,
         date: new Date(2026, 3, 15),
         startTime: '09:00',
+        payment: { id: 77, status: 'APPROVED' },
       },
       appointmentsCount: 5,
       recentAppointments: [
@@ -66,6 +67,8 @@ describe('GetClientDashboardSummaryUseCase', () => {
     expect(result.nextAppointment).not.toBeNull();
     expect(result.nextAppointment?.date).toBe('15/04');
     expect(result.nextAppointment?.dateTime).toBe('2026-04-15T09:00:00');
+    expect(result.nextAppointment?.receiptPaymentId).toBe(77);
+    expect(result.serviceHistory[0].entries[0].isoDate).toBe('2026-03-10');
     expect(result.appointmentsCount).toBe(5);
     expect(result.appointmentsCountLabel).toBeDefined();
     expect(result.serviceHistory).toHaveLength(1);
@@ -102,7 +105,7 @@ describe('GetClientDashboardSummaryUseCase', () => {
     await expect(useCase.getClientDashboardSummary(999)).rejects.toThrow(NotFoundException);
   });
 
-  it('should set canEdit to true for SCHEDULED appointments', async () => {
+  it('should set canEdit to true for SCHEDULED appointments with an APPROVED payment', async () => {
     const rawData: RawClientDashboardData = {
       clientName: 'Test',
       nextAppointment: null,
@@ -118,7 +121,7 @@ describe('GetClientDashboardSummaryUseCase', () => {
           locationAddress: null,
           service: { name: 'Faxina Premium', icon: 'star' },
           unit: null,
-          payment: null,
+          payment: { id: 5, amount: 100, status: 'APPROVED', card: null },
         },
       ],
     };
@@ -128,7 +131,34 @@ describe('GetClientDashboardSummaryUseCase', () => {
     const result = await useCase.getClientDashboardSummary(3);
 
     expect(result.serviceHistory[0].entries[0].canEdit).toBe(true);
-    expect(result.serviceHistory[0].entries[0].payment).toBeNull();
     expect(result.serviceHistory[0].entries[0].locationName).toBeNull();
+  });
+
+  it('should set canEdit to false for SCHEDULED appointments whose payment is not APPROVED', async () => {
+    const rawData: RawClientDashboardData = {
+      clientName: 'Test',
+      nextAppointment: null,
+      appointmentsCount: 1,
+      recentAppointments: [
+        {
+          id: 21,
+          date: new Date(2026, 3, 21),
+          startTime: '10:00',
+          status: 'SCHEDULED',
+          recurrenceType: 'WEEKLY',
+          locationZip: null,
+          locationAddress: null,
+          service: { name: 'Faxina Premium', icon: 'star' },
+          unit: null,
+          payment: { id: 6, amount: 100, status: 'PENDING', card: null },
+        },
+      ],
+    };
+
+    dashboardRepository.getClientDashboardData.mockResolvedValue(rawData);
+
+    const result = await useCase.getClientDashboardSummary(3);
+
+    expect(result.serviceHistory[0].entries[0].canEdit).toBe(false);
   });
 });

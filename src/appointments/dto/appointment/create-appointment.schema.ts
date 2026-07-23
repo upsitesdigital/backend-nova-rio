@@ -14,7 +14,7 @@ export class CreateAppointmentSchemas {
     duration: z.number().int().positive().max(480).meta({ example: 120 }),
     recurrenceType: z.enum(RecurrenceType).optional().meta({ example: 'SINGLE' }),
     weeklyFrequency: z.number().int().min(1).max(7).optional().meta({ example: 1 }),
-    locationZip: z.string().optional().meta({ example: '20040-020' }),
+    locationZip: ZodPrimitives.cep.optional().meta({ example: '20040-020' }),
     locationAddress: z.string().optional().meta({ example: 'Rua das Flores, 123' }),
     notes: z.string().optional().meta({ example: 'Levar produtos de limpeza' }),
     clientId: z.number().int().positive().meta({ example: 1 }),

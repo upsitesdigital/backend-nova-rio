@@ -1,15 +1,16 @@
-import type { Holiday } from '@prisma/client';
+import type { Holiday, HolidayType } from '@prisma/client';
 
 export interface CreateHolidayData {
   date: Date;
   name: string;
-  type?: string;
+  type?: HolidayType;
   isBlocked?: boolean;
 }
 
 export interface UpdateHolidayData {
   date?: Date;
   name?: string;
+  type?: HolidayType;
   isBlocked?: boolean;
 }
 

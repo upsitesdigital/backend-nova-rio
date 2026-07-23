@@ -65,6 +65,13 @@ enum PaymentOption {
   RECURRENCE
 }
 
+enum HolidayType {
+  NATIONAL
+  STATE
+  MUNICIPAL
+  FACULTATIVO
+}
+
 // ============================================================
 // ADMIN USERS (Painel Admin)
 // ============================================================
@@ -246,7 +253,8 @@ model Service {
   name        String
   description String?
   icon        String? // Identificador do ícone
-  basePrice   Decimal @db.Decimal(10, 2)
+  basePrice       Decimal  @db.Decimal(10, 2)
+  durationMinutes  Int      @default(120) // Duração padrão em minutos
 
   // Opções de pagamento habilitadas
   allowSingle     Boolean @default(true)  // Avulso
@@ -398,7 +406,7 @@ model Holiday {
   uuid      String   @unique @default(uuid())
   date      DateTime @db.Date
   name      String
-  type      String   @default("national")
+  type      HolidayType @default(NATIONAL)
   isBlocked Boolean  @default(true) @map("is_blocked")
 
   @@unique([date])

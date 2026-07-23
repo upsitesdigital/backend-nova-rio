@@ -74,7 +74,7 @@ export class CreateClientPaymentUseCase {
       appointment.weeklyFrequency,
     );
 
-    const serviceFee = 0;
+    const serviceFee = 3;
     const amount = subtotal - discount + serviceFee;
 
     const paymentData: CreatePaymentData = {

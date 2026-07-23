@@ -17,6 +17,7 @@ describe('CancelAppointmentUseCase', () => {
     status: 'SCHEDULED',
     client: { id: 1, name: 'João', email: 'joao@test.com' },
     service: { id: 1, name: 'Faxina Regular' },
+    payment: { id: 1, status: 'APPROVED' },
   };
 
   beforeEach(async () => {
@@ -54,6 +55,16 @@ describe('CancelAppointmentUseCase', () => {
     });
 
     await expect(useCase.cancelAppointmentById(1)).rejects.toThrow(BadRequestException);
+  });
+
+  it('should throw BadRequestException when payment is not APPROVED', async () => {
+    appointmentRepository.findAppointmentById.mockResolvedValue({
+      ...existingAppointment,
+      payment: { id: 1, status: 'PENDING' },
+    });
+
+    await expect(useCase.cancelAppointmentById(1)).rejects.toThrow(BadRequestException);
+    expect(appointmentRepository.cancelAppointmentById).not.toHaveBeenCalled();
   });
 
   it('should cancel appointment and send email', async () => {

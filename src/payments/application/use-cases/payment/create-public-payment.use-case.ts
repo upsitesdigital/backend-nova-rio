@@ -64,7 +64,7 @@ export class CreatePublicPaymentUseCase {
       appointment.weeklyFrequency,
     );
 
-    const serviceFee = 0;
+    const serviceFee = 3;
     const amount = subtotal - discount + serviceFee;
 
     const paymentData: CreatePaymentData = {
@@ -84,9 +84,17 @@ export class CreatePublicPaymentUseCase {
 
       let paymentProfileId: number | undefined;
 
-      if (dto.cardNumber && dto.cardCvv && dto.cardExpiry && dto.holderName) {
+      if (
+        dto.method !== PaymentMethod.PIX &&
+        dto.cardNumber &&
+        dto.cardCvv &&
+        dto.cardExpiry &&
+        dto.holderName
+      ) {
         const expiryParts = dto.cardExpiry.split('/');
-        const cardExpiration = `${expiryParts[0].padStart(2, '0')}/${expiryParts[1]}`;
+        const expiryMonth = expiryParts[0].padStart(2, '0');
+        const expiryYear = 2000 + parseInt(expiryParts[1], 10);
+        const cardExpiration = `${expiryMonth}/${expiryYear}`;
 
         if (dto.cardNumber.length < 13) {
           throw new BadRequestException('Invalid card number');
@@ -98,7 +106,7 @@ export class CreatePublicPaymentUseCase {
           cardExpiration,
           cardNumber: dto.cardNumber,
           cardCvv: dto.cardCvv,
-          paymentMethodCode: this.resolveVindiPaymentMethod(dto.method),
+          paymentMethodCode: PaymentMethodMapper.toVindi(dto.method),
         });
 
         paymentProfileId = paymentProfile.id;
@@ -131,17 +139,6 @@ export class CreatePublicPaymentUseCase {
       }
 
       throw error;
-    }
-  }
-
-  private resolveVindiPaymentMethod(method: PaymentMethod): string {
-    switch (method) {
-      case PaymentMethod.CREDIT_CARD:
-        return 'credit_card';
-      case PaymentMethod.DEBIT_CARD:
-        return 'debit_card';
-      default:
-        return 'credit_card';
     }
   }
 

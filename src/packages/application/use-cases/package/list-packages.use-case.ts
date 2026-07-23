@@ -23,8 +23,8 @@ export class ListPackagesUseCase {
     }
 
     return this.packageRepository.findPackages({
-      page: query.page!,
-      limit: query.limit!,
+      page: query.page,
+      limit: query.limit,
       active: query.active,
       serviceId: query.serviceId,
     });

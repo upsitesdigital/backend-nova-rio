@@ -39,7 +39,7 @@ export class HandleVindiChargeRejectedUseCase {
         String(cancelled.amount),
         cancelled.appointment.service.name,
       )
-      .catch(() => {});
+      .catch((err) => this.logger.error('Failed to send payment cancelled email', err));
 
     this.logger.log(`Payment ${payment.id} cancelled via webhook (bill ${billId}): ${reason}`);
   }

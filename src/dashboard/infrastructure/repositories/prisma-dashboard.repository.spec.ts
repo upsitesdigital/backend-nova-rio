@@ -87,7 +87,7 @@ describe('PrismaDashboardRepository', () => {
 
       expect(result).toBe(8);
       expect(prisma.appointment.count).toHaveBeenCalledWith({
-        where: { status: 'SCHEDULED' },
+        where: { status: 'SCHEDULED', payment: { status: 'APPROVED' } },
       });
     });
   });

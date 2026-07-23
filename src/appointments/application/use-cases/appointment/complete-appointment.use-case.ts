@@ -1,6 +1,6 @@
 import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { AppointmentStatus } from '@prisma/client';
+import { AppointmentStatus, PaymentStatus } from '@prisma/client';
 import type {
   AppointmentResponse,
   IAppointmentRepository,
@@ -21,6 +21,10 @@ export class CompleteAppointmentUseCase {
 
     if (existing.status !== AppointmentStatus.SCHEDULED) {
       throw new BadRequestException('Only scheduled appointments can be completed');
+    }
+
+    if (existing.payment?.status !== PaymentStatus.APPROVED) {
+      throw new BadRequestException('Only appointments with an approved payment can be completed');
     }
 
     const completed = await this.appointmentRepository.completeAppointmentById(id);

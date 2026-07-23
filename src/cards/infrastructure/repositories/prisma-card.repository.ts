@@ -6,18 +6,7 @@ import type {
   CreateCardData,
   ICardRepository,
 } from '../../domain/interfaces/card.repository.interface.js';
-
-class CardQueryConfig {
-  static readonly responseSelect = {
-    id: true,
-    lastFourDigits: true,
-    brand: true,
-    holderName: true,
-    expiryMonth: true,
-    expiryYear: true,
-    isDefault: true,
-  } as const;
-}
+import { CardQueryConfig } from './card-query.config.js';
 
 @Injectable()
 export class PrismaCardRepository implements ICardRepository {

@@ -26,6 +26,7 @@ const APPOINTMENT_INCLUDE = {
   employee: { select: { id: true, name: true } },
   package: { select: { id: true, name: true } },
   unit: { select: { id: true, name: true } },
+  payment: { select: { id: true, status: true } },
 } as const;
 
 @Injectable()
