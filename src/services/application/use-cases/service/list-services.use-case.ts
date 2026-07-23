@@ -11,8 +11,8 @@ export class ListServicesUseCase {
 
   async listActiveServices(query: ListServicesQueryDto): Promise<PaginatedResponse<Service>> {
     return this.serviceRepository.findAllActiveServices({
-      page: query.page!,
-      limit: query.limit!,
+      page: query.page,
+      limit: query.limit,
     });
   }
 }
