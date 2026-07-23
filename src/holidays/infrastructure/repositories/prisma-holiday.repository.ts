@@ -60,7 +60,7 @@ export class PrismaHolidayRepository implements IHolidayRepository {
       data: holidays.map((holiday) => ({
         date: holiday.date,
         name: holiday.name,
-        type: holiday.type ?? 'national',
+        type: holiday.type ?? 'NATIONAL',
         isBlocked: holiday.isBlocked ?? true,
       })),
       skipDuplicates: true,
@@ -72,7 +72,7 @@ export class PrismaHolidayRepository implements IHolidayRepository {
           where: { date: holiday.date },
           data: {
             name: holiday.name,
-            type: holiday.type ?? 'national',
+            type: holiday.type ?? 'NATIONAL',
             isBlocked: holiday.isBlocked ?? true,
           },
         }),
