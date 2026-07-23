@@ -8,7 +8,6 @@ import { ListClientAppointmentsUseCase } from './application/use-cases/appointme
 import { GetClientAppointmentUseCase } from './application/use-cases/appointment/get-client-appointment.use-case.js';
 import { RescheduleClientAppointmentUseCase } from './application/use-cases/appointment/reschedule-client-appointment.use-case.js';
 import { CancelClientAppointmentUseCase } from './application/use-cases/appointment/cancel-client-appointment.use-case.js';
-import { CreatePublicAppointmentUseCase } from './application/use-cases/appointment/create-public-appointment.use-case.js';
 
 describe('ClientAppointmentsController', () => {
   let controller: ClientAppointmentsController;
@@ -17,7 +16,6 @@ describe('ClientAppointmentsController', () => {
   let getClientAppointmentUseCase: { getAppointmentByIdAndClientId: Mock };
   let rescheduleClientAppointmentUseCase: { rescheduleAppointmentByIdAndClientId: Mock };
   let cancelClientAppointmentUseCase: { cancelAppointmentByIdAndClientId: Mock };
-  let createPublicAppointmentUseCase: { createPublicAppointment: Mock };
 
   const clientUser: AuthUser = { id: 1, email: 'client@test.com', type: 'client' };
 
@@ -27,7 +25,6 @@ describe('ClientAppointmentsController', () => {
     getClientAppointmentUseCase = { getAppointmentByIdAndClientId: vi.fn() };
     rescheduleClientAppointmentUseCase = { rescheduleAppointmentByIdAndClientId: vi.fn() };
     cancelClientAppointmentUseCase = { cancelAppointmentByIdAndClientId: vi.fn() };
-    createPublicAppointmentUseCase = { createPublicAppointment: vi.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ClientAppointmentsController],
@@ -40,7 +37,6 @@ describe('ClientAppointmentsController', () => {
           useValue: rescheduleClientAppointmentUseCase,
         },
         { provide: CancelClientAppointmentUseCase, useValue: cancelClientAppointmentUseCase },
-        { provide: CreatePublicAppointmentUseCase, useValue: createPublicAppointmentUseCase },
         { provide: DiTokens.clientAuthRepository, useValue: { findById: vi.fn() } },
       ],
     }).compile();

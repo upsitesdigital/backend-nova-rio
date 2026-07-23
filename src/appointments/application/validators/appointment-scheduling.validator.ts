@@ -45,6 +45,14 @@ export class AppointmentSchedulingValidator {
   }
 
   async validateSchedulingDate(date: Date): Promise<void> {
+    // Appointment.date is UTC midnight; compare against today's UTC midnight so past
+    // days (D-1, D-N) are rejected without a timezone off-by-one.
+    const now = new Date();
+    const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    if (date.getTime() < todayUtc.getTime()) {
+      throw new BadRequestException('Appointments cannot be scheduled in the past');
+    }
+
     const dayOfWeek = date.getUTCDay();
     if (dayOfWeek === 0 || dayOfWeek === 6) {
       throw new BadRequestException('Appointments cannot be scheduled on weekends');

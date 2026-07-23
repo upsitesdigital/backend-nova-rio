@@ -5,6 +5,7 @@ import { CreateAdminUserUseCase } from './application/use-cases/admin-user/creat
 import { DeleteAdminUserUseCase } from './application/use-cases/admin-user/delete-admin-user.use-case.js';
 import { GetAdminUserUseCase } from './application/use-cases/admin-user/get-admin-user.use-case.js';
 import { ListAdminUsersUseCase } from './application/use-cases/admin-user/list-admin-users.use-case.js';
+import { UpdateAdminUserUseCase } from './application/use-cases/admin-user/update-admin-user.use-case.js';
 import { AdminUsersController } from './admin-users.controller.js';
 import { PrismaAdminUserRepository } from './infrastructure/repositories/prisma-admin-user.repository.js';
 
@@ -16,6 +17,7 @@ import { PrismaAdminUserRepository } from './infrastructure/repositories/prisma-
     CreateAdminUserUseCase,
     ListAdminUsersUseCase,
     GetAdminUserUseCase,
+    UpdateAdminUserUseCase,
     DeleteAdminUserUseCase,
   ],
 })

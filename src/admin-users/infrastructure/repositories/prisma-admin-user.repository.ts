@@ -7,6 +7,7 @@ import type {
   CreateAdminUserData,
   IAdminUserRepository,
   ListAdminUsersFilters,
+  UpdateAdminUserData,
 } from '../../domain/interfaces/admin-user.repository.interface.js';
 import { AdminUserSelect } from './admin-user.select.js';
 
@@ -63,6 +64,14 @@ export class PrismaAdminUserRepository implements IAdminUserRepository {
     ]);
 
     return { data, total, page, limit };
+  }
+
+  async updateAdminUserById(id: number, data: UpdateAdminUserData): Promise<AdminUserSafe> {
+    return this.prisma.adminUser.update({
+      where: { id },
+      data,
+      select: AdminUserSelect.safe,
+    });
   }
 
   async deactivateAdminUserById(id: number): Promise<void> {

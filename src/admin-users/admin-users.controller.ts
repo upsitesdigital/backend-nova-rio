@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -33,8 +34,10 @@ import { CreateAdminUserUseCase } from './application/use-cases/admin-user/creat
 import { DeleteAdminUserUseCase } from './application/use-cases/admin-user/delete-admin-user.use-case.js';
 import { GetAdminUserUseCase } from './application/use-cases/admin-user/get-admin-user.use-case.js';
 import { ListAdminUsersUseCase } from './application/use-cases/admin-user/list-admin-users.use-case.js';
+import { UpdateAdminUserUseCase } from './application/use-cases/admin-user/update-admin-user.use-case.js';
 import { CreateAdminUserDto } from './dto/admin-user/create-admin-user.dto.js';
 import { ListAdminUsersQueryDto } from './dto/admin-user/list-admin-users-query.dto.js';
+import { UpdateAdminUserDto } from './dto/admin-user/update-admin-user.dto.js';
 
 @ApiTags('Admin Users')
 @ApiBearerAuth()
@@ -46,6 +49,7 @@ export class AdminUsersController {
     private readonly createAdminUserUseCase: CreateAdminUserUseCase,
     private readonly listAdminUsersUseCase: ListAdminUsersUseCase,
     private readonly getAdminUserUseCase: GetAdminUserUseCase,
+    private readonly updateAdminUserUseCase: UpdateAdminUserUseCase,
     private readonly deleteAdminUserUseCase: DeleteAdminUserUseCase,
   ) {}
 
@@ -75,6 +79,22 @@ export class AdminUsersController {
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
   getAdminUserById(@Param('id', ParseIntPipe) id: number) {
     return this.getAdminUserUseCase.getAdminUserById(id);
+  }
+
+  @Patch(':id')
+  @Roles(AdminRole.ADMIN_MASTER)
+  @ApiOperation({ summary: 'Update an admin user' })
+  @ApiOkResponse({ description: 'Admin user updated successfully' })
+  @ApiNotFoundResponse({ description: 'Admin user not found' })
+  @ApiConflictResponse({ description: 'Email already in use' })
+  @ApiForbiddenResponse({ description: 'Only ADMIN_MASTER can edit an ADMIN_MASTER' })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
+  updateAdminUser(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateAdminUserDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.updateAdminUserUseCase.updateAdminUser(id, dto, user.role ?? '');
   }
 
   @Delete(':id')

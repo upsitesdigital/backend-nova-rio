@@ -1,5 +1,6 @@
 import { DiTokens } from '../shared/di/di-tokens.js';
 import { Global, Module } from '@nestjs/common';
+import { AppointmentsModule } from '../appointments/appointments.module.js';
 import { PaymentsModule } from '../payments/payments.module.js';
 import { ReceiptsModule } from '../receipts/receipts.module.js';
 import { PrismaModule } from '../shared/prisma/prisma.module.js';
@@ -14,7 +15,7 @@ import { VindiWebhooksController } from './vindi-webhooks.controller.js';
 
 @Global()
 @Module({
-  imports: [PaymentsModule, ReceiptsModule, PrismaModule],
+  imports: [AppointmentsModule, PaymentsModule, ReceiptsModule, PrismaModule],
   controllers: [VindiWebhooksController],
   providers: [
     VindiHttpClient,

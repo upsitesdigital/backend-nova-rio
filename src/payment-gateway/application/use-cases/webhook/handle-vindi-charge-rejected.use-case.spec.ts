@@ -9,6 +9,7 @@ describe('HandleVindiChargeRejectedUseCase', () => {
     findPaymentByGatewayTransactionId: Mock;
     cancelPaymentById: Mock;
   };
+  let appointmentRepository: { cancelAppointmentById: Mock };
   let emailService: { sendPaymentCancelledEmail: Mock };
 
   const pendingPayment = {
@@ -31,12 +32,14 @@ describe('HandleVindiChargeRejectedUseCase', () => {
       findPaymentByGatewayTransactionId: vi.fn(),
       cancelPaymentById: vi.fn(),
     };
+    appointmentRepository = { cancelAppointmentById: vi.fn().mockResolvedValue(true) };
     emailService = { sendPaymentCancelledEmail: vi.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         HandleVindiChargeRejectedUseCase,
         { provide: DiTokens.paymentRepository, useValue: paymentRepository },
+        { provide: DiTokens.appointmentRepository, useValue: appointmentRepository },
         { provide: DiTokens.emailService, useValue: emailService },
       ],
     }).compile();
@@ -59,6 +62,7 @@ describe('HandleVindiChargeRejectedUseCase', () => {
 
     expect(paymentRepository.findPaymentByGatewayTransactionId).toHaveBeenCalledWith('100');
     expect(paymentRepository.cancelPaymentById).toHaveBeenCalledWith(1, 'Card declined');
+    expect(appointmentRepository.cancelAppointmentById).toHaveBeenCalledWith(1);
     expect(emailService.sendPaymentCancelledEmail).toHaveBeenCalledWith(
       'joao@test.com',
       'João',

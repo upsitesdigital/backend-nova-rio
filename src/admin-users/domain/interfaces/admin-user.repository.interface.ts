@@ -21,6 +21,14 @@ export interface CreateAdminUserData {
   createdById: number;
 }
 
+export interface UpdateAdminUserData {
+  name?: string;
+  email?: string;
+  password?: string;
+  role?: AdminRole;
+  status?: UserStatus;
+}
+
 export interface ListAdminUsersFilters {
   status?: UserStatus;
   search?: string;
@@ -33,5 +41,6 @@ export interface IAdminUserRepository {
   findAdminUserByEmail(email: string): Promise<AdminUserSafe | null>;
   findAdminUserById(id: number): Promise<AdminUserSafe | null>;
   listAdminUsers(filters: ListAdminUsersFilters): Promise<PaginatedResponse<AdminUserSafe>>;
+  updateAdminUserById(id: number, data: UpdateAdminUserData): Promise<AdminUserSafe>;
   deactivateAdminUserById(id: number): Promise<void>;
 }

@@ -176,13 +176,13 @@ describe('CreateClientPaymentUseCase', () => {
     expect(paymentGatewayService.createGatewayBill).toHaveBeenCalledWith(
       expect.objectContaining({
         paymentMethodCode: 'pix',
-        amount: 200,
+        amount: 203,
         productId: 1,
       }),
     );
     expect(paymentRepository.createPayment).toHaveBeenCalledWith(
       expect.objectContaining({
-        amount: 200,
+        amount: 203,
       }),
     );
     expect(paymentRepository.updatePaymentGatewayDetails).toHaveBeenCalledWith(
@@ -222,11 +222,11 @@ describe('CreateClientPaymentUseCase', () => {
     await useCase.createClientPayment(1, { appointmentId: 1, method: 'PIX' });
 
     expect(paymentGatewayService.createGatewayBill).toHaveBeenCalledWith(
-      expect.objectContaining({ amount: 180 }),
+      expect.objectContaining({ amount: 183 }),
     );
     expect(paymentRepository.createPayment).toHaveBeenCalledWith(
       expect.objectContaining({
-        amount: 180,
+        amount: 183,
         subtotal: 200,
         discount: 20,
       }),
@@ -244,11 +244,11 @@ describe('CreateClientPaymentUseCase', () => {
     await useCase.createClientPayment(1, { appointmentId: 1, method: 'PIX' });
 
     expect(paymentGatewayService.createGatewayBill).toHaveBeenCalledWith(
-      expect.objectContaining({ amount: 190 }),
+      expect.objectContaining({ amount: 193 }),
     );
     expect(paymentRepository.createPayment).toHaveBeenCalledWith(
       expect.objectContaining({
-        amount: 190,
+        amount: 193,
         subtotal: 200,
         discount: 10,
       }),
@@ -267,11 +267,11 @@ describe('CreateClientPaymentUseCase', () => {
     await useCase.createClientPayment(1, { appointmentId: 1, method: 'PIX' });
 
     expect(paymentGatewayService.createGatewayBill).toHaveBeenCalledWith(
-      expect.objectContaining({ amount: 500 }),
+      expect.objectContaining({ amount: 503 }),
     );
     expect(paymentRepository.createPayment).toHaveBeenCalledWith(
       expect.objectContaining({
-        amount: 500,
+        amount: 503,
         subtotal: 500,
         discount: 0,
       }),
