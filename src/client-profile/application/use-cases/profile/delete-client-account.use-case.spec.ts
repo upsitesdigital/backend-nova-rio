@@ -8,6 +8,9 @@ describe('DeleteClientAccountUseCase', () => {
   let useCase: DeleteClientAccountUseCase;
   let clientRepository: { findById: Mock; deactivateClient: Mock };
   let emailService: { sendAccountDeletedEmail: Mock };
+  let appointmentRepository: { listAppointmentsByClientId: Mock; cancelAppointmentById: Mock };
+  let paymentRepository: { listPaymentsByClientId: Mock; cancelPaymentById: Mock };
+  let cardRepository: { findCardsByClientId: Mock; deleteCardByIdAndClientId: Mock };
 
   beforeEach(async () => {
     clientRepository = {
@@ -15,12 +18,27 @@ describe('DeleteClientAccountUseCase', () => {
       deactivateClient: vi.fn(),
     };
     emailService = { sendAccountDeletedEmail: vi.fn().mockResolvedValue(undefined) };
+    appointmentRepository = {
+      listAppointmentsByClientId: vi.fn().mockResolvedValue({ data: [] }),
+      cancelAppointmentById: vi.fn(),
+    };
+    paymentRepository = {
+      listPaymentsByClientId: vi.fn().mockResolvedValue({ data: [] }),
+      cancelPaymentById: vi.fn(),
+    };
+    cardRepository = {
+      findCardsByClientId: vi.fn().mockResolvedValue([]),
+      deleteCardByIdAndClientId: vi.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteClientAccountUseCase,
         { provide: DiTokens.clientProfileRepository, useValue: clientRepository },
         { provide: DiTokens.emailService, useValue: emailService },
+        { provide: DiTokens.appointmentRepository, useValue: appointmentRepository },
+        { provide: DiTokens.paymentRepository, useValue: paymentRepository },
+        { provide: DiTokens.cardRepository, useValue: cardRepository },
       ],
     }).compile();
 
