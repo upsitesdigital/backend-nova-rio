@@ -1,19 +1,7 @@
-import {
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  ParseIntPipe,
-  Patch,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Patch, Query, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
-  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -24,7 +12,7 @@ import { Roles } from '../auth/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { ApprovePaymentUseCase } from './application/use-cases/payment/approve-payment.use-case.js';
-import { DeletePaymentUseCase } from './application/use-cases/payment/delete-payment.use-case.js';
+import { CancelPaymentUseCase } from './application/use-cases/payment/cancel-payment.use-case.js';
 import { GetPaymentUseCase } from './application/use-cases/payment/get-payment.use-case.js';
 import { ListPaymentsUseCase } from './application/use-cases/payment/list-payments.use-case.js';
 import { ListPaymentsQueryDto } from './dto/payment/list-payments-query.dto.js';
@@ -39,7 +27,7 @@ export class AdminPaymentsController {
     private listPaymentsUseCase: ListPaymentsUseCase,
     private getPaymentUseCase: GetPaymentUseCase,
     private approvePaymentUseCase: ApprovePaymentUseCase,
-    private deletePaymentUseCase: DeletePaymentUseCase,
+    private cancelPaymentUseCase: CancelPaymentUseCase,
   ) {}
 
   @Get()
@@ -70,14 +58,14 @@ export class AdminPaymentsController {
     return this.approvePaymentUseCase.approvePaymentById(id);
   }
 
-  @Delete(':id')
+  @Patch(':id/cancel')
   @Roles('ADMIN_MASTER')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a payment' })
-  @ApiNoContentResponse({ description: 'Payment deleted successfully' })
+  @ApiOperation({ summary: 'Cancel a pending payment and its gateway bill' })
+  @ApiOkResponse({ description: 'Payment cancelled successfully' })
+  @ApiBadRequestResponse({ description: 'Payment is not pending' })
   @ApiNotFoundResponse({ description: 'Payment not found' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
-  deletePaymentById(@Param('id', ParseIntPipe) id: number) {
-    return this.deletePaymentUseCase.deletePaymentById(id);
+  cancelPaymentById(@Param('id', ParseIntPipe) id: number) {
+    return this.cancelPaymentUseCase.cancelPaymentById(id);
   }
 }
