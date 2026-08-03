@@ -4,6 +4,7 @@ import { AppointmentsModule } from '../appointments/appointments.module.js';
 import { PaymentsModule } from '../payments/payments.module.js';
 import { ReceiptsModule } from '../receipts/receipts.module.js';
 import { PrismaModule } from '../shared/prisma/prisma.module.js';
+import { HandleVindiBillCancelledUseCase } from './application/use-cases/webhook/handle-vindi-bill-cancelled.use-case.js';
 import { HandleVindiBillPaidUseCase } from './application/use-cases/webhook/handle-vindi-bill-paid.use-case.js';
 import { HandleVindiChargeRejectedUseCase } from './application/use-cases/webhook/handle-vindi-charge-rejected.use-case.js';
 import { ProcessVindiWebhookUseCase } from './application/use-cases/webhook/process-vindi-webhook.use-case.js';
@@ -31,6 +32,7 @@ import { VindiWebhooksController } from './vindi-webhooks.controller.js';
       provide: DiTokens.processedWebhookEventRepository,
       useClass: PrismaProcessedWebhookEventRepository,
     },
+    HandleVindiBillCancelledUseCase,
     HandleVindiBillPaidUseCase,
     HandleVindiChargeRejectedUseCase,
     ProcessVindiWebhookUseCase,

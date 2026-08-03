@@ -4,20 +4,20 @@ import { AdminPaymentsController } from './admin-payments.controller.js';
 import { ListPaymentsUseCase } from './application/use-cases/payment/list-payments.use-case.js';
 import { GetPaymentUseCase } from './application/use-cases/payment/get-payment.use-case.js';
 import { ApprovePaymentUseCase } from './application/use-cases/payment/approve-payment.use-case.js';
-import { DeletePaymentUseCase } from './application/use-cases/payment/delete-payment.use-case.js';
+import { CancelPaymentUseCase } from './application/use-cases/payment/cancel-payment.use-case.js';
 
 describe('AdminPaymentsController', () => {
   let controller: AdminPaymentsController;
   let listPaymentsUseCase: { listPayments: Mock };
   let getPaymentUseCase: { getPaymentById: Mock };
   let approvePaymentUseCase: { approvePaymentById: Mock };
-  let deletePaymentUseCase: { deletePaymentById: Mock };
+  let cancelPaymentUseCase: { cancelPaymentById: Mock };
 
   beforeEach(async () => {
     listPaymentsUseCase = { listPayments: vi.fn() };
     getPaymentUseCase = { getPaymentById: vi.fn() };
     approvePaymentUseCase = { approvePaymentById: vi.fn() };
-    deletePaymentUseCase = { deletePaymentById: vi.fn() };
+    cancelPaymentUseCase = { cancelPaymentById: vi.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminPaymentsController],
@@ -25,7 +25,7 @@ describe('AdminPaymentsController', () => {
         { provide: ListPaymentsUseCase, useValue: listPaymentsUseCase },
         { provide: GetPaymentUseCase, useValue: getPaymentUseCase },
         { provide: ApprovePaymentUseCase, useValue: approvePaymentUseCase },
-        { provide: DeletePaymentUseCase, useValue: deletePaymentUseCase },
+        { provide: CancelPaymentUseCase, useValue: cancelPaymentUseCase },
       ],
     }).compile();
 
@@ -52,8 +52,8 @@ describe('AdminPaymentsController', () => {
     expect(approvePaymentUseCase.approvePaymentById).toHaveBeenCalledWith(1);
   });
 
-  it('deletePaymentById should call deletePaymentUseCase', async () => {
-    await controller.deletePaymentById(1);
-    expect(deletePaymentUseCase.deletePaymentById).toHaveBeenCalledWith(1);
+  it('cancelPaymentById should call cancelPaymentUseCase', async () => {
+    await controller.cancelPaymentById(1);
+    expect(cancelPaymentUseCase.cancelPaymentById).toHaveBeenCalledWith(1);
   });
 });
