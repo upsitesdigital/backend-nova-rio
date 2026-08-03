@@ -218,14 +218,18 @@ describe('PrismaPaymentRepository', () => {
     });
   });
 
-  describe('softDeletePaymentById', () => {
-    it('should soft-delete payment by setting status to CANCELLED', async () => {
-      await repository.softDeletePaymentById(1);
+  describe('incrementChargeAttempts', () => {
+    it('should increment the attempt counter and return the new value', async () => {
+      prisma.payment.update.mockResolvedValue({ chargeAttempts: 2 });
+
+      const attempts = await repository.incrementChargeAttempts(1);
 
       expect(prisma.payment.update).toHaveBeenCalledWith({
         where: { id: 1 },
-        data: { status: 'CANCELLED', cancellationReason: 'Deleted by admin' },
+        data: { chargeAttempts: { increment: 1 } },
+        select: { chargeAttempts: true },
       });
+      expect(attempts).toBe(2);
     });
   });
 });

@@ -167,6 +167,16 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     return this.findPaymentById(id);
   }
 
+  async incrementChargeAttempts(id: number): Promise<number> {
+    const updated = await this.prisma.payment.update({
+      where: { id },
+      data: { chargeAttempts: { increment: 1 } },
+      select: { chargeAttempts: true },
+    });
+
+    return updated.chargeAttempts;
+  }
+
   async cancelPaymentById(id: number, reason: string): Promise<PaymentResponse | null> {
     const updated = await this.prisma.payment.updateMany({
       where: { id, status: PaymentStatus.PENDING },
@@ -178,12 +188,5 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     }
 
     return this.findPaymentById(id);
-  }
-
-  async softDeletePaymentById(id: number): Promise<void> {
-    await this.prisma.payment.update({
-      where: { id },
-      data: { status: PaymentStatus.CANCELLED, cancellationReason: 'Deleted by admin' },
-    });
   }
 }

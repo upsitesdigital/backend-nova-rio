@@ -11,6 +11,7 @@ export interface PaymentResponse {
   method: PaymentMethod;
   status: PaymentStatus;
   cancellationReason: string | null;
+  chargeAttempts: number;
   gatewayTransactionId: string | null;
   pixCode: string | null;
   pixQrCodeUrl: string | null;
@@ -73,6 +74,6 @@ export interface IPaymentRepository {
   findPaymentByGatewayTransactionId(transactionId: string): Promise<PaymentResponse | null>;
   deletePendingPaymentReservation(id: number): Promise<boolean>;
   approvePaymentById(id: number): Promise<PaymentResponse | null>;
+  incrementChargeAttempts(id: number): Promise<number>;
   cancelPaymentById(id: number, reason: string): Promise<PaymentResponse | null>;
-  softDeletePaymentById(id: number): Promise<void>;
 }
