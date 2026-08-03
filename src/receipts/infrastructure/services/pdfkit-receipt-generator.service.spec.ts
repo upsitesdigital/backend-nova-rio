@@ -53,6 +53,7 @@ describe('PdfkitReceiptGeneratorService', () => {
     method: 'PIX',
     status: 'APPROVED',
     cancellationReason: null,
+    chargeAttempts: 0,
     gatewayTransactionId: 'tx-456',
     pixCode: 'pix123',
     pixQrCodeUrl: null,
