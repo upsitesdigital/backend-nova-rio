@@ -2,6 +2,7 @@ import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
+import { HandleVindiBillCancelledUseCase } from './handle-vindi-bill-cancelled.use-case.js';
 import { HandleVindiBillPaidUseCase } from './handle-vindi-bill-paid.use-case.js';
 import { HandleVindiChargeRejectedUseCase } from './handle-vindi-charge-rejected.use-case.js';
 import { ProcessVindiWebhookUseCase } from './process-vindi-webhook.use-case.js';
@@ -58,6 +59,7 @@ describe('ProcessVindiWebhookUseCase', () => {
   let processedEventRepository: { registerEventOnce: Mock };
   let handleBillPaid: { handleBillPaid: Mock };
   let handleChargeRejected: { handleChargeRejected: Mock };
+  let handleBillCancelled: { handleBillCancelled: Mock };
   const AUTH = 'Basic dXNlcjpwYXNz';
 
   beforeEach(async () => {
@@ -65,6 +67,7 @@ describe('ProcessVindiWebhookUseCase', () => {
     processedEventRepository = { registerEventOnce: vi.fn().mockResolvedValue(true) };
     handleBillPaid = { handleBillPaid: vi.fn().mockResolvedValue(undefined) };
     handleChargeRejected = { handleChargeRejected: vi.fn().mockResolvedValue(undefined) };
+    handleBillCancelled = { handleBillCancelled: vi.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -73,6 +76,7 @@ describe('ProcessVindiWebhookUseCase', () => {
         { provide: DiTokens.processedWebhookEventRepository, useValue: processedEventRepository },
         { provide: HandleVindiBillPaidUseCase, useValue: handleBillPaid },
         { provide: HandleVindiChargeRejectedUseCase, useValue: handleChargeRejected },
+        { provide: HandleVindiBillCancelledUseCase, useValue: handleBillCancelled },
       ],
     }).compile();
 
@@ -103,13 +107,14 @@ describe('ProcessVindiWebhookUseCase', () => {
     );
   });
 
-  it('should handle bill_canceled as a rejection', async () => {
+  it('should handle bill_canceled as an immediate cancellation', async () => {
     await useCase.processVindiWebhook(AUTH, billCanceledPayload(100));
 
-    expect(handleChargeRejected.handleChargeRejected).toHaveBeenCalledWith(
+    expect(handleBillCancelled.handleBillCancelled).toHaveBeenCalledWith(
       100,
       'Bill cancelled by gateway',
     );
+    expect(handleChargeRejected.handleChargeRejected).not.toHaveBeenCalled();
   });
 
   it('should skip routing for duplicate events', async () => {

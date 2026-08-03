@@ -9,6 +9,7 @@ import type {
   VindiWebhookChargeData,
   VindiWebhookPayload,
 } from '../../../domain/types/vindi.types.js';
+import { HandleVindiBillCancelledUseCase } from './handle-vindi-bill-cancelled.use-case.js';
 import { HandleVindiBillPaidUseCase } from './handle-vindi-bill-paid.use-case.js';
 import { HandleVindiChargeRejectedUseCase } from './handle-vindi-charge-rejected.use-case.js';
 
@@ -24,6 +25,7 @@ export class ProcessVindiWebhookUseCase {
     private readonly processedEventRepository: IProcessedWebhookEventRepository,
     private readonly handleBillPaid: HandleVindiBillPaidUseCase,
     private readonly handleChargeRejected: HandleVindiChargeRejectedUseCase,
+    private readonly handleBillCancelled: HandleVindiBillCancelledUseCase,
   ) {}
 
   async processVindiWebhook(
@@ -63,7 +65,7 @@ export class ProcessVindiWebhookUseCase {
       }
       case VindiWebhookEventType.billCanceled: {
         const data = payload.event.data as VindiWebhookBillData;
-        await this.handleChargeRejected.handleChargeRejected(
+        await this.handleBillCancelled.handleBillCancelled(
           data.bill.id,
           'Bill cancelled by gateway',
         );

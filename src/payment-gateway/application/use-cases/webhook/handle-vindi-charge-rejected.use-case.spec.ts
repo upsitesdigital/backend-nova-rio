@@ -1,21 +1,24 @@
 import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { type Mock, vi } from 'vitest';
+import { HandleVindiBillCancelledUseCase } from './handle-vindi-bill-cancelled.use-case.js';
 import { HandleVindiChargeRejectedUseCase } from './handle-vindi-charge-rejected.use-case.js';
 
 describe('HandleVindiChargeRejectedUseCase', () => {
   let useCase: HandleVindiChargeRejectedUseCase;
   let paymentRepository: {
     findPaymentByGatewayTransactionId: Mock;
-    cancelPaymentById: Mock;
+    incrementChargeAttempts: Mock;
   };
-  let appointmentRepository: { cancelAppointmentById: Mock };
-  let emailService: { sendPaymentCancelledEmail: Mock };
+  let paymentGatewayService: { cancelGatewayBillById: Mock };
+  let handleBillCancelled: { handleBillCancelled: Mock };
 
   const pendingPayment = {
     id: 1,
     status: 'PENDING',
     amount: 200,
+    chargeAttempts: 0,
+    gatewayTransactionId: '100',
     client: { id: 1, name: 'João', email: 'joao@test.com', cpfCnpj: null },
     appointment: {
       id: 1,
@@ -29,18 +32,18 @@ describe('HandleVindiChargeRejectedUseCase', () => {
 
   beforeEach(async () => {
     paymentRepository = {
-      findPaymentByGatewayTransactionId: vi.fn(),
-      cancelPaymentById: vi.fn(),
+      findPaymentByGatewayTransactionId: vi.fn().mockResolvedValue(pendingPayment),
+      incrementChargeAttempts: vi.fn(),
     };
-    appointmentRepository = { cancelAppointmentById: vi.fn().mockResolvedValue(true) };
-    emailService = { sendPaymentCancelledEmail: vi.fn().mockResolvedValue(undefined) };
+    paymentGatewayService = { cancelGatewayBillById: vi.fn().mockResolvedValue(undefined) };
+    handleBillCancelled = { handleBillCancelled: vi.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         HandleVindiChargeRejectedUseCase,
         { provide: DiTokens.paymentRepository, useValue: paymentRepository },
-        { provide: DiTokens.appointmentRepository, useValue: appointmentRepository },
-        { provide: DiTokens.emailService, useValue: emailService },
+        { provide: DiTokens.paymentGatewayService, useValue: paymentGatewayService },
+        { provide: HandleVindiBillCancelledUseCase, useValue: handleBillCancelled },
       ],
     }).compile();
 
@@ -51,24 +54,44 @@ describe('HandleVindiChargeRejectedUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should cancel payment and send email when charge is rejected', async () => {
-    paymentRepository.findPaymentByGatewayTransactionId.mockResolvedValue(pendingPayment);
-    paymentRepository.cancelPaymentById.mockResolvedValue({
-      ...pendingPayment,
-      status: 'CANCELLED',
-    });
+  it('should only count the attempt on the first rejection', async () => {
+    paymentRepository.incrementChargeAttempts.mockResolvedValue(1);
 
     await useCase.handleChargeRejected(100, 'Card declined');
 
-    expect(paymentRepository.findPaymentByGatewayTransactionId).toHaveBeenCalledWith('100');
-    expect(paymentRepository.cancelPaymentById).toHaveBeenCalledWith(1, 'Card declined');
-    expect(appointmentRepository.cancelAppointmentById).toHaveBeenCalledWith(1);
-    expect(emailService.sendPaymentCancelledEmail).toHaveBeenCalledWith(
-      'joao@test.com',
-      'João',
-      expect.any(String) as string,
-      'Faxina Regular',
+    expect(paymentRepository.incrementChargeAttempts).toHaveBeenCalledWith(1);
+    expect(paymentGatewayService.cancelGatewayBillById).not.toHaveBeenCalled();
+    expect(handleBillCancelled.handleBillCancelled).not.toHaveBeenCalled();
+  });
+
+  it('should keep the bill alive on the second rejection', async () => {
+    paymentRepository.incrementChargeAttempts.mockResolvedValue(2);
+
+    await useCase.handleChargeRejected(100, 'Card declined');
+
+    expect(paymentGatewayService.cancelGatewayBillById).not.toHaveBeenCalled();
+    expect(handleBillCancelled.handleBillCancelled).not.toHaveBeenCalled();
+  });
+
+  it('should cancel the gateway bill and the payment on the third rejection', async () => {
+    paymentRepository.incrementChargeAttempts.mockResolvedValue(3);
+
+    await useCase.handleChargeRejected(100, 'Card declined');
+
+    expect(paymentGatewayService.cancelGatewayBillById).toHaveBeenCalledWith(100);
+    expect(handleBillCancelled.handleBillCancelled).toHaveBeenCalledWith(
+      100,
+      'Card declined (3 tentativas de cobranca)',
     );
+  });
+
+  it('should still cancel the payment when the gateway cancellation fails', async () => {
+    paymentRepository.incrementChargeAttempts.mockResolvedValue(3);
+    paymentGatewayService.cancelGatewayBillById.mockRejectedValue(new Error('Vindi down'));
+
+    await useCase.handleChargeRejected(100, 'Card declined');
+
+    expect(handleBillCancelled.handleBillCancelled).toHaveBeenCalled();
   });
 
   it('should skip when no payment found for bill', async () => {
@@ -76,7 +99,7 @@ describe('HandleVindiChargeRejectedUseCase', () => {
 
     await useCase.handleChargeRejected(999, 'Card declined');
 
-    expect(paymentRepository.cancelPaymentById).not.toHaveBeenCalled();
+    expect(paymentRepository.incrementChargeAttempts).not.toHaveBeenCalled();
   });
 
   it('should skip when payment is not PENDING (idempotent)', async () => {
@@ -87,6 +110,6 @@ describe('HandleVindiChargeRejectedUseCase', () => {
 
     await useCase.handleChargeRejected(100, 'Card declined');
 
-    expect(paymentRepository.cancelPaymentById).not.toHaveBeenCalled();
+    expect(paymentRepository.incrementChargeAttempts).not.toHaveBeenCalled();
   });
 });

@@ -1,9 +1,11 @@
 import { DiTokens } from '../../../../shared/di/di-tokens.js';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PaymentStatus } from '@prisma/client';
-import type { IAppointmentRepository } from '../../../../appointments/domain/interfaces/appointment.repository.interface.js';
-import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
+import type { IPaymentGatewayService } from '../../../domain/interfaces/payment-gateway.service.interface.js';
 import type { IPaymentRepository } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
+import { HandleVindiBillCancelledUseCase } from './handle-vindi-bill-cancelled.use-case.js';
+
+const maxChargeAttempts = 3;
 
 @Injectable()
 export class HandleVindiChargeRejectedUseCase {
@@ -11,8 +13,8 @@ export class HandleVindiChargeRejectedUseCase {
 
   constructor(
     @Inject(DiTokens.paymentRepository) private paymentRepository: IPaymentRepository,
-    @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
-    @Inject(DiTokens.emailService) private emailService: IEmailService,
+    @Inject(DiTokens.paymentGatewayService) private paymentGatewayService: IPaymentGatewayService,
+    private readonly handleBillCancelled: HandleVindiBillCancelledUseCase,
   ) {}
 
   async handleChargeRejected(billId: number, reason: string): Promise<void> {
@@ -28,31 +30,32 @@ export class HandleVindiChargeRejectedUseCase {
       return;
     }
 
-    const cancelled = await this.paymentRepository.cancelPaymentById(payment.id, reason);
-    if (!cancelled) {
-      this.logger.log(`Payment ${payment.id} changed before webhook cancellation, skipping`);
+    const attempts = await this.paymentRepository.incrementChargeAttempts(payment.id);
+
+    if (attempts < maxChargeAttempts) {
+      this.logger.log(
+        `Payment ${payment.id} charge rejected (${attempts}/${maxChargeAttempts}): ${reason}`,
+      );
       return;
     }
 
-    // Release the slot: a rejected payment must not leave a live appointment.
-    const appointmentCancelled = await this.appointmentRepository.cancelAppointmentById(
-      cancelled.appointment.id,
+    // Attempt limit reached: kill the bill at the gateway, otherwise Vindi keeps
+    // retrying the charge and emailing the client indefinitely.
+    await this.cancelGatewayBill(billId);
+
+    await this.handleBillCancelled.handleBillCancelled(
+      billId,
+      `${reason} (${attempts} tentativas de cobranca)`,
     );
-    if (!appointmentCancelled) {
-      this.logger.warn(
-        `Appointment ${cancelled.appointment.id} could not be cancelled after payment ${payment.id} rejection`,
-      );
+  }
+
+  private async cancelGatewayBill(billId: number): Promise<void> {
+    try {
+      await this.paymentGatewayService.cancelGatewayBillById(billId);
+    } catch (err) {
+      // The bill may already be cancelled or expired on Vindi's side. Log it and still
+      // settle our own records, so the payment never stays stuck as PENDING.
+      this.logger.error(`Failed to cancel Vindi bill ${billId} after attempt limit`, err);
     }
-
-    this.emailService
-      .sendPaymentCancelledEmail(
-        cancelled.client.email,
-        cancelled.client.name,
-        String(cancelled.amount),
-        cancelled.appointment.service.name,
-      )
-      .catch((err) => this.logger.error('Failed to send payment cancelled email', err));
-
-    this.logger.log(`Payment ${payment.id} cancelled via webhook (bill ${billId}): ${reason}`);
   }
 }
