@@ -1,13 +1,13 @@
 import { DiTokens } from '../shared/di/di-tokens.js';
 import { Global, Module } from '@nestjs/common';
-import { ResendEmailService } from './infrastructure/services/resend-email.service.js';
+import { Smtp2goEmailService } from './infrastructure/services/smtp2go-email.service.js';
 
 @Global()
 @Module({
   providers: [
     {
       provide: DiTokens.emailService,
-      useClass: ResendEmailService,
+      useClass: Smtp2goEmailService,
     },
   ],
   exports: [DiTokens.emailService],
