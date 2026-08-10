@@ -86,7 +86,7 @@ async function seedServices() {
       name: 'Faxina Regular',
       description: 'Limpeza completa e manutenção periódica',
       icon: 'broom',
-      basePrice: 50.0,
+      basePrice: 99.99,
       allowSingle: true,
       allowPackage: true,
       allowRecurrence: true,
@@ -95,7 +95,16 @@ async function seedServices() {
       name: 'Faxina Premium',
       description: 'Limpeza completa e manutenção periódica',
       icon: 'sketch-logo',
-      basePrice: 50.0,
+      basePrice: 139.99,
+      allowSingle: true,
+      allowPackage: true,
+      allowRecurrence: true,
+    },
+    {
+      name: 'Diária de Limpeza',
+      description: 'Diária de limpeza com duração de 6 horas',
+      icon: 'clock',
+      basePrice: 269.99,
       allowSingle: true,
       allowPackage: true,
       allowRecurrence: true,
@@ -104,7 +113,7 @@ async function seedServices() {
       name: 'Faxina Pós-Obra',
       description: 'Limpeza especializada após construção',
       icon: 'star-four',
-      basePrice: 50.0,
+      basePrice: 399.99,
       allowSingle: true,
       allowPackage: false,
       allowRecurrence: false,
@@ -117,7 +126,11 @@ async function seedServices() {
     });
 
     if (existing) {
-      console.log(`Service "${service.name}" already exists, skipping.`);
+      await prisma.service.update({
+        where: { id: existing.id },
+        data: { basePrice: service.basePrice, description: service.description },
+      });
+      console.log(`Service "${service.name}" updated.`);
       continue;
     }
 
