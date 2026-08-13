@@ -26,28 +26,36 @@ describe('PrismaPaymentPricingService', () => {
     expect(result).toEqual({ subtotal: 200, discount: 0 });
   });
 
-  it('applies 10% discount for WEEKLY with frequency 1', async () => {
+  it('applies 5% discount for 1x weekly (4 monthly visits)', async () => {
     prisma.service.findUnique.mockResolvedValue({ basePrice: 200 });
 
     const result = await service.calculatePricing(1, 'WEEKLY', null, 1);
 
-    expect(result).toEqual({ subtotal: 200, discount: 20 });
+    expect(result).toEqual({ subtotal: 800, discount: 40 });
   });
 
-  it('multiplies subtotal by weekly frequency and discounts the total for WEEKLY', async () => {
+  it('applies 8% discount for 3x weekly (13 monthly visits)', async () => {
     prisma.service.findUnique.mockResolvedValue({ basePrice: 200 });
 
     const result = await service.calculatePricing(1, 'WEEKLY', null, 3);
 
-    expect(result).toEqual({ subtotal: 600, discount: 60 });
+    expect(result).toEqual({ subtotal: 2600, discount: 208 });
   });
 
-  it('ignores weekly frequency for non-weekly recurrence (MONTHLY)', async () => {
+  it('applies 3% discount for BIWEEKLY (2 monthly visits)', async () => {
     prisma.service.findUnique.mockResolvedValue({ basePrice: 200 });
 
-    const result = await service.calculatePricing(1, 'MONTHLY', null, 3);
+    const result = await service.calculatePricing(1, 'BIWEEKLY', null, 1);
 
-    expect(result).toEqual({ subtotal: 200, discount: 10 });
+    expect(result).toEqual({ subtotal: 400, discount: 12 });
+  });
+
+  it('rounds discounted unit price before multiplying visits', async () => {
+    prisma.service.findUnique.mockResolvedValue({ basePrice: 99.99 });
+
+    const result = await service.calculatePricing(1, 'WEEKLY', null, 5);
+
+    expect(result).toEqual({ subtotal: 2099.79, discount: 210 });
   });
 
   it('prices a package by its own price ignoring frequency', async () => {
