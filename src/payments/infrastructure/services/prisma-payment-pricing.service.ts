@@ -50,24 +50,35 @@ export class PrismaPaymentPricingService implements IPaymentPricingService {
       throw new BadRequestException('Service not found');
     }
 
-    const sessionsPerWeek =
-      recurrenceType === 'WEEKLY' ? Math.max(1, Math.min(7, weeklyFrequency)) : 1;
-    const subtotal = Number(service.basePrice) * sessionsPerWeek;
-    const discountRate = this.resolveDiscountRate(recurrenceType);
-    const discount = subtotal * discountRate;
+    const monthlyVisits = this.resolveMonthlyVisits(recurrenceType, weeklyFrequency);
+    const basePrice = Number(service.basePrice);
+    const discountRate = this.resolveDiscountRate(monthlyVisits);
+    const discountedUnitPrice = Number((basePrice * (1 - discountRate)).toFixed(2));
+    const subtotal = basePrice * monthlyVisits;
+    const discount = subtotal - discountedUnitPrice * monthlyVisits;
 
     return { subtotal, discount };
   }
 
-  private resolveDiscountRate(recurrenceType: RecurrenceType): number {
-    if (recurrenceType === 'WEEKLY' || recurrenceType === 'BIWEEKLY') {
-      return 0.1;
-    }
+  private resolveMonthlyVisits(recurrenceType: RecurrenceType, weeklyFrequency: number): number {
+    const frequency = Math.max(1, Math.min(7, weeklyFrequency));
+    if (recurrenceType === 'BIWEEKLY') return frequency * 2;
+    if (recurrenceType === 'MONTHLY') return frequency;
+    if (recurrenceType !== 'WEEKLY') return 1;
+    if (frequency === 1) return 4;
+    if (frequency === 2) return 8;
+    if (frequency === 3) return 13;
+    if (frequency === 4) return 17;
+    return 21;
+  }
 
-    if (recurrenceType === 'MONTHLY') {
-      return 0.05;
-    }
-
+  private resolveDiscountRate(monthlyVisits: number): number {
+    if (monthlyVisits >= 21) return 0.1;
+    if (monthlyVisits >= 17) return 0.09;
+    if (monthlyVisits >= 13) return 0.08;
+    if (monthlyVisits >= 8) return 0.07;
+    if (monthlyVisits >= 4) return 0.05;
+    if (monthlyVisits >= 2) return 0.03;
     return 0;
   }
 }
