@@ -37,7 +37,8 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@2026!}
       ADMIN_NAME: ${ADMIN_NAME:-Admin Master}
     ports:
-      - '8180:8180'
+      # The app listens on PORT (8080 in .env); 8180 is the host-side port.
+      - '8180:8080'
 
 volumes:
   postgres_data:
