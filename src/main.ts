@@ -1,4 +1,7 @@
-import { Logger } from '@nestjs/common';
+// Import this first: Sentry must instrument the app before anything else loads.
+import './instrument.js';
+
+import { ConsoleLogger, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -11,7 +14,11 @@ import { SecretStrength } from './config/secret-strength.js';
 import { SwaggerBasicAuth } from './config/swagger-basic-auth.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true,
+    // Nest writes to stdout directly unless forced through console; Sentry hooks console.
+    logger: new ConsoleLogger({ forceConsole: true }),
+  });
   const configService = app.get(ConfigService);
 
   const missing = RequiredSecrets.keys.filter((key) => !configService.get(key));
