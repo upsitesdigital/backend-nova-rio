@@ -2,6 +2,9 @@ import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { Request, Response } from 'express';
+import { AppLogger } from '../observability/app-logger.service.js';
+import { HttpOperationResolver } from '../observability/http-operation-resolver.js';
+import { QueryStringScrubber } from '../observability/query-string-scrubber.js';
 
 interface ErrorEnvelope {
   statusCode: number;
@@ -14,6 +17,8 @@ interface ErrorEnvelope {
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
+
+  constructor(private readonly appLogger: AppLogger) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const httpContext = host.switchToHttp();
@@ -36,7 +41,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     const envelope: ErrorEnvelope = {
       ...this.normalizeHttpResponse(exceptionResponse, status),
-      path: request.url,
+      path: HttpOperationResolver.path(request),
       timestamp: new Date().toISOString(),
     };
 
@@ -51,7 +56,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return {
         statusCode: status,
         error: this.statusText(status),
-        message: exceptionResponse,
+        message: QueryStringScrubber.scrub(exceptionResponse),
       };
     }
 
@@ -68,11 +73,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const message = body.message;
 
     if (typeof message === 'string') {
-      return message;
+      return QueryStringScrubber.scrub(message);
     }
 
     if (Array.isArray(message) && message.every((item) => typeof item === 'string')) {
-      return message;
+      return message.map((item) => QueryStringScrubber.scrub(item));
     }
 
     return this.statusText(status);
@@ -83,7 +88,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       error: 'Internal Server Error',
       message: 'An unexpected error occurred',
-      path: request.url,
+      path: HttpOperationResolver.path(request),
       timestamp: new Date().toISOString(),
     };
 
@@ -91,30 +96,33 @@ export class AllExceptionsFilter implements ExceptionFilter {
   }
 
   private logError(exception: unknown, request: Request): void {
-    const origin = `${request.method} ${request.url}`;
+    const origin = `${request.method} ${HttpOperationResolver.path(request)}`;
+    const operation = HttpOperationResolver.resolve(request);
 
-    if (exception instanceof HttpException) {
+    // 4xx are client mistakes, not incidents: logged locally, never sent to Sentry.
+    if (exception instanceof HttpException && exception.getStatus() < 500) {
       this.logger.warn(
-        `${origin} -> ${exception.getStatus()} ${exception.message}`,
-        exception.stack,
+        `${origin} -> ${exception.getStatus()} ${QueryStringScrubber.scrub(exception.message)}`,
+        exception.stack && QueryStringScrubber.scrub(exception.stack),
       );
       return;
     }
 
     if (this.isPrismaError(exception)) {
-      // Do NOT log the Prisma stack/message: it embeds query arguments (CPF, email, etc.).
-      this.logger.error(
+      // Do NOT report the Prisma error object: its message embeds query arguments (CPF, email).
+      this.appLogger.error(
         `${origin} -> Prisma error ${this.prismaErrorCode(exception)} ${this.prismaErrorTarget(exception)}`.trim(),
+        operation,
       );
       return;
     }
 
     if (exception instanceof Error) {
-      this.logger.error(`${origin} -> ${exception.message}`, exception.stack);
+      this.appLogger.error(`${origin} -> ${exception.message}`, { ...operation, error: exception });
       return;
     }
 
-    this.logger.error(`${origin} -> Unknown exception`, String(exception));
+    this.appLogger.error(`${origin} -> Unknown exception ${String(exception)}`, operation);
   }
 
   private isPrismaError(exception: unknown): exception is Error {
