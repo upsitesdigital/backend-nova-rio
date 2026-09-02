@@ -8,6 +8,8 @@ import type {
 } from '../../../domain/interfaces/appointment.repository.interface.js';
 import type { RescheduleAppointmentDto } from '../../../dto/appointment/reschedule-appointment.dto.js';
 import { AppointmentSchedulingValidator } from '../../validators/appointment-scheduling.validator.js';
+import type { IAdminNotificationService } from '../../../../admin-notifications/domain/interfaces/admin-notification.service.interface.js';
+import { AdminNotificationEvent } from '../../../../admin-notifications/domain/enums/admin-notification-event.enum.js';
 
 @Injectable()
 export class RescheduleClientAppointmentUseCase {
@@ -17,6 +19,8 @@ export class RescheduleClientAppointmentUseCase {
     @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
     @Inject(DiTokens.emailService) private emailService: IEmailService,
     private schedulingValidator: AppointmentSchedulingValidator,
+    @Inject(DiTokens.adminNotificationService)
+    private adminNotificationService: IAdminNotificationService,
   ) {}
 
   async rescheduleAppointmentByIdAndClientId(
@@ -42,16 +46,12 @@ export class RescheduleClientAppointmentUseCase {
 
     this.schedulingValidator.validateCancellationAdvance(existing.date, existing.startTime);
 
-    // date/startTime are optional: when omitted the appointment keeps its current slot,
-    // so this endpoint also handles address/recurrence-only edits from the service drawer.
     const isReschedule = dto.date !== undefined || dto.startTime !== undefined;
     const newDate = dto.date ? new Date(dto.date) : existing.date;
     const newStartTime = dto.startTime ?? existing.startTime;
 
     await this.schedulingValidator.validateSchedulingDate(newDate);
 
-    // Ensure the new slot itself is at least 1h in the future, otherwise a client could
-    // reschedule an appointment into the past or too close to now.
     if (isReschedule) {
       this.schedulingValidator.validateCancellationAdvance(newDate, newStartTime);
     }
@@ -87,17 +87,31 @@ export class RescheduleClientAppointmentUseCase {
       throw new BadRequestException('Only scheduled appointments can be rescheduled');
     }
 
-    // Only notify the client when the actual slot changed, not on address/recurrence edits.
     if (isReschedule) {
+      const oldDateStr = existing.date.toISOString().slice(0, 10);
+      const newDateStr = newDate.toISOString().slice(0, 10);
+
       this.emailService
         .sendAppointmentRescheduledEmail(
           existing.client.email,
           existing.client.name,
-          newDate.toISOString().slice(0, 10),
+          newDateStr,
           newStartTime,
           existing.service.name,
         )
         .catch((err) => this.logger.error('Failed to send reschedule email', err));
+
+      void this.adminNotificationService.dispatch({
+        event: AdminNotificationEvent.APPOINTMENT_RESCHEDULED,
+        data: {
+          clientName: existing.client.name,
+          serviceName: existing.service.name,
+          oldDate: oldDateStr,
+          oldTime: existing.startTime,
+          newDate: newDateStr,
+          newTime: newStartTime,
+        },
+      });
     }
 
     return rescheduled;

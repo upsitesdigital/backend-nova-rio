@@ -8,6 +8,8 @@ import type {
 } from '../../../domain/interfaces/appointment.repository.interface.js';
 import type { RescheduleAppointmentDto } from '../../../dto/appointment/reschedule-appointment.dto.js';
 import { AppointmentSchedulingValidator } from '../../validators/appointment-scheduling.validator.js';
+import type { IAdminNotificationService } from '../../../../admin-notifications/domain/interfaces/admin-notification.service.interface.js';
+import { AdminNotificationEvent } from '../../../../admin-notifications/domain/enums/admin-notification-event.enum.js';
 
 @Injectable()
 export class RescheduleAppointmentUseCase {
@@ -17,6 +19,8 @@ export class RescheduleAppointmentUseCase {
     @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
     @Inject(DiTokens.emailService) private emailService: IEmailService,
     private schedulingValidator: AppointmentSchedulingValidator,
+    @Inject(DiTokens.adminNotificationService)
+    private adminNotificationService: IAdminNotificationService,
   ) {}
 
   async rescheduleAppointmentById(
@@ -70,15 +74,30 @@ export class RescheduleAppointmentUseCase {
     }
 
     if (isReschedule) {
+      const oldDateStr = existing.date.toISOString().slice(0, 10);
+      const newDateStr = newDate.toISOString().slice(0, 10);
+
       this.emailService
         .sendAppointmentRescheduledEmail(
           existing.client.email,
           existing.client.name,
-          newDate.toISOString().slice(0, 10),
+          newDateStr,
           newStartTime,
           existing.service.name,
         )
         .catch((err) => this.logger.error('Failed to send reschedule email', err));
+
+      void this.adminNotificationService.dispatch({
+        event: AdminNotificationEvent.APPOINTMENT_RESCHEDULED,
+        data: {
+          clientName: existing.client.name,
+          serviceName: existing.service.name,
+          oldDate: oldDateStr,
+          oldTime: existing.startTime,
+          newDate: newDateStr,
+          newTime: newStartTime,
+        },
+      });
     }
 
     return rescheduled;

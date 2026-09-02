@@ -4,6 +4,8 @@ import { AppointmentStatus, PaymentStatus } from '@prisma/client';
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
 import type { IAppointmentRepository } from '../../../domain/interfaces/appointment.repository.interface.js';
 import { AppointmentSchedulingValidator } from '../../validators/appointment-scheduling.validator.js';
+import type { IAdminNotificationService } from '../../../../admin-notifications/domain/interfaces/admin-notification.service.interface.js';
+import { AdminNotificationEvent } from '../../../../admin-notifications/domain/enums/admin-notification-event.enum.js';
 
 @Injectable()
 export class CancelClientAppointmentUseCase {
@@ -11,6 +13,8 @@ export class CancelClientAppointmentUseCase {
     @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
     @Inject(DiTokens.emailService) private emailService: IEmailService,
     private schedulingValidator: AppointmentSchedulingValidator,
+    @Inject(DiTokens.adminNotificationService)
+    private adminNotificationService: IAdminNotificationService,
   ) {}
 
   async cancelAppointmentByIdAndClientId(id: number, clientId: number): Promise<void> {
@@ -35,14 +39,26 @@ export class CancelClientAppointmentUseCase {
       throw new BadRequestException('Only scheduled appointments can be cancelled');
     }
 
+    const date = existing.date.toISOString().slice(0, 10);
+
     this.emailService
       .sendAppointmentCancelledEmail(
         existing.client.email,
         existing.client.name,
-        existing.date.toISOString().slice(0, 10),
+        date,
         existing.startTime,
         existing.service.name,
       )
       .catch(() => {});
+
+    void this.adminNotificationService.dispatch({
+      event: AdminNotificationEvent.APPOINTMENT_CANCELLED,
+      data: {
+        clientName: existing.client.name,
+        serviceName: existing.service.name,
+        date,
+        time: existing.startTime,
+      },
+    });
   }
 }

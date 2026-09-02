@@ -5,6 +5,8 @@ import { EmailAlreadyInUseError } from '../../../domain/errors/email-already-in-
 import type { IEmailService } from '../../../../email/domain/interfaces/email.service.interface.js';
 import type { IHashService } from '../../../domain/interfaces/hash.service.interface.js';
 import { ClientRegisterDto } from '../../../dto/client-register.dto.js';
+import type { IAdminNotificationService } from '../../../../admin-notifications/domain/interfaces/admin-notification.service.interface.js';
+import { AdminNotificationEvent } from '../../../../admin-notifications/domain/enums/admin-notification-event.enum.js';
 
 @Injectable()
 export class ClientRegisterUseCase {
@@ -12,6 +14,8 @@ export class ClientRegisterUseCase {
     @Inject(DiTokens.clientAuthRepository) private clientRepository: IClientAuthRepository,
     @Inject(DiTokens.emailService) private emailService: IEmailService,
     @Inject(DiTokens.hashService) private hashService: IHashService,
+    @Inject(DiTokens.adminNotificationService)
+    private adminNotificationService: IAdminNotificationService,
   ) {}
 
   async registerClient(dto: ClientRegisterDto): Promise<{ message: string }> {
@@ -32,6 +36,11 @@ export class ClientRegisterUseCase {
       });
 
       void this.emailService.sendWelcomeEmail(dto.email, dto.name);
+
+      void this.adminNotificationService.dispatch({
+        event: AdminNotificationEvent.NEW_CLIENT,
+        data: { clientName: dto.name, clientEmail: dto.email },
+      });
 
       return { message: 'Registration successful. Your account is pending approval.' };
     } catch (error: unknown) {

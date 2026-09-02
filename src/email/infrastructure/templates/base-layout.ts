@@ -1,8 +1,6 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
-
-const logoSvg = readFileSync(join(process.cwd(), 'assets/logo.svg'), 'utf-8');
-const logoBase64 = Buffer.from(logoSvg).toString('base64');
+const LOGO_URL = process.env.SITE_URL
+  ? `${process.env.SITE_URL}/logo/logo-white.svg`
+  : 'https://novario-frontend-novario.ralc6m.easypanel.host/logo/logo-white.svg';
 
 export function baseLayout(content: string): string {
   return `
@@ -22,7 +20,7 @@ export function baseLayout(content: string): string {
           <!-- Header -->
           <tr>
             <td style="background-color:#0a0a0a;padding:32px 40px;text-align:center;">
-              <img src="data:image/svg+xml;base64,${logoBase64}" alt="Nova Rio" width="140" height="75" style="display:block;margin:0 auto;" />
+              <img src="${LOGO_URL}" alt="Nova Rio" width="140" height="75" style="display:block;margin:0 auto;" />
             </td>
           </tr>
           <!-- Green accent bar -->

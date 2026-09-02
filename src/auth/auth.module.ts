@@ -2,6 +2,7 @@ import { DiTokens } from '../shared/di/di-tokens.js';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { AdminNotificationCoreModule } from '../admin-notifications/admin-notifications-core.module.js';
 import { LoginUseCase } from './application/use-cases/auth/login.use-case.js';
 import { ClientRegisterUseCase } from './application/use-cases/client/client-register.use-case.js';
 import { ForgotPasswordUseCase } from './application/use-cases/client/forgot-password.use-case.js';
@@ -18,7 +19,7 @@ import { VerificationCodeCleanupCron } from './infrastructure/services/verificat
 import { JwtStrategy } from './strategies/jwt.strategy.js';
 
 @Module({
-  imports: [PassportModule, JwtModule.register({})],
+  imports: [PassportModule, JwtModule.register({}), AdminNotificationCoreModule],
   controllers: [AuthController],
   providers: [
     JwtStrategy,

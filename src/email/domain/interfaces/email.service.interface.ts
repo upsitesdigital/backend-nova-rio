@@ -41,4 +41,44 @@ export interface IEmailService {
     amount: string,
     serviceName: string,
   ): Promise<void>;
+
+  // Admin notifications
+  sendAdminNewClientEmail(to: string, clientName: string, clientEmail: string): Promise<void>;
+  sendAdminNewAppointmentEmail(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    time: string,
+  ): Promise<void>;
+  sendAdminAppointmentCancelledEmail(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    time: string,
+  ): Promise<void>;
+  sendAdminAppointmentRescheduledEmail(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    oldDate: string,
+    oldTime: string,
+    newDate: string,
+    newTime: string,
+  ): Promise<void>;
+  sendAdminPaymentReceivedEmail(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    amount: string,
+    date: string,
+  ): Promise<void>;
+  sendAdminPaymentCancelledEmail(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    amount: string,
+  ): Promise<void>;
+  sendAdminAccountDeletedEmail(to: string, clientName: string, clientEmail: string): Promise<void>;
 }

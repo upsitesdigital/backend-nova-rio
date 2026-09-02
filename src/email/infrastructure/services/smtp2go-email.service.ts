@@ -15,6 +15,13 @@ import { appointmentCancelledTemplate } from '../templates/appointment-cancelled
 import { appointmentRescheduledTemplate } from '../templates/appointment-rescheduled.template.js';
 import { paymentApprovedTemplate } from '../templates/payment-approved.template.js';
 import { paymentCancelledTemplate } from '../templates/payment-cancelled.template.js';
+import { adminNewClientTemplate } from '../templates/admin-new-client.template.js';
+import { adminNewAppointmentTemplate } from '../templates/admin-new-appointment.template.js';
+import { adminAppointmentCancelledTemplate } from '../templates/admin-appointment-cancelled.template.js';
+import { adminAppointmentRescheduledTemplate } from '../templates/admin-appointment-rescheduled.template.js';
+import { adminPaymentReceivedTemplate } from '../templates/admin-payment-received.template.js';
+import { adminPaymentCancelledTemplate } from '../templates/admin-payment-cancelled.template.js';
+import { adminAccountDeletedTemplate } from '../templates/admin-account-deleted.template.js';
 
 @Injectable()
 export class Smtp2goEmailService implements IEmailService {
@@ -220,6 +227,154 @@ export class Smtp2goEmailService implements IEmailService {
       );
     } catch (error) {
       this.logger.error(`Failed to send payment cancelled email to ${this.maskEmail(to)}`, error);
+    }
+  }
+
+  async sendAdminNewClientEmail(
+    to: string,
+    clientName: string,
+    clientEmail: string,
+  ): Promise<void> {
+    try {
+      await this.send(
+        to,
+        `[Admin] Novo cliente aguardando aprovação - ${clientName}`,
+        adminNewClientTemplate(clientName, clientEmail),
+      );
+    } catch (error) {
+      this.logger.error(`Failed to send admin new-client email to ${this.maskEmail(to)}`, error);
+    }
+  }
+
+  async sendAdminNewAppointmentEmail(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    time: string,
+  ): Promise<void> {
+    try {
+      await this.send(
+        to,
+        `[Admin] Novo agendamento - ${clientName}`,
+        adminNewAppointmentTemplate(clientName, serviceName, date, time),
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send admin new-appointment email to ${this.maskEmail(to)}`,
+        error,
+      );
+    }
+  }
+
+  async sendAdminAppointmentCancelledEmail(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    time: string,
+  ): Promise<void> {
+    try {
+      await this.send(
+        to,
+        `[Admin] Agendamento cancelado - ${clientName}`,
+        adminAppointmentCancelledTemplate(clientName, serviceName, date, time),
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send admin appointment-cancelled email to ${this.maskEmail(to)}`,
+        error,
+      );
+    }
+  }
+
+  async sendAdminAppointmentRescheduledEmail(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    oldDate: string,
+    oldTime: string,
+    newDate: string,
+    newTime: string,
+  ): Promise<void> {
+    try {
+      await this.send(
+        to,
+        `[Admin] Agendamento reagendado - ${clientName}`,
+        adminAppointmentRescheduledTemplate(
+          clientName,
+          serviceName,
+          oldDate,
+          oldTime,
+          newDate,
+          newTime,
+        ),
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send admin appointment-rescheduled email to ${this.maskEmail(to)}`,
+        error,
+      );
+    }
+  }
+
+  async sendAdminPaymentReceivedEmail(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    amount: string,
+    date: string,
+  ): Promise<void> {
+    try {
+      await this.send(
+        to,
+        `[Admin] Pagamento recebido - ${clientName}`,
+        adminPaymentReceivedTemplate(clientName, serviceName, amount, date),
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send admin payment-received email to ${this.maskEmail(to)}`,
+        error,
+      );
+    }
+  }
+
+  async sendAdminPaymentCancelledEmail(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    amount: string,
+  ): Promise<void> {
+    try {
+      await this.send(
+        to,
+        `[Admin] Pagamento cancelado - ${clientName}`,
+        adminPaymentCancelledTemplate(clientName, serviceName, amount),
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send admin payment-cancelled email to ${this.maskEmail(to)}`,
+        error,
+      );
+    }
+  }
+
+  async sendAdminAccountDeletedEmail(
+    to: string,
+    clientName: string,
+    clientEmail: string,
+  ): Promise<void> {
+    try {
+      await this.send(
+        to,
+        `[Admin] Conta excluída - ${clientName}`,
+        adminAccountDeletedTemplate(clientName, clientEmail),
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send admin account-deleted email to ${this.maskEmail(to)}`,
+        error,
+      );
     }
   }
 }

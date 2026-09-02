@@ -27,9 +27,12 @@ import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter.js';
 import { ObservabilityModule } from './shared/observability/observability.module.js';
 import { PrismaModule } from './shared/prisma/prisma.module.js';
 import { UnitsModule } from './units/units.module.js';
+import { AdminNotificationsModule } from './admin-notifications/admin-notifications.module.js';
+import { AdminNotificationCoreModule } from './admin-notifications/admin-notifications-core.module.js';
 
 @Module({
   imports: [
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     ObservabilityModule,
@@ -55,6 +58,8 @@ import { UnitsModule } from './units/units.module.js';
     ReportsModule,
     PaymentGatewayModule,
     UnitsModule,
+    AdminNotificationCoreModule,
+    AdminNotificationsModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },

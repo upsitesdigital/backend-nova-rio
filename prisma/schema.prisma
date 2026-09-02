@@ -414,6 +414,21 @@ model Holiday {
   @@map("holidays")
 }
 
+// ============================================================
+// ADMIN NOTIFICATION SETTINGS (Configurações de notificação admin)
+// ============================================================
+
+model AdminNotificationSetting {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid())
+  email     String   @unique
+  events    String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admin_notification_settings")
+}
+
 model ProcessedWebhookEvent {
   id        Int      @id @default(autoincrement())
   eventId   String   @unique

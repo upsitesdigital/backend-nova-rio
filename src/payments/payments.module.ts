@@ -4,6 +4,7 @@ import { AppointmentsModule } from '../appointments/appointments.module.js';
 import { AuthModule } from '../auth/auth.module.js';
 import { CardsModule } from '../cards/cards.module.js';
 import { ReceiptsModule } from '../receipts/receipts.module.js';
+import { AdminNotificationCoreModule } from '../admin-notifications/admin-notifications-core.module.js';
 import { ApprovePaymentUseCase } from './application/use-cases/payment/approve-payment.use-case.js';
 import { CancelPaymentUseCase } from './application/use-cases/payment/cancel-payment.use-case.js';
 import { CreateClientPaymentUseCase } from './application/use-cases/payment/create-client-payment.use-case.js';
@@ -18,7 +19,13 @@ import { AdminPaymentsController } from './admin-payments.controller.js';
 import { ClientPaymentsController } from './client-payments.controller.js';
 
 @Module({
-  imports: [AppointmentsModule, AuthModule, CardsModule, forwardRef(() => ReceiptsModule)],
+  imports: [
+    AppointmentsModule,
+    AuthModule,
+    CardsModule,
+    forwardRef(() => ReceiptsModule),
+    AdminNotificationCoreModule,
+  ],
   controllers: [AdminPaymentsController, ClientPaymentsController],
   providers: [
     { provide: DiTokens.paymentRepository, useClass: PrismaPaymentRepository },

@@ -81,4 +81,8 @@ export class DiTokens {
 
   // health
   static readonly healthRepository = Symbol('healthRepository');
+
+  // admin-notifications
+  static readonly adminNotificationSettingRepository = Symbol('adminNotificationSettingRepository');
+  static readonly adminNotificationService = Symbol('adminNotificationService');
 }

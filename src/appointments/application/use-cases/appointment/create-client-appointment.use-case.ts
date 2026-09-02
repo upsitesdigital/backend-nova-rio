@@ -10,6 +10,8 @@ import type {
 import type { CreateClientAppointmentDto } from '../../../dto/appointment/create-client-appointment.dto.js';
 import type { ICreateClientAppointmentService } from '../../../domain/interfaces/create-client-appointment.service.interface.js';
 import { AppointmentSchedulingValidator } from '../../validators/appointment-scheduling.validator.js';
+import type { IAdminNotificationService } from '../../../../admin-notifications/domain/interfaces/admin-notification.service.interface.js';
+import { AdminNotificationEvent } from '../../../../admin-notifications/domain/enums/admin-notification-event.enum.js';
 
 @Injectable()
 export class CreateClientAppointmentUseCase implements ICreateClientAppointmentService {
@@ -17,6 +19,8 @@ export class CreateClientAppointmentUseCase implements ICreateClientAppointmentS
     @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
     @Inject(DiTokens.emailService) private emailService: IEmailService,
     private schedulingValidator: AppointmentSchedulingValidator,
+    @Inject(DiTokens.adminNotificationService)
+    private adminNotificationService: IAdminNotificationService,
   ) {}
 
   async createClientAppointment(
@@ -59,6 +63,16 @@ export class CreateClientAppointmentUseCase implements ICreateClientAppointmentS
         appointment.service.name,
       )
       .catch(() => {});
+
+    void this.adminNotificationService.dispatch({
+      event: AdminNotificationEvent.NEW_APPOINTMENT,
+      data: {
+        clientName: appointment.client.name,
+        serviceName: appointment.service.name,
+        date: appointment.date.toISOString().slice(0, 10),
+        time: appointment.startTime,
+      },
+    });
 
     return appointment;
   }

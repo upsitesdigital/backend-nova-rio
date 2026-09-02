@@ -7,6 +7,8 @@ import type {
   IPaymentRepository,
   PaymentResponse,
 } from '../../../domain/interfaces/payment.repository.interface.js';
+import type { IAdminNotificationService } from '../../../../admin-notifications/domain/interfaces/admin-notification.service.interface.js';
+import { AdminNotificationEvent } from '../../../../admin-notifications/domain/enums/admin-notification-event.enum.js';
 
 @Injectable()
 export class ApprovePaymentUseCase {
@@ -17,6 +19,8 @@ export class ApprovePaymentUseCase {
     @Inject(DiTokens.emailService) private emailService: IEmailService,
     @Inject(DiTokens.receiptGenerationService)
     private receiptGenerationService: IReceiptGenerationService,
+    @Inject(DiTokens.adminNotificationService)
+    private adminNotificationService: IAdminNotificationService,
   ) {}
 
   async approvePaymentById(id: number): Promise<PaymentResponse> {
@@ -35,19 +39,31 @@ export class ApprovePaymentUseCase {
       throw new BadRequestException('Only pending payments can be approved');
     }
 
+    const date = payment.appointment.date.toISOString().slice(0, 10);
+
     this.emailService
       .sendPaymentApprovedEmail(
         payment.client.email,
         payment.client.name,
         String(payment.amount),
         payment.appointment.service.name,
-        payment.appointment.date.toISOString().slice(0, 10),
+        date,
       )
       .catch((err) => this.logger.error('Failed to send payment approved email', err));
 
     this.receiptGenerationService
       .generateReceiptForPayment(payment.id)
       .catch((err) => this.logger.error('Failed to generate receipt', err));
+
+    void this.adminNotificationService.dispatch({
+      event: AdminNotificationEvent.PAYMENT_RECEIVED,
+      data: {
+        clientName: payment.client.name,
+        serviceName: payment.appointment.service.name,
+        amount: String(payment.amount),
+        date,
+      },
+    });
 
     return payment;
   }

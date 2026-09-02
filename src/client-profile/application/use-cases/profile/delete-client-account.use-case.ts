@@ -6,6 +6,8 @@ import type { IEmailService } from '../../../../email/domain/interfaces/email.se
 import type { IAppointmentRepository } from '../../../../appointments/domain/interfaces/appointment.repository.interface.js';
 import type { IPaymentRepository } from '../../../../payments/domain/interfaces/payment.repository.interface.js';
 import type { ICardRepository } from '../../../../cards/domain/interfaces/card.repository.interface.js';
+import type { IAdminNotificationService } from '../../../../admin-notifications/domain/interfaces/admin-notification.service.interface.js';
+import { AdminNotificationEvent } from '../../../../admin-notifications/domain/enums/admin-notification-event.enum.js';
 
 @Injectable()
 export class DeleteClientAccountUseCase {
@@ -17,6 +19,8 @@ export class DeleteClientAccountUseCase {
     @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
     @Inject(DiTokens.paymentRepository) private paymentRepository: IPaymentRepository,
     @Inject(DiTokens.cardRepository) private cardRepository: ICardRepository,
+    @Inject(DiTokens.adminNotificationService)
+    private adminNotificationService: IAdminNotificationService,
   ) {}
 
   async deleteClientAccount(clientId: number) {
@@ -58,6 +62,11 @@ export class DeleteClientAccountUseCase {
     await this.clientRepository.deactivateClient(clientId);
 
     void this.emailService.sendAccountDeletedEmail(client.email, client.name);
+
+    void this.adminNotificationService.dispatch({
+      event: AdminNotificationEvent.ACCOUNT_DELETED,
+      data: { clientName: client.name, clientEmail: client.email },
+    });
 
     this.logger.log(`Client ${clientId} (${client.email}) account deleted`);
 

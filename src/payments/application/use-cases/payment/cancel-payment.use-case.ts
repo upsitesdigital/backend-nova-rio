@@ -8,6 +8,8 @@ import type {
   IPaymentRepository,
   PaymentResponse,
 } from '../../../domain/interfaces/payment.repository.interface.js';
+import type { IAdminNotificationService } from '../../../../admin-notifications/domain/interfaces/admin-notification.service.interface.js';
+import { AdminNotificationEvent } from '../../../../admin-notifications/domain/enums/admin-notification-event.enum.js';
 
 const adminCancellationReason = 'Cancelado pelo administrador';
 
@@ -20,6 +22,8 @@ export class CancelPaymentUseCase {
     @Inject(DiTokens.paymentGatewayService) private paymentGatewayService: IPaymentGatewayService,
     @Inject(DiTokens.appointmentRepository) private appointmentRepository: IAppointmentRepository,
     @Inject(DiTokens.emailService) private emailService: IEmailService,
+    @Inject(DiTokens.adminNotificationService)
+    private adminNotificationService: IAdminNotificationService,
   ) {}
 
   async cancelPaymentById(id: number): Promise<PaymentResponse> {
@@ -64,6 +68,15 @@ export class CancelPaymentUseCase {
         cancelled.appointment.service.name,
       )
       .catch((err) => this.logger.error('Failed to send payment cancelled email', err));
+
+    void this.adminNotificationService.dispatch({
+      event: AdminNotificationEvent.PAYMENT_CANCELLED,
+      data: {
+        clientName: cancelled.client.name,
+        serviceName: cancelled.appointment.service.name,
+        amount: String(cancelled.amount),
+      },
+    });
 
     this.logger.log(`Payment ${id} cancelled by admin (bill ${existing.gatewayTransactionId})`);
 
