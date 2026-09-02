@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { SentryModule } from '@sentry/nestjs/setup';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -23,12 +24,15 @@ import { ReceiptsModule } from './receipts/receipts.module.js';
 import { ReportsModule } from './reports/reports.module.js';
 import { ServicesModule } from './services/services.module.js';
 import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter.js';
+import { ObservabilityModule } from './shared/observability/observability.module.js';
 import { PrismaModule } from './shared/prisma/prisma.module.js';
 import { UnitsModule } from './units/units.module.js';
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
+    ObservabilityModule,
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     PrismaModule,

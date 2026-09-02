@@ -35,4 +35,4 @@ USER appuser
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && ([ -f dist/seed.js ] && node dist/seed.js || true) && node dist/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && ([ -f dist/seed.js ] && node dist/seed.js || true) && node --enable-source-maps dist/main.js"]
