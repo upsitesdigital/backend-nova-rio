@@ -242,4 +242,57 @@ export class ResendEmailService implements IEmailService {
       this.logger.error(`Failed to send payment cancelled email to ${this.maskEmail(to)}`, error);
     }
   }
+
+  async sendAdminNewClientEmail(
+    _to: string,
+    _clientName: string,
+    _clientEmail: string,
+  ): Promise<void> {}
+
+  async sendAdminNewAppointmentEmail(
+    _to: string,
+    _clientName: string,
+    _serviceName: string,
+    _date: string,
+    _time: string,
+  ): Promise<void> {}
+
+  async sendAdminAppointmentCancelledEmail(
+    _to: string,
+    _clientName: string,
+    _serviceName: string,
+    _date: string,
+    _time: string,
+  ): Promise<void> {}
+
+  async sendAdminAppointmentRescheduledEmail(
+    _to: string,
+    _clientName: string,
+    _serviceName: string,
+    _oldDate: string,
+    _oldTime: string,
+    _newDate: string,
+    _newTime: string,
+  ): Promise<void> {}
+
+  async sendAdminPaymentReceivedEmail(
+    _to: string,
+    _clientName: string,
+    _serviceName: string,
+    _amount: string,
+    _date: string,
+  ): Promise<void> {}
+
+  async sendAdminPaymentCancelledEmail(
+    _to: string,
+    _clientName: string,
+    _serviceName: string,
+    _amount: string,
+  ): Promise<void> {}
+
+  async sendAdminAccountDeletedEmail(
+    _to: string,
+    _clientName: string,
+    _clientEmail: string,
+  ): Promise<void> {}
 }
