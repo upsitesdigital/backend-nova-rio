@@ -31,18 +31,23 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const isProduction = configService.get<string>('NODE_ENV') === 'production';
 
-  app.use(compression());
-  app.use(helmet());
+  const corsOrigins = configService
+    .getOrThrow<string>('CORS_ORIGIN')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+
+  // CORS must run before helmet so that OPTIONS preflight is answered correctly.
   app.enableCors({
-    origin: configService
-      .getOrThrow<string>('CORS_ORIGIN')
-      .split(',')
-      .map((origin) => origin.trim())
-      .filter((origin) => origin.length > 0),
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    origin: corsOrigins,
+    methods: ['GET', 'HEAD', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Authorization', 'Content-Type'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
     credentials: false,
   });
+  app.use(compression());
+  app.use(helmet());
   app.enableShutdownHooks();
 
   if (configService.get('ENABLE_SWAGGER') === 'true') {
